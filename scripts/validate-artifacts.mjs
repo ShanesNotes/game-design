@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Factory artifact validator. Proves the repo matches its own contracts without needing a
-// runtime game. Checks: required-tree | schemas | generated-leakage | no-default-engine | run | all.
+// runtime game. Checks: required-tree | schemas | generated-leakage | no-default-engine | skill-refs | run | all.
+// `all` runs every check except `run`, which is on-demand (requires --seed-id).
 // Usage: node scripts/validate-artifacts.mjs --check <mode> [--seed-id <id>]
 import fs from "node:fs";
 import path from "node:path";
@@ -113,6 +114,7 @@ const LEAK_TOKENS = [
   [/sandcastle/i, "Sandcastle"],
   [/\bOMX\b/, "OMX"],
   [/tiny[ -]app[ -]factory/i, "Tiny App Factory product term"],
+  [/tiny[ -]game[ -]factory/i, "Tiny Game Factory orchestrator name"],
   [/tincture/i, "Tincture of Mercy product term"],
   [/rescue[ -]town[ -]builders/i, "Rescue Town Builders product term"],
   [/\/home\/ark\//, "absolute /home/ark path"]

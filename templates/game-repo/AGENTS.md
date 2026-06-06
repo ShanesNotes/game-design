@@ -1,4 +1,4 @@
-# AGENTS.md — Tiny Game Factory
+# AGENTS.md — Game Repo
 
 ## North star
 
@@ -26,8 +26,6 @@ Write:
 - decisions in `decisions/`
 - playtest evidence in `playtests/`
 - reviews in `reviews/`
-- prompts in `.factory/prompts/`
-- schemas in `schemas/`
 - branch notes in `reviews/<branch>/`
 
 ## Required gates

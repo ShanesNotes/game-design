@@ -14,6 +14,6 @@ How MCP servers may participate in the factory. Default posture is conservative:
 ## Editor / asset mutation (OFF by default)
 
 - **Godot, Blender, Meshy** MCP servers are disabled by default. Enabling any of them is an opt-in, per-task decision.
-- Any mutation through these servers MUST emit a diffable text artifact (scene diff, recipe, prompt/seed/model/version). This is enforced by the `mcp_mutation_must_emit_text` guard — an editor/tool mutation with no text artifact blocks the turn.
+- Any mutation through these servers MUST emit a diffable text artifact (scene diff, recipe, prompt/seed/model/version). This is the `mcp_mutation_must_emit_text` **policy** (declared in `factory.config.toml`) — currently enforced by review, not yet a shipped executable hook.
 
 If a server cannot produce a reviewable text diff, it does not get to mutate factory state.

@@ -1,11 +1,11 @@
 # P00 — Orchestrator Ultragoal
 
-ROLE: Claude Code ultracode orchestrator / $ultragoal director.
+ROLE: Manifest-first parent orchestrator. Host-agnostic — host-specific framing
+(Claude Code `$ultragoal`, Codex, Grok) lives in `adapters/`, not in this contract.
 
 INPUTS:
 - GAME_SEED.md
-- AGENTS.md
-- CLAUDE.md
+- AGENTS.md (root operating file; a host may also load its own CLAUDE.md etc.)
 - factory.config.toml
 - schemas/*
 - docs/anti-boring-gate.md
@@ -26,7 +26,7 @@ NON-NEGOTIABLES:
 PHASES:
 1. Verify local tools and update docs/toolchain-verification-ledger.md.
 2. Compile seed into GAME_THESIS.md using P01.
-3. Stress-test GAME_THESIS.md with P07/P08 logic before coding.
+3. Pre-mortem GAME_THESIS.md against docs/anti-boring-gate.md as a design check before coding. (P07/P08 are evidence-gated and run only after a slice exists.)
 4. Select 2–3 prototype lanes using P02 and P03. Use Grok only if available.
 5. Dispatch isolated worktrees/branches.
 6. Each branch builds only the first playable slice using P04.

@@ -51,8 +51,8 @@ Agents communicate by files, not chat:
 ### Why a hand-rolled validator?
 
 The factory must run with **zero install** (`npm run verify` works offline). The
-schemas use a small, fixed subset of JSON Schema (type/enum/required/properties/
-items/min·max/additionalProperties), so a tiny validator is simpler and more
+schemas use a small, fixed subset of JSON Schema (type/enum/pattern/required/
+properties/items/min·max/additionalProperties), so a tiny validator is simpler and more
 honest than pulling a dependency. If schemas grow beyond the subset, adopting `ajv`
 as the one accepted dev dependency is the documented escape hatch.
 

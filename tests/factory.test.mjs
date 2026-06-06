@@ -31,6 +31,14 @@ test("all schemas parse and declare $schema/title/type", () => {
   }
 });
 
+test("seed-manifest schema rejects a malformed seed_id (pattern enforced)", () => {
+  const schema = JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8"));
+  const good = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-seed-manifest.json"), "utf8"));
+  assert.deepEqual(validate(schema, good), [], "valid manifest should pass");
+  const bad = { ...good, seed_id: "BAD_ID!!" };
+  assert.ok(validate(schema, bad).length > 0, "malformed seed_id must fail the pattern");
+});
+
 test("fixtures validate against their schemas", () => {
   const pairs = {
     "minimal-seed-manifest.json": "seed-manifest.schema.json",
@@ -103,6 +111,26 @@ test("init-game-run refuses existing run without --force, succeeds with --force"
     const rows = fs.readFileSync(path.join(dir, ".tgf/seeds", id, "execution-ledger.jsonl"), "utf8").trim().split("\n");
     assert.equal(rows.length, 2, "force should append a ledger row");
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("init-game-run --force refuses to write through a symlinked owned path", () => {
+  const dir = tmp();
+  const outside = tmp();
+  const id = "selftest-symlink";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf/seeds", id);
+    const target = path.join(outside, "outside-target.txt");
+    fs.writeFileSync(target, "ORIGINAL");
+    fs.rmSync(path.join(runDir, "manifest.json"));
+    fs.symlinkSync(target, path.join(runDir, "manifest.json"));
+    const r = node("init-game-run.mjs", ["--seed-id", id, "--seed", "x", "--force"], { cwd: dir });
+    assert.notEqual(r.status, 0, "must refuse to write through a symlinked owned path");
+    assert.equal(fs.readFileSync(target, "utf8"), "ORIGINAL", "outside target must be untouched");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
 });
 
 test("validate-artifacts --check schemas passes", () => {

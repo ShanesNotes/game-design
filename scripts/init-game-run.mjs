@@ -90,7 +90,6 @@ if (illegal.length) fail(`illegal absolute source path(s) in manifest: ${illegal
 if (manifest.default_child_game_root !== childGameRoot) {
   fail(`default_child_game_root must be ${childGameRoot}`);
 }
-const childRepoAbsent = !fs.existsSync(childGameRoot);
 
 const wouldCreate = ledgerRow.changed_paths.concat([
   `${runRel}/decisions/.gitkeep`,
@@ -100,6 +99,7 @@ const wouldCreate = ledgerRow.changed_paths.concat([
 ]);
 
 if (dryRun) {
+  const childRepoAbsent = !fs.existsSync(childGameRoot);
   console.log(JSON.stringify({
     ok: true,
     mode: "dry-run",
@@ -118,6 +118,21 @@ if (dryRun) {
 
 if (fs.existsSync(runDir) && !force) {
   fail(`run already exists at ${runRel} (use --force to overwrite owned files)`);
+}
+
+// Refuse to write through symlinks: --force must only touch real files the
+// initializer owns inside runDir, never follow a symlink to an outside target.
+if (fs.existsSync(runDir)) {
+  const owned = [
+    runDir,
+    ...["decisions", "playtests", "reviews", "handoffs"].map((d) => path.join(runDir, d)),
+    ...["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl"].map((f) => path.join(runDir, f))
+  ];
+  for (const p of owned) {
+    if (fs.existsSync(p) && fs.lstatSync(p).isSymbolicLink()) {
+      fail(`refusing to write through symlink: ${path.relative(process.cwd(), p)} (initializer writes only real files inside ${runRel})`);
+    }
+  }
 }
 
 // --- Write (only inside runDir) ---

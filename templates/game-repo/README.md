@@ -1,8 +1,7 @@
 # Game Repo
 
-This is a generated child game repo produced by the Tiny Game Factory workflow.
-It holds one game: its seed, its thesis, its slices, and the evidence that the
-game is worth playing.
+This is a generated game repo. It holds one game: its seed, its thesis, its slices,
+and the evidence that the game is worth playing.
 
 ## Agent boot sequence
 
@@ -10,8 +9,8 @@ If you are an agent picking up this repo, do this in order:
 
 1. Read `AGENTS.md` — the north star, non-negotiables, and required gates.
 2. Read `GAME_SEED.md` — the premise this game grows from.
-3. Run `.factory/prompts/P17` — scout the repo and current state.
-4. Run `.factory/prompts/P01` — set or confirm the game thesis.
+3. Verify your local toolchain before relying on any tool.
+4. Set or confirm the game thesis (`GAME_THESIS.md`) before writing any code.
 
 ## Doctrine
 
