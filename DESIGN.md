@@ -66,10 +66,15 @@ Each declares `$schema`/`title`/`type` and is exercised by a fixture in
 ## Hooks (`hooks/`)
 
 Policy + executable prototypes that **block, not warn**: `scope_brake`,
-`art_fidelity_cap`, `asset_provenance`, `engine_migration_requires_adr`,
-`phaser_version_pin`, `playtest_report_required`, `afk_heartbeat_required`. They
-read cwd/args so they run identically in a child game repo and in the gate
-sandbox. Real Claude/Codex hook adapters pass changed paths via stdin/env.
+`art_fidelity_cap`, `asset_provenance`, `mcp_mutation_must_emit_text`,
+`engine_migration_requires_adr`, `phaser_version_pin`, `playtest_report_required`,
+`afk_heartbeat_required`, `no_content_before_fun_lock`, `minimum_bot_session_gate`,
+`two_bot_spread_gate`. Every guard declared in `factory.config.toml` ships an
+executable here (no policy-only entries). Shared, zero-import plumbing lives in
+`hooks/lib/guard.mjs`, so each guard carries only its rule and they run identically
+in a child game repo or the gate sandbox. Real Claude/Codex hook adapters pass
+changed paths via stdin/env; `run-gates` proves every registered guard blocks the
+unsafe case and allows the safe one.
 
 ## Skills (`.codex/skills/`) and adapters
 

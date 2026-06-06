@@ -21,7 +21,9 @@ export const SCHEMAS = [
 
 export const HOOKS = [
   "scope_brake", "art_fidelity_cap", "asset_provenance", "engine_migration_requires_adr",
-  "phaser_version_pin", "playtest_report_required", "afk_heartbeat_required"
+  "phaser_version_pin", "playtest_report_required", "afk_heartbeat_required",
+  "mcp_mutation_must_emit_text", "no_content_before_fun_lock",
+  "minimum_bot_session_gate", "two_bot_spread_gate"
 ];
 
 export const FIXTURE_SCHEMA = {
