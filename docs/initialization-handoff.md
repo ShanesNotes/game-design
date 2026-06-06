@@ -3,6 +3,12 @@
 Status: **initialized and verify-green (v0.1.0).** No game has been generated; no
 child game repo or `/home/ark/tgf-games/` exists; source repos untouched.
 
+> **Update (2026-06-06):** an architecture-deepening pass landed on branch
+> `deepen-architecture` (run-state module, factory-contract registry, guard-policy
+> module, anti-boring gate consistency checker, 4 new guards, schema hardening, +
+> doc coherence). It is verify-green and pending owner review + the ADR 0004 call
+> below. See `docs/handoffs/claude-architecture-deepening-RESULT.md`.
+
 ## One decision needs your confirmation
 
 **ADR 0004 (factory layout) is `Proposed`, not accepted** — see `docs/adr/0004-*`

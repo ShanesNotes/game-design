@@ -32,6 +32,7 @@ function checkRequiredTree() {
     "docs/toolchain-verification-ledger.md", "docs/borrowed-patterns.md", "docs/repo-radar.md", "docs/source-ledger.md",
     "docs/adr/0001-meta-factory-root.md", "docs/adr/0002-evidence-first-prototype-search.md",
     "docs/adr/0003-factory-game-separation.md", "docs/adr/0004-factory-layout-and-skill-packaging.md",
+    "docs/adr/0005-gate-policy-in-checkers-not-schemas.md",
     "docs/agents/domain.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md",
     "scripts/verify-local-tools.mjs", "scripts/init-game-run.mjs", "scripts/run-gates.mjs",
     "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs",

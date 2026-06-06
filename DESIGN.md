@@ -42,11 +42,15 @@ Agents communicate by files, not chat:
 | Component | Responsibility |
 |---|---|
 | `scripts/init-game-run.mjs` | Create ONLY `.tgf/seeds/{seed-id}/`. Never a child repo, engine, or thesis. Validates manifest + path policy. |
-| `scripts/validate-artifacts.mjs` | `required-tree`, `schemas` (+fixtures), `generated-leakage`, `no-default-engine`, `skill-refs`, `run`. The acceptance engine. |
-| `scripts/run-gates.mjs` | Sandboxes each `hooks/*` guard and proves it blocks the unsafe case and allows the safe case. |
-| `scripts/verify-local-tools.mjs` | Probes tools via real commands; refreshes a generated block in the toolchain ledger. Memory is never proof. |
-| `scripts/summarize-run.mjs` | Evidence-first run summary from manifest + ledger. |
+| `scripts/validate-artifacts.mjs` | `required-tree`, `schemas` (+fixtures), `generated-leakage`, `no-default-engine`, `skill-refs`, `gate`, `issues`, `run`. The acceptance engine. |
+| `scripts/run-gates.mjs` | Sandboxes each `hooks/*` guard and proves it blocks the unsafe case and allows the safe case; fails if a registered guard has no scenario. |
+| `scripts/verify-local-tools.mjs` | Probes tools via real commands (grouped by category); refreshes a generated block in the toolchain ledger. Memory is never proof. |
+| `scripts/summarize-run.mjs` | Evidence-first run summary from manifest + ledger (crash-safe). |
 | `scripts/lib/validate-json-schema.mjs` | ~90-line dependency-free JSON-schema subset validator. |
+| `scripts/lib/run-state.mjs` | Deep module for one seed run: paths, owned files, manifest/ledger read + schema validation, path policy, symlink guard, and the phase state machine (legal transitions + phase-gated artifacts). |
+| `scripts/lib/factory-contract.mjs` | Single source of truth for the contract surface: phases, skills, schemas, hooks, fixtures, prompt count, gate thresholds. |
+| `scripts/lib/anti-boring-gate.mjs` | Consistency checks for gate artifacts (total == sum, an ADVANCE clears the gate, dominant_move agrees with action_distribution) — gate policy in a checker, not the schema. |
+| `hooks/lib/guard.mjs` | Shared, zero-import plumbing for the guards (opaque-asset pattern, playtests walker, argv/block/allow). |
 
 ### Why a hand-rolled validator?
 
