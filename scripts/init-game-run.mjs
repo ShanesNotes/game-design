@@ -5,10 +5,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { validate } from "./lib/validate-json-schema.mjs";
+import {
+  SEED_ID_RE, runRelFor, runDirFor, childGameRootFor,
+  validateManifest, manifestPathPolicyErrors, symlinkWriteThroughPaths
+} from "./lib/run-state.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SEED_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
 
 function arg(name, fallback = null) {
   const i = process.argv.indexOf(`--${name}`);
@@ -31,9 +33,9 @@ if (!SEED_ID_RE.test(seedId)) {
   fail(`--seed-id must match ${SEED_ID_RE} (got "${seedId}")`);
 }
 
-const runRel = path.join(".tgf", "seeds", seedId);
-const runDir = path.resolve(process.cwd(), runRel);
-const childGameRoot = `/home/ark/tgf-games/${seedId}`;
+const runRel = runRelFor(seedId);
+const runDir = runDirFor(process.cwd(), seedId);
+const childGameRoot = childGameRootFor(seedId);
 const iso = new Date().toISOString();
 
 // Load + substitute templates from the factory repo (independent of cwd).
@@ -66,8 +68,8 @@ const ledgerRow = {
   ],
   verification: {
     commands: [`node scripts/validate-artifacts.mjs --check run --seed-id ${seedId}`],
-    status: "passed",
-    evidence: "Run manifest and path policy validated; no child game repo created."
+    status: "not-run",
+    evidence: "init-game-run validated the manifest schema and path policy inline; the listed run-check has not executed yet and is the first action for the booting agent (completion is evidence, not prose)."
   },
   blockers: [],
   resume_point: {
@@ -77,19 +79,12 @@ const ledgerRow = {
   }
 };
 
-// --- Validation gates (run in every mode) ---
-const schema = JSON.parse(fs.readFileSync(path.join(FACTORY_ROOT, "schemas", "seed-manifest.schema.json"), "utf8"));
-const manifestErrors = validate(schema, manifest);
+// --- Validation gates (run in every mode), via the run-state module ---
+const manifestErrors = validateManifest(manifest);
 if (manifestErrors.length) fail(`manifest does not validate:\n  ${manifestErrors.join("\n  ")}`);
 
-// Path policy: the only absolute /home/ark/... value allowed is default_child_game_root,
-// and it must equal /home/ark/tgf-games/{seed-id}.
-const absPaths = JSON.stringify(manifest).match(/\/home\/ark\/[A-Za-z0-9._/-]+/g) || [];
-const illegal = absPaths.filter((p) => p !== childGameRoot);
-if (illegal.length) fail(`illegal absolute source path(s) in manifest: ${illegal.join(", ")}`);
-if (manifest.default_child_game_root !== childGameRoot) {
-  fail(`default_child_game_root must be ${childGameRoot}`);
-}
+const pathPolicyErrors = manifestPathPolicyErrors(manifest, seedId);
+if (pathPolicyErrors.length) fail(pathPolicyErrors.join("; "));
 
 const wouldCreate = ledgerRow.changed_paths.concat([
   `${runRel}/decisions/.gitkeep`,
@@ -123,15 +118,9 @@ if (fs.existsSync(runDir) && !force) {
 // Refuse to write through symlinks: --force must only touch real files the
 // initializer owns inside runDir, never follow a symlink to an outside target.
 if (fs.existsSync(runDir)) {
-  const owned = [
-    runDir,
-    ...["decisions", "playtests", "reviews", "handoffs"].map((d) => path.join(runDir, d)),
-    ...["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl"].map((f) => path.join(runDir, f))
-  ];
-  for (const p of owned) {
-    if (fs.existsSync(p) && fs.lstatSync(p).isSymbolicLink()) {
-      fail(`refusing to write through symlink: ${path.relative(process.cwd(), p)} (initializer writes only real files inside ${runRel})`);
-    }
+  const symlinked = symlinkWriteThroughPaths(runDir);
+  if (symlinked.length) {
+    fail(`refusing to write through symlink: ${path.relative(process.cwd(), symlinked[0])} (initializer writes only real files inside ${runRel})`);
   }
 }
 

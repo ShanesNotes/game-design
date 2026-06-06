@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "./lib/validate-json-schema.mjs";
+import * as runState from "./lib/run-state.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -160,29 +161,31 @@ function checkNoDefaultEngine() {
 }
 
 // --- run check (validates a created .tgf/seeds/{id} relative to cwd) ---
+// Run-state shape, schema validation, path policy, phase transitions, and
+// phase-gated artifact rules all come from scripts/lib/run-state.mjs.
 function checkRun(seedId) {
   const errors = [];
   if (!seedId) return ["--check run requires --seed-id <id>"];
-  const runDir = path.join(process.cwd(), ".tgf", "seeds", seedId);
-  const mpath = path.join(runDir, "manifest.json");
-  if (!fs.existsSync(mpath)) return [`run manifest missing: ${path.relative(process.cwd(), mpath)}`];
-  const manifest = JSON.parse(fs.readFileSync(mpath, "utf8"));
-  validate(JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8")), manifest)
-    .forEach((e) => errors.push(`manifest ${e}`));
+  const runDir = runState.runDirFor(process.cwd(), seedId);
+  let manifest;
+  try { manifest = runState.readManifest(runDir); }
+  catch { return [`run manifest is not parseable JSON: .tgf/seeds/${seedId}/manifest.json`]; }
+  if (!manifest) return [`run manifest missing: .tgf/seeds/${seedId}/manifest.json`];
+
+  runState.validateManifest(manifest).forEach((e) => errors.push(`manifest ${e}`));
+  runState.manifestPathPolicyErrors(manifest, seedId).forEach((e) => errors.push(e));
+  runState.phaseArtifactConstraintErrors(manifest).forEach((e) => errors.push(e));
   if (!["toolchain", "intake"].includes(manifest.current_phase)) errors.push(`current_phase must be toolchain|intake, got ${manifest.current_phase}`);
   if (manifest.external_side_effects_allowed !== false) errors.push("external_side_effects_allowed must be false");
 
-  const lpath = path.join(runDir, "execution-ledger.jsonl");
-  if (!fs.existsSync(lpath)) errors.push("execution-ledger.jsonl missing");
+  const { rows, parseErrors } = runState.readLedger(runDir);
+  parseErrors.forEach((e) => errors.push(`ledger ${e}`));
+  if (!rows.length) errors.push("execution-ledger.jsonl missing or empty");
   else {
-    const first = fs.readFileSync(lpath, "utf8").trim().split("\n")[0];
-    try {
-      const row = JSON.parse(first);
-      validate(JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8")), row)
-        .forEach((e) => errors.push(`ledger ${e}`));
-    } catch { errors.push("ledger first row is not parseable JSON"); }
+    runState.validateLedgerRow(rows[0]).forEach((e) => errors.push(`ledger ${e}`));
+    runState.ledgerTransitionErrors(rows).forEach((e) => errors.push(e));
   }
-  if (fs.existsSync(`/home/ark/tgf-games/${seedId}`)) errors.push(`child game repo unexpectedly exists: /home/ark/tgf-games/${seedId}`);
+  if (fs.existsSync(runState.childGameRootFor(seedId))) errors.push(`child game repo unexpectedly exists: ${runState.childGameRootFor(seedId)}`);
   for (const bad of ["src", "app", "public", "assets"]) if (fs.existsSync(path.join(runDir, bad))) errors.push(`run dir contains forbidden ${bad}/`);
   if (fs.existsSync(path.join(runDir, "GAME_THESIS.md"))) errors.push("run initializer must not create GAME_THESIS.md");
   return errors;
