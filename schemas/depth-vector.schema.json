@@ -2,10 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Tiny Game Factory Depth Vector",
   "type": "object",
+  "additionalProperties": false,
   "required": ["scores", "total", "verdict"],
   "properties": {
     "scores": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "meaningful_choice",
         "tradeoff",

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Tiny Game Factory Playtest Report",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "branch",
     "duration_seconds",
@@ -28,6 +29,7 @@
     "capture_path": { "type": "string" },
     "anti_boring": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["naked_mechanics", "two_bot_spread", "dominant_move", "second_session"],
       "properties": {
         "naked_mechanics": { "type": "boolean" },

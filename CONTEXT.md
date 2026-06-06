@@ -65,13 +65,24 @@ only when a raw/vague seed or an inherited repo needs office-hours grilling befo
 the thesis. `deepen` and `fun-lock` are gate *states*, not prompts: `deepen` is
 driven by a `DEEPEN` depth verdict (one transform, ≤2 attempts), and `fun-lock` is
 the state entered when the anti-boring gate + depth minimum pass, recorded by a
-ledger transition.
+ledger transition (owned by P08 — see the workflow contract). The ≤2-attempt cap is
+tracked by `manifest.deepen_attempt_count` and enforced by
+`validate-artifacts --check run`; applying the named transform is owned by the depth
+red-team / first-slice re-entry (a dedicated `deepen-apply` wrapper is deferred until
+a real run needs it). Legal phase transitions are the machine-readable graph in
+`scripts/lib/run-state.mjs` (derived from `docs/doctrine.md`), checked against each
+run's ledger.
 
 ## Workflow contract (P00–P17)
 
+`P00_ORCHESTRATOR_ULTRAGOAL` (`tgf-harness`) is a **router**, not a phase: it reads
+`manifest.current_phase` and dispatches to the skills below. `orchestrate` is therefore
+not in the § Phase vocabulary. Canonical machine-readable lists of phases, prompts,
+skills, schemas, and hooks live in `scripts/lib/factory-contract.mjs`; this table is the
+human-friendly view.
+
 | Phase | Prompt | TGF skill | Output |
 |---|---|---|---|
-| orchestrate | `P00_ORCHESTRATOR_ULTRAGOAL` | `tgf-harness` (router) | manifest routing |
 | intake | (P00/P01 prelude) | `tgf-office-hours-grill` | `intake/office-hours.md`, ≤1 question |
 | toolchain | `P17_VERIFY_TOOLCHAIN` | `tgf-verify-toolchain` | toolchain ledger from real probes |
 | thesis | `P01_SEED_COMPILE` | `tgf-seed-compile` | `GAME_THESIS.md` |
@@ -142,7 +153,10 @@ Matt Pocock-style skills (`grill-me`, `grill-with-docs`, `to-prd`, `to-issues`,
 `triage`, `tdd`, `diagnose`, `zoom-out`, `improve-codebase-architecture`,
 `prototype`, `handoff`, `review`) are **wrapped or referenced, never vendored**.
 Generic issue/PRD skills must route through local artifacts and never publish
-remotely by default. See `docs/agents/` and `docs/adr/0004`.
+remotely by default. The shared contract every `.codex/skills/` wrapper inherits —
+read order, manifest-first routing, run-dir confinement, no-leakage, completion-is-
+evidence — lives in `docs/agents/skill-wrapper-doctrine.md`, so a wrapper carries
+only its phase-specific difference. See `docs/agents/` and `docs/adr/0004`.
 
 ## Completion is evidence, not prose
 

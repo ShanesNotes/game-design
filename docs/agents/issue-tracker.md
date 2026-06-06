@@ -42,6 +42,12 @@ new states here. **Completion is evidence, not prose** (CONTEXT.md): an issue
 closes when its `evidence` links point at a passing validator, gate, playtest
 report, or verdict — not when an agent says "done".
 
+`scripts/validate-artifacts.mjs --check issues` enforces this format: every
+`.tgf/issues/*.md` must have front matter with a kebab-case `id` matching its
+filename, a `title`, a `type` from the set above, and `state` + `afk`. The check is
+a no-op until `.tgf/issues/` exists, so the convention activates the moment the
+borrowed skills first write a local issue.
+
 ## Tracer-bullet vertical slices
 
 A `slice` is a **tracer-bullet vertical slice**: the thinnest end-to-end cut that

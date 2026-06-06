@@ -20,6 +20,7 @@ Read `.factory/prompts/P08_BRANCH_BAKEOFF.md` and execute it exactly.
 
 **Outputs** (emit before summarizing)
 - `reviews/BRANCH_BAKEOFF.md` (per-branch scores align with `schemas/branch-score.schema.json`) and the next implementation decision
+- the manifest transition this phase owns: set `current_phase` to `fun-lock` on a gate-passing winner (else route to `P14` as `deepen`/`killed`), plus the `execution-ledger.jsonl` row recording the verdict and transition
 
 **Borrowed behaviours** (wrapped or referenced — never vendor a generic skill body)
 - a reviewer/evidence-synthesis pattern

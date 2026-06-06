@@ -1,10 +1,11 @@
 # ADR 0004 — Factory layout and skill packaging
 
-- Status: **Proposed — pending owner confirmation.** Reconciliation recorded by the
-  implementing agent; it supersedes the user-accepted clean-init spec §4 tree layout
-  (while preserving D012's "project-local skills first" principle), so it is **not**
-  self-Accepted — the owner confirms or reverses it. See decision register D013.
-- Date: 2026-06-06
+- Status: **Accepted (owner-confirmed 2026-06-06).** Supersedes the user-accepted
+  clean-init spec §4 tree layout (while preserving D012's "project-local skills first"
+  principle). Originally recorded as Proposed because an agent may not self-accept a
+  reversal of a ratified decision; the owner (Shane) confirmed it on 2026-06-06.
+  Decision register **D013** is resolved.
+- Date: 2026-06-06 (proposed); 2026-06-06 (accepted)
 
 ## Context
 
@@ -71,11 +72,12 @@ router; `validate-artifacts.mjs --check skill-refs` enforces this.
 - Post-fun-lock prompts (`P05`, `P06`, `P09`–`P12`, `P14`) ship as contracts; their
   wrappers are deferred until gameplay proof exists.
 
-## Provenance / caveat
+## Provenance
 
 This ADR records a decision made in the implementation handoff, not a novel
 architectural choice invented here. Because it reverses a detail of the user-accepted
-clean-init spec §4 (the flat prompts/skills tree) without a direct owner ratification
-— while preserving D012's "project-local skills first" principle — its status is
-**Proposed** and decision register **D013** tracks the open confirmation. It is flagged in the initialization report so it can be
-revisited; if the flat layout is preferred, this ADR is the single place to reverse.
+clean-init spec §4 (the flat prompts/skills tree) — while preserving D012's
+"project-local skills first" principle — it could not be self-accepted by an agent;
+it was carried as **Proposed** until the owner (Shane) confirmed it on 2026-06-06,
+resolving decision register **D013**. The clean-init spec §4/§13 is amended to point
+here as the authoritative layout.

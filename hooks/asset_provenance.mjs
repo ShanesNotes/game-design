@@ -3,10 +3,11 @@
 // Pass asset paths as args.
 import fs from "node:fs";
 import path from "node:path";
+import { changedPaths, OPAQUE_ASSET_RE, block, allow } from "./lib/guard.mjs";
 
-let bad = [];
-for (const p of process.argv.slice(2)) {
-  if (!/\.(png|jpg|jpeg|webp|psd|blend|fbx|glb|gltf|wav|mp3|ogg)$/i.test(p)) continue;
+const bad = [];
+for (const p of changedPaths()) {
+  if (!OPAQUE_ASSET_RE.test(p)) continue;
   const dir = path.dirname(p);
   const base = path.basename(p).replace(/\.[^.]+$/, "");
   const candidates = [
@@ -16,8 +17,5 @@ for (const p of process.argv.slice(2)) {
   ];
   if (!candidates.some(fs.existsSync)) bad.push(p);
 }
-if (bad.length) {
-  console.error("[TGF asset_provenance] BLOCK: opaque asset(s) without provenance:", bad.join(", "));
-  process.exit(2);
-}
-process.exit(0);
+if (bad.length) block(`opaque asset(s) without provenance: ${bad.join(", ")}`);
+allow();

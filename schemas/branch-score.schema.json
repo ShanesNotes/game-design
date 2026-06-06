@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Tiny Game Factory Branch Score",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "branch",
     "anti_boring_pass",

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Tiny Game Factory Asset Provenance",
   "type": "object",
+  "additionalProperties": false,
   "required": ["asset_path", "kind", "generator", "recipe", "reviewed"],
   "properties": {
     "asset_path": { "type": "string" },

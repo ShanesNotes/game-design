@@ -45,21 +45,21 @@ Before promoting any `PROBE` item:
 
 ## Local probe results (generated)
 
-_Probed 2026-06-06T19:15:49.025Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
+_Probed 2026-06-06T21:23:17.692Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
 
-| Probe | Available | First line |
-|---|---|---|
-| `node --version` | yes | v22.22.2 |
-| `npm --version` | yes | 11.13.0 |
-| `pnpm --version` | yes | 10.33.0 |
-| `claude --version` | yes | 2.1.167 (Claude Code) |
-| `codex --version` | yes | codex-cli 0.137.0 |
-| `omx --version` | yes | oh-my-codex v0.18.8 |
-| `grok-build --version` | no (PROBE) |  |
-| `npx playwright --version` | yes | Version 1.60.0 |
-| `godot --version` | yes | 4.6.2.stable.mono.official.71f334935 |
-| `godot4 --version` | no (PROBE) |  |
-| `cargo --version` | yes | cargo 1.95.0 (f2d3ce0bd 2026-03-21) |
-| `git --version` | yes | git version 2.43.0 |
+| Category | Probe | Available | First line |
+|---|---|---|---|
+| base | `node --version` | yes | v22.22.2 |
+| base | `npm --version` | yes | 11.13.0 |
+| base | `pnpm --version` | yes | 10.33.0 |
+| base | `git --version` | yes | git version 2.43.0 |
+| builder | `claude --version` | yes | 2.1.167 (Claude Code) |
+| builder | `codex --version` | yes | codex-cli 0.137.0 |
+| builder | `omx --version` | yes | oh-my-codex v0.18.9 |
+| builder | `grok-build --version` | no (PROBE) |  |
+| harness | `npx playwright --version` | yes | Version 1.60.0 |
+| engine | `godot --version` | yes | 4.6.2.stable.mono.official.71f334935 |
+| engine | `godot4 --version` | no (PROBE) |  |
+| engine | `cargo --version` | yes | cargo 1.95.0 (f2d3ce0bd 2026-03-21) |
 
 <!-- TGF:PROBE:END -->

@@ -11,7 +11,8 @@ the domain dictionary. This file is the operating procedure.
 1. `CONTEXT.md` — what the factory is and its vocabulary.
 2. `docs/doctrine.md` — the non-negotiable doctrine.
 3. `docs/adr/` — decisions: **accepted** 0001 (root), 0002 (evidence-first), 0003
-   (separation); **proposed** 0004 (layout — pending owner confirmation; register D013).
+   (separation), 0004 (layout — owner-confirmed 2026-06-06; register D013 resolved),
+   0005 (gate policy in checkers, not schemas).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 

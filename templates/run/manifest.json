@@ -14,6 +14,8 @@
   "playtest_report_paths": [],
   "review_report_paths": [],
   "handoff_paths": [],
+  "questions_asked": [],
+  "deepen_attempt_count": 0,
   "resume_point": {
     "phase": "toolchain",
     "artifact_path": ".tgf/seeds/{{SEED_ID}}/README_AGENT_BOOT.md",

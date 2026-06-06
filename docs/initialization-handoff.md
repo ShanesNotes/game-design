@@ -3,20 +3,19 @@
 Status: **initialized and verify-green (v0.1.0).** No game has been generated; no
 child game repo or `/home/ark/tgf-games/` exists; source repos untouched.
 
-## One decision needs your confirmation
+> **Update (2026-06-06):** an architecture-deepening pass landed on branch
+> `deepen-architecture` (run-state module, factory-contract registry, guard-policy
+> module, anti-boring gate consistency checker, 4 new guards, schema hardening, +
+> doc coherence). It is verify-green and pending owner review + the ADR 0004 call
+> below. See `docs/handoffs/claude-architecture-deepening-RESULT.md`.
 
-**ADR 0004 (factory layout) is `Proposed`, not accepted** — see `docs/adr/0004-*`
-and decision register **D013**. The repo uses `.factory/prompts/` + `.codex/skills/`
-(12 wrappers) + `docs/agents/`, per the implementation handoff. This **supersedes a
-detail of the user-accepted clean-init spec §4** (which drew a flat `prompts/` +
-`skills/` tree with 6 skills). It was an agent-made reconciliation, so per the
-ADR-gate rule it is not self-accepted.
+## Layout decision — resolved
 
-- **Confirm** → flip ADR 0004 to Accepted, resolve D013, amend clean-init §4/§13.
-- **Reverse** → ADR 0004 is the single place to roll back to the flat 6-skill layout.
-
-Nothing else in the build is blocked on this; everything verifies under the chosen
-layout either way (the validator asserts whatever tree exists).
+**ADR 0004 (factory layout) is `Accepted`** (owner-confirmed 2026-06-06; register
+**D013** resolved). The repo uses `.factory/prompts/` + `.codex/skills/` (12 wrappers)
++ `docs/agents/`, superseding the flat `prompts/` + `skills/`-with-6 layout of
+clean-init spec §4 (which is amended to point at ADR 0004). No open governance items
+remain.
 
 ## Verify
 

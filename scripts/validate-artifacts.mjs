@@ -7,6 +7,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "./lib/validate-json-schema.mjs";
+import * as runState from "./lib/run-state.mjs";
+import * as gate from "./lib/anti-boring-gate.mjs";
+import { SKILLS, SCHEMAS, HOOKS, FIXTURE_SCHEMA, PROMPT_MAX } from "./lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -17,29 +20,8 @@ function arg(name) {
   return i >= 0 ? process.argv[i + 1] : null;
 }
 
-const SKILLS = [
-  "tgf-harness", "tgf-office-hours-grill", "tgf-verify-toolchain", "tgf-seed-compile",
-  "tgf-engine-profile", "tgf-prototype-dispatch", "tgf-first-slice", "tgf-depth-redteam",
-  "tgf-branch-bakeoff", "tgf-existing-project-rescue", "tgf-repo-scout", "tgf-handoff"
-];
-
-const SCHEMAS = [
-  "seed-manifest", "game-thesis", "engine-profile-decision", "playtest-report",
-  "depth-vector", "branch-score", "execution-ledger-row", "asset-provenance"
-];
-
-const HOOKS = [
-  "scope_brake", "art_fidelity_cap", "asset_provenance", "engine_migration_requires_adr",
-  "phaser_version_pin", "playtest_report_required", "afk_heartbeat_required"
-];
-
-const FIXTURE_SCHEMA = {
-  "minimal-seed-manifest.json": "seed-manifest.schema.json",
-  "minimal-game-thesis.json": "game-thesis.schema.json",
-  "minimal-playtest-report.json": "playtest-report.schema.json",
-  "minimal-depth-vector.json": "depth-vector.schema.json",
-  "minimal-ledger-row.json": "execution-ledger-row.schema.json"
-};
+// SKILLS, SCHEMAS, HOOKS, FIXTURE_SCHEMA, PROMPT_MAX come from the factory-contract
+// registry (scripts/lib/factory-contract.mjs) — the single source of truth.
 
 // --- required tree ---
 function checkRequiredTree() {
@@ -50,6 +32,7 @@ function checkRequiredTree() {
     "docs/toolchain-verification-ledger.md", "docs/borrowed-patterns.md", "docs/repo-radar.md", "docs/source-ledger.md",
     "docs/adr/0001-meta-factory-root.md", "docs/adr/0002-evidence-first-prototype-search.md",
     "docs/adr/0003-factory-game-separation.md", "docs/adr/0004-factory-layout-and-skill-packaging.md",
+    "docs/adr/0005-gate-policy-in-checkers-not-schemas.md",
     "docs/agents/domain.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md",
     "scripts/verify-local-tools.mjs", "scripts/init-game-run.mjs", "scripts/run-gates.mjs",
     "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs",
@@ -67,7 +50,7 @@ function checkRequiredTree() {
   // prompts P00..P17
   const promptDir = rel(".factory/prompts");
   const promptFiles = fs.existsSync(promptDir) ? fs.readdirSync(promptDir) : [];
-  for (let n = 0; n <= 17; n++) {
+  for (let n = 0; n <= PROMPT_MAX; n++) {
     const pre = `P${String(n).padStart(2, "0")}_`;
     if (!promptFiles.some((f) => f.startsWith(pre) && f.endsWith(".md"))) errors.push(`missing prompt: .factory/prompts/${pre}*.md`);
   }
@@ -160,29 +143,33 @@ function checkNoDefaultEngine() {
 }
 
 // --- run check (validates a created .tgf/seeds/{id} relative to cwd) ---
+// Run-state shape, schema validation, path policy, phase transitions, and
+// phase-gated artifact rules all come from scripts/lib/run-state.mjs.
 function checkRun(seedId) {
   const errors = [];
   if (!seedId) return ["--check run requires --seed-id <id>"];
-  const runDir = path.join(process.cwd(), ".tgf", "seeds", seedId);
-  const mpath = path.join(runDir, "manifest.json");
-  if (!fs.existsSync(mpath)) return [`run manifest missing: ${path.relative(process.cwd(), mpath)}`];
-  const manifest = JSON.parse(fs.readFileSync(mpath, "utf8"));
-  validate(JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8")), manifest)
-    .forEach((e) => errors.push(`manifest ${e}`));
+  const runDir = runState.runDirFor(process.cwd(), seedId);
+  let manifest;
+  try { manifest = runState.readManifest(runDir); }
+  catch { return [`run manifest is not parseable JSON: .tgf/seeds/${seedId}/manifest.json`]; }
+  if (!manifest) return [`run manifest missing: .tgf/seeds/${seedId}/manifest.json`];
+
+  runState.validateManifest(manifest).forEach((e) => errors.push(`manifest ${e}`));
+  runState.manifestPathPolicyErrors(manifest, seedId).forEach((e) => errors.push(e));
+  runState.phaseArtifactConstraintErrors(manifest).forEach((e) => errors.push(e));
+  runState.questionBudgetErrors(manifest).forEach((e) => errors.push(e));
+  runState.deepenAttemptErrors(manifest).forEach((e) => errors.push(e));
   if (!["toolchain", "intake"].includes(manifest.current_phase)) errors.push(`current_phase must be toolchain|intake, got ${manifest.current_phase}`);
   if (manifest.external_side_effects_allowed !== false) errors.push("external_side_effects_allowed must be false");
 
-  const lpath = path.join(runDir, "execution-ledger.jsonl");
-  if (!fs.existsSync(lpath)) errors.push("execution-ledger.jsonl missing");
+  const { rows, parseErrors } = runState.readLedger(runDir);
+  parseErrors.forEach((e) => errors.push(`ledger ${e}`));
+  if (!rows.length) errors.push("execution-ledger.jsonl missing or empty");
   else {
-    const first = fs.readFileSync(lpath, "utf8").trim().split("\n")[0];
-    try {
-      const row = JSON.parse(first);
-      validate(JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8")), row)
-        .forEach((e) => errors.push(`ledger ${e}`));
-    } catch { errors.push("ledger first row is not parseable JSON"); }
+    runState.validateLedgerRow(rows[0]).forEach((e) => errors.push(`ledger ${e}`));
+    runState.ledgerTransitionErrors(rows).forEach((e) => errors.push(e));
   }
-  if (fs.existsSync(`/home/ark/tgf-games/${seedId}`)) errors.push(`child game repo unexpectedly exists: /home/ark/tgf-games/${seedId}`);
+  if (fs.existsSync(runState.childGameRootFor(seedId))) errors.push(`child game repo unexpectedly exists: ${runState.childGameRootFor(seedId)}`);
   for (const bad of ["src", "app", "public", "assets"]) if (fs.existsSync(path.join(runDir, bad))) errors.push(`run dir contains forbidden ${bad}/`);
   if (fs.existsSync(path.join(runDir, "GAME_THESIS.md"))) errors.push("run initializer must not create GAME_THESIS.md");
   return errors;
@@ -206,18 +193,66 @@ function checkSkillRefs() {
   return errors;
 }
 
+// --- anti-boring gate consistency (artifact must not contradict its own numbers) ---
+// `--check gate --file <path>` checks one depth-vector/playtest/branch-score artifact;
+// with no --file it proves the example fixtures are internally gate-consistent.
+function checkGate() {
+  const file = arg("file");
+  if (file) {
+    let data;
+    try { data = JSON.parse(fs.readFileSync(file, "utf8")); }
+    catch { return [`gate file not parseable JSON: ${file}`]; }
+    return gate.gateConsistencyErrors(data).map((e) => `${file}: ${e}`);
+  }
+  const errors = [];
+  for (const [fixture] of Object.entries(FIXTURE_SCHEMA)) {
+    if (!/depth-vector|playtest-report|branch-score/.test(fixture)) continue;
+    const data = JSON.parse(fs.readFileSync(rel("examples/fixtures", fixture), "utf8"));
+    gate.gateConsistencyErrors(data).forEach((e) => errors.push(`fixture ${fixture}: ${e}`));
+  }
+  return errors;
+}
+
+// --- local issue files (.tgf/issues/*.md): structural check per issue-tracker.md ---
+// No-op when .tgf/issues/ is absent (the convention is not active yet). Keeps the
+// borrowed to-issues/to-prd/triage output honest the moment it lands locally.
+const ISSUE_TYPES = ["bug", "feature", "chore", "slice"];
+function checkIssues() {
+  const errors = [];
+  const dir = path.join(process.cwd(), ".tgf", "issues");
+  if (!fs.existsSync(dir)) return errors;
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.endsWith(".md")) continue;
+    const fm = fs.readFileSync(path.join(dir, name), "utf8").match(/^---\n([\s\S]*?)\n---/);
+    if (!fm) { errors.push(`${name}: missing YAML front matter`); continue; }
+    const front = fm[1];
+    const field = (k) => { const m = front.match(new RegExp(`^${k}:\\s*(.+)$`, "m")); return m ? m[1].trim() : null; };
+    const stem = name.replace(/\.md$/, "");
+    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(stem)) errors.push(`${name}: filename must be a kebab-case slug`);
+    if (field("id") !== stem) errors.push(`${name}: id '${field("id")}' must match filename '${stem}'`);
+    for (const req of ["title", "type", "state", "afk"]) {
+      if (!field(req)) errors.push(`${name}: missing required front-matter key '${req}'`);
+    }
+    const type = field("type");
+    if (type && !ISSUE_TYPES.includes(type)) errors.push(`${name}: type '${type}' not in ${ISSUE_TYPES.join("|")}`);
+  }
+  return errors;
+}
+
 const CHECKS = {
   "required-tree": checkRequiredTree,
   schemas: checkSchemas,
   "generated-leakage": checkGeneratedLeakage,
   "no-default-engine": checkNoDefaultEngine,
   "skill-refs": checkSkillRefs,
+  gate: checkGate,
+  issues: checkIssues,
   run: () => checkRun(arg("seed-id"))
 };
 
 const mode = arg("check") || "all";
 const toRun = mode === "all"
-  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs"]
+  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs", "gate", "issues"]
   : [mode];
 
 let totalErrors = 0;
