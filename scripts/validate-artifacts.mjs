@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "./lib/validate-json-schema.mjs";
 import * as runState from "./lib/run-state.mjs";
+import * as gate from "./lib/anti-boring-gate.mjs";
 import { SKILLS, SCHEMAS, HOOKS, FIXTURE_SCHEMA, PROMPT_MAX } from "./lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -189,18 +190,39 @@ function checkSkillRefs() {
   return errors;
 }
 
+// --- anti-boring gate consistency (artifact must not contradict its own numbers) ---
+// `--check gate --file <path>` checks one depth-vector/playtest/branch-score artifact;
+// with no --file it proves the example fixtures are internally gate-consistent.
+function checkGate() {
+  const file = arg("file");
+  if (file) {
+    let data;
+    try { data = JSON.parse(fs.readFileSync(file, "utf8")); }
+    catch { return [`gate file not parseable JSON: ${file}`]; }
+    return gate.gateConsistencyErrors(data).map((e) => `${file}: ${e}`);
+  }
+  const errors = [];
+  for (const [fixture] of Object.entries(FIXTURE_SCHEMA)) {
+    if (!/depth-vector|playtest-report|branch-score/.test(fixture)) continue;
+    const data = JSON.parse(fs.readFileSync(rel("examples/fixtures", fixture), "utf8"));
+    gate.gateConsistencyErrors(data).forEach((e) => errors.push(`fixture ${fixture}: ${e}`));
+  }
+  return errors;
+}
+
 const CHECKS = {
   "required-tree": checkRequiredTree,
   schemas: checkSchemas,
   "generated-leakage": checkGeneratedLeakage,
   "no-default-engine": checkNoDefaultEngine,
   "skill-refs": checkSkillRefs,
+  gate: checkGate,
   run: () => checkRun(arg("seed-id"))
 };
 
 const mode = arg("check") || "all";
 const toRun = mode === "all"
-  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs"]
+  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs", "gate"]
   : [mode];
 
 let totalErrors = 0;
