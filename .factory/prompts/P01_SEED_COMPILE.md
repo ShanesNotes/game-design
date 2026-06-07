@@ -5,7 +5,8 @@ ROLE: Seed compiler.
 INPUT: GAME_SEED.md, no architecture assumptions.
 
 TASK:
-Emit GAME_THESIS.md according to schemas/game-thesis.schema.json.
+Emit GAME_THESIS.md carrying a fenced ```json block that validates against
+schemas/game-thesis.schema.json (verify: `validate-artifacts --check thesis --seed-id <id>`).
 
 Generate, do not ask:
 - thesis

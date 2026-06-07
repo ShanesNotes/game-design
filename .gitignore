@@ -2,3 +2,8 @@ node_modules/
 .factory/local_tool_probe.json
 *.local
 .DS_Store
+# Per-run state and research runtime (durable on disk, not factory source).
+# A completed run's evidence lives in .tgf/seeds/<id>/, the child game repo's
+# own git, and a committed handoff report — not the meta-factory's history.
+.tgf/
+.omx/

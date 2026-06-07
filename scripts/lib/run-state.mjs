@@ -62,6 +62,29 @@ export function validateLedgerRow(row) {
   return validate(loadSchema("execution-ledger-row"), row);
 }
 
+// --- Document artifacts that carry a canonical JSON block ---
+//
+// GAME_THESIS.md and decisions/NNNN-engine-*.md are human-readable markdown that
+// each embed exactly one fenced ```json block — the machine-checkable object the
+// factory's schema describes. This keeps one named, diffable, reviewable artifact
+// that is *also* schema-validatable, so "must validate against schemas/…" is a real
+// check, not prose. The prompts (P01/P02) and skills declare the convention.
+export function extractFencedJson(text) {
+  const m = text.match(/```json\s*\n([\s\S]*?)\n```/);
+  if (!m) return { obj: null, error: "no fenced ```json block found" };
+  try { return { obj: JSON.parse(m[1]), error: null }; }
+  catch (e) { return { obj: null, error: `embedded json is not parseable: ${e.message}` }; }
+}
+
+// Validate the JSON block embedded in a markdown artifact against a named schema.
+// Returns an array of error strings ([] = valid).
+export function validateEmbeddedJson(filePath, schemaName) {
+  if (!fs.existsSync(filePath)) return [`file missing: ${filePath}`];
+  const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
+  if (error) return [error];
+  return validate(loadSchema(schemaName), obj);
+}
+
 // --- Reading (crash-safe: a malformed file is reported, never thrown to the caller) ---
 
 export function readManifest(runDir) {

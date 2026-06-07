@@ -35,7 +35,7 @@ function checkRequiredTree() {
     "docs/adr/0005-gate-policy-in-checkers-not-schemas.md",
     "docs/agents/domain.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md",
     "scripts/verify-local-tools.mjs", "scripts/init-game-run.mjs", "scripts/run-gates.mjs",
-    "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs",
+    "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs", "scripts/advance-run.mjs",
     "templates/run/manifest.json", "templates/run/GAME_SEED.md", "templates/run/GAME_THESIS.template.md",
     "templates/run/README_AGENT_BOOT.md", "templates/run/README_NEXT_ACTIONS.md",
     "templates/run/decisions/0001-engine-profile.md",
@@ -142,9 +142,16 @@ function checkNoDefaultEngine() {
   return errors;
 }
 
-// --- run check (validates a created .tgf/seeds/{id} relative to cwd) ---
+// --- run check (validates a .tgf/seeds/{id} run at ANY phase, relative to cwd) ---
 // Run-state shape, schema validation, path policy, phase transitions, and
-// phase-gated artifact rules all come from scripts/lib/run-state.mjs.
+// phase-gated artifact rules all come from scripts/lib/run-state.mjs. The check
+// has two layers: invariants that hold for the whole life of a run, and init-only
+// invariants that hold only while a run has not yet progressed past initialization
+// (a fresh run must not already contain downstream products like a thesis or a
+// child game repo; once those legitimately exist, their presence is expected, not
+// an error). Before this split, the check clamped current_phase to toolchain|intake,
+// so it could only ever validate a freshly-initialized run — leaving the phase
+// machine and phase-artifact constraints unreachable for real, in-progress runs.
 function checkRun(seedId) {
   const errors = [];
   if (!seedId) return ["--check run requires --seed-id <id>"];
@@ -154,13 +161,29 @@ function checkRun(seedId) {
   catch { return [`run manifest is not parseable JSON: .tgf/seeds/${seedId}/manifest.json`]; }
   if (!manifest) return [`run manifest missing: .tgf/seeds/${seedId}/manifest.json`];
 
+  // Whole-life invariants (every phase).
   runState.validateManifest(manifest).forEach((e) => errors.push(`manifest ${e}`));
   runState.manifestPathPolicyErrors(manifest, seedId).forEach((e) => errors.push(e));
   runState.phaseArtifactConstraintErrors(manifest).forEach((e) => errors.push(e));
   runState.questionBudgetErrors(manifest).forEach((e) => errors.push(e));
   runState.deepenAttemptErrors(manifest).forEach((e) => errors.push(e));
-  if (!["toolchain", "intake"].includes(manifest.current_phase)) errors.push(`current_phase must be toolchain|intake, got ${manifest.current_phase}`);
   if (manifest.external_side_effects_allowed !== false) errors.push("external_side_effects_allowed must be false");
+  // Game code never lives in the run-state dir; it belongs in the child game repo.
+  for (const bad of ["src", "app", "public", "assets"]) {
+    if (fs.existsSync(path.join(runDir, bad))) errors.push(`run dir contains forbidden ${bad}/`);
+  }
+  // A declared artifact path must point at a real file whose embedded ```json block
+  // validates against its schema (the artifact is markdown carrying a canonical block).
+  if (manifest.game_thesis_path) {
+    const tp = path.resolve(process.cwd(), manifest.game_thesis_path);
+    if (!fs.existsSync(tp)) errors.push(`game_thesis_path set but file missing: ${manifest.game_thesis_path}`);
+    else runState.validateEmbeddedJson(tp, "game-thesis").forEach((e) => errors.push(`thesis ${e}`));
+  }
+  if (manifest.engine_decision_path) {
+    const ep = path.resolve(process.cwd(), manifest.engine_decision_path);
+    if (!fs.existsSync(ep)) errors.push(`engine_decision_path set but file missing: ${manifest.engine_decision_path}`);
+    else runState.validateEmbeddedJson(ep, "engine-profile-decision").forEach((e) => errors.push(`engine ${e}`));
+  }
 
   const { rows, parseErrors } = runState.readLedger(runDir);
   parseErrors.forEach((e) => errors.push(`ledger ${e}`));
@@ -168,10 +191,51 @@ function checkRun(seedId) {
   else {
     runState.validateLedgerRow(rows[0]).forEach((e) => errors.push(`ledger ${e}`));
     runState.ledgerTransitionErrors(rows).forEach((e) => errors.push(e));
+    // Manifest beats memory: current_phase must equal the latest ledger phase.
+    const lastPhase = [...rows].reverse().map((r) => r.phase).find((p) => typeof p === "string");
+    if (lastPhase && lastPhase !== manifest.current_phase) {
+      errors.push(`manifest current_phase '${manifest.current_phase}' != latest ledger phase '${lastPhase}'`);
+    }
   }
-  if (fs.existsSync(runState.childGameRootFor(seedId))) errors.push(`child game repo unexpectedly exists: ${runState.childGameRootFor(seedId)}`);
-  for (const bad of ["src", "app", "public", "assets"]) if (fs.existsSync(path.join(runDir, bad))) errors.push(`run dir contains forbidden ${bad}/`);
-  if (fs.existsSync(path.join(runDir, "GAME_THESIS.md"))) errors.push("run initializer must not create GAME_THESIS.md");
+
+  // Init-only invariants: a run that has not produced a thesis yet must not already
+  // contain downstream products. The child game root may exist only once both a
+  // thesis and an engine decision exist (README_AGENT_BOOT boot sequence).
+  const beforeThesis = ["toolchain", "intake"].includes(manifest.current_phase) && !manifest.game_thesis_path;
+  if (beforeThesis && fs.existsSync(path.join(runDir, "GAME_THESIS.md"))) {
+    errors.push("GAME_THESIS.md exists before the thesis phase (no implementation before the thesis)");
+  }
+  const mayHaveChildRepo = manifest.game_thesis_path && manifest.engine_decision_path;
+  if (!mayHaveChildRepo && fs.existsSync(runState.childGameRootFor(seedId))) {
+    errors.push(`child game repo exists before thesis+engine decision: ${runState.childGameRootFor(seedId)}`);
+  }
+
+  // Fun-lock (and beyond) is evidence-gated: completion is evidence, not prose. A run
+  // cannot be at/past fun-lock without a gate-passing depth vector in its reviews/ —
+  // verdict ADVANCE that actually clears the gate (>=16/24, required axes nonzero).
+  // Gate POLICY lives here (the checker), not in the schema (ADR 0005).
+  const FUNLOCK_AND_PAST = ["fun-lock", "content", "art", "polish", "qa", "release-candidate", "handoff", "complete"];
+  if (FUNLOCK_AND_PAST.includes(manifest.current_phase)) {
+    const dvFiles = [];
+    (function walk(d) {
+      if (!fs.existsSync(d)) return;
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name === "depth-vector.json") dvFiles.push(p);
+      }
+    })(path.join(runDir, "reviews"));
+    let passing = false;
+    for (const f of dvFiles) {
+      let dv;
+      try { dv = JSON.parse(fs.readFileSync(f, "utf8")); }
+      catch { errors.push(`reviews depth vector not parseable JSON: ${path.relative(process.cwd(), f)}`); continue; }
+      if (dv.verdict === "ADVANCE" && gate.depthVectorConsistencyErrors(dv).length === 0) passing = true;
+    }
+    if (!passing) {
+      errors.push(`current_phase '${manifest.current_phase}' is at/past fun-lock but reviews/ has no gate-passing depth vector (verdict ADVANCE, total >=16, required axes nonzero)`);
+    }
+  }
   return errors;
 }
 
@@ -239,6 +303,26 @@ function checkIssues() {
   return errors;
 }
 
+// --- thesis / engine decision: embedded ```json block validates against its schema ---
+// On-demand, like `run`: resolves the artifact from a run's manifest (--seed-id) or a
+// direct --file, so a phase can self-verify its output the moment it writes it.
+function checkEmbeddedArtifact(kind) {
+  const schemaName = kind === "thesis" ? "game-thesis" : "engine-profile-decision";
+  const manifestKey = kind === "thesis" ? "game_thesis_path" : "engine_decision_path";
+  const file = arg("file");
+  let p;
+  if (file) p = path.resolve(process.cwd(), file);
+  else {
+    const seedId = arg("seed-id");
+    if (!seedId) return [`--check ${kind} requires --seed-id <id> or --file <path>`];
+    const m = runState.readManifest(runState.runDirFor(process.cwd(), seedId));
+    if (!m) return [`no run at .tgf/seeds/${seedId}`];
+    if (!m[manifestKey]) return [`run ${seedId} has no ${manifestKey} set yet`];
+    p = path.resolve(process.cwd(), m[manifestKey]);
+  }
+  return runState.validateEmbeddedJson(p, schemaName).map((e) => `${path.relative(process.cwd(), p)}: ${e}`);
+}
+
 const CHECKS = {
   "required-tree": checkRequiredTree,
   schemas: checkSchemas,
@@ -247,6 +331,8 @@ const CHECKS = {
   "skill-refs": checkSkillRefs,
   gate: checkGate,
   issues: checkIssues,
+  thesis: () => checkEmbeddedArtifact("thesis"),
+  engine: () => checkEmbeddedArtifact("engine"),
   run: () => checkRun(arg("seed-id"))
 };
 

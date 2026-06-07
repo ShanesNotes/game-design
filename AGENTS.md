@@ -32,6 +32,9 @@ node scripts/init-game-run.mjs --seed-id <kebab-id> --seed "<one-line seed>"
 
 # Then route by the manifest's current_phase. Resume reads the manifest, never chat.
 node scripts/summarize-run.mjs --seed-id <kebab-id>
+
+# Advance a phase (refuses illegal transitions; re-validates before writing):
+node scripts/advance-run.mjs --seed-id <kebab-id> --to <phase> --event <event> --status passed
 ```
 
 The initializer creates **only** `.tgf/seeds/{seed-id}/`. It never creates a child

@@ -31,8 +31,10 @@ Agents communicate by files, not chat:
 
 - `manifest.json` — per-seed phase authority (`current_phase`, paths, resume point).
 - `execution-ledger.jsonl` — append-only temporal truth; every transition is a row.
-- `GAME_THESIS.md` — the compiled, schema-valid thesis (P01).
-- `decisions/NNNN-*.md` — reversible engine/architecture ADRs.
+- `GAME_THESIS.md` — the compiled thesis (P01); markdown carrying a canonical
+  fenced `json` block that validates against `schemas/game-thesis`.
+- `decisions/NNNN-*.md` — reversible engine/architecture ADRs; the engine decision
+  likewise carries a `json` block validating against `schemas/engine-profile-decision`.
 - `playtests/<branch>/playtest_report.json` — bot/human evidence.
 - `reviews/<branch>/ANTI_BORING_VERDICT.md`, `reviews/BRANCH_BAKEOFF.md` — verdicts.
 - `handoffs/{seed-id}.md` — durable next-agent transfer.
@@ -42,12 +44,13 @@ Agents communicate by files, not chat:
 | Component | Responsibility |
 |---|---|
 | `scripts/init-game-run.mjs` | Create ONLY `.tgf/seeds/{seed-id}/`. Never a child repo, engine, or thesis. Validates manifest + path policy. |
-| `scripts/validate-artifacts.mjs` | `required-tree`, `schemas` (+fixtures), `generated-leakage`, `no-default-engine`, `skill-refs`, `gate`, `issues`, `run`. The acceptance engine. |
+| `scripts/advance-run.mjs` | Advance a run to its next phase: refuses illegal transitions, appends a schema-valid ledger row, updates `current_phase`/`resume_point`, and re-validates the whole manifest before writing — the write-side counterpart to `summarize-run` (so manifest and ledger can't desync). |
+| `scripts/validate-artifacts.mjs` | `required-tree`, `schemas` (+fixtures), `generated-leakage`, `no-default-engine`, `skill-refs`, `gate`, `issues`, `thesis`/`engine` (embedded-json artifacts), `run`. The acceptance engine. `run` validates a seed run at **any** phase: manifest schema + path policy, manifest↔ledger phase agreement, legal ledger transitions, phase-gated artifacts (incl. thesis/engine embedded-json), and **fun-lock gate evidence** (a passing depth vector must exist before a run is fun-locked). |
 | `scripts/run-gates.mjs` | Sandboxes each `hooks/*` guard and proves it blocks the unsafe case and allows the safe case; fails if a registered guard has no scenario. |
 | `scripts/verify-local-tools.mjs` | Probes tools via real commands (grouped by category); refreshes a generated block in the toolchain ledger. Memory is never proof. |
 | `scripts/summarize-run.mjs` | Evidence-first run summary from manifest + ledger (crash-safe). |
 | `scripts/lib/validate-json-schema.mjs` | ~90-line dependency-free JSON-schema subset validator. |
-| `scripts/lib/run-state.mjs` | Deep module for one seed run: paths, owned files, manifest/ledger read + schema validation, path policy, symlink guard, and the phase state machine (legal transitions + phase-gated artifacts). |
+| `scripts/lib/run-state.mjs` | Deep module for one seed run: paths, owned files, manifest/ledger read + schema validation, path policy, symlink guard, the phase state machine (legal transitions + phase-gated artifacts), and embedded-`json`-block extraction/validation for markdown artifacts (thesis, engine decision). |
 | `scripts/lib/factory-contract.mjs` | Single source of truth for the contract surface: phases, skills, schemas, hooks, fixtures, prompt count, gate thresholds. |
 | `scripts/lib/anti-boring-gate.mjs` | Consistency checks for gate artifacts (total == sum, an ADVANCE clears the gate, dominant_move agrees with action_distribution) — gate policy in a checker, not the schema. |
 | `hooks/lib/guard.mjs` | Shared, zero-import plumbing for the guards (opaque-asset pattern, playtests walker, argv/block/allow). |

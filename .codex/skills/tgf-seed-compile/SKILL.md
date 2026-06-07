@@ -19,7 +19,7 @@ Read `.factory/prompts/P01_SEED_COMPILE.md` and execute it exactly.
 - `schemas/game-thesis.schema.json`
 
 **Outputs** (emit before summarizing)
-- `.tgf/seeds/{seed-id}/GAME_THESIS.md` (must validate against `schemas/game-thesis.schema.json`)
+- `.tgf/seeds/{seed-id}/GAME_THESIS.md` — markdown carrying a fenced ```json block that validates against `schemas/game-thesis.schema.json` (verify: `validate-artifacts --check thesis --seed-id {seed-id}`)
 
 **Borrowed behaviours** (wrapped or referenced — never vendor a generic skill body)
 - `to-prd` concepts only — the per-seed output is `GAME_THESIS.md`, not a generic PRD

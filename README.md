@@ -49,8 +49,8 @@ docs/            doctrine, engine matrix, anti-boring gate, ledgers; adr/; agent
 .factory/prompts P00–P17 task contracts
 .codex/skills/   12 project-local TGF skill wrappers
 schemas/         8 JSON schemas (manifest, thesis, playtest, depth, branch, ...)
-hooks/           7 executable guard prototypes
-scripts/         verify-local-tools · init-game-run · validate-artifacts · run-gates · summarize-run
+hooks/           11 executable guard prototypes
+scripts/         verify-local-tools · init-game-run · advance-run · validate-artifacts · run-gates · summarize-run
 templates/       run/ (seed-run state) · game-repo/ (future child game)
 examples/        fixtures/ (schema fixtures) · seeds/
 ```

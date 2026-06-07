@@ -23,7 +23,9 @@ HARD RULE:
 Optimize for the seed's best game, not agent convenience or incumbent stack.
 
 OUTPUT:
-`decisions/0001-engine-profile.md` with:
+`decisions/0001-engine-profile.md` carrying a fenced ```json block that validates
+against schemas/engine-profile-decision.schema.json (verify: `validate-artifacts
+--check engine --seed-id <id>`), with:
 - chosen first-slice profile
 - fallback profile
 - 2-line rationale

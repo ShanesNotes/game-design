@@ -45,7 +45,7 @@ Before promoting any `PROBE` item:
 
 ## Local probe results (generated)
 
-_Probed 2026-06-06T21:23:17.692Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
+_Probed 2026-06-07T01:56:30.202Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
 
 | Category | Probe | Available | First line |
 |---|---|---|---|
@@ -53,7 +53,7 @@ _Probed 2026-06-06T21:23:17.692Z by `scripts/verify-local-tools.mjs`; generated 
 | base | `npm --version` | yes | 11.13.0 |
 | base | `pnpm --version` | yes | 10.33.0 |
 | base | `git --version` | yes | git version 2.43.0 |
-| builder | `claude --version` | yes | 2.1.167 (Claude Code) |
+| builder | `claude --version` | yes | 2.1.168 (Claude Code) |
 | builder | `codex --version` | yes | codex-cli 0.137.0 |
 | builder | `omx --version` | yes | oh-my-codex v0.18.9 |
 | builder | `grok-build --version` | no (PROBE) |  |

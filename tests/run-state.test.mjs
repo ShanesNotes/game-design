@@ -116,3 +116,24 @@ test("summarize-run prints an evidence-first summary for a created run", () => {
     assert.match(r.stdout, /phase:\s+toolchain/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test("extractFencedJson pulls the first json block and reports a missing/broken one", () => {
+  assert.deepEqual(rs.extractFencedJson("pre\n```json\n{\"a\":1}\n```\npost").obj, { a: 1 });
+  assert.match(rs.extractFencedJson("no block here").error, /no fenced/);
+  assert.match(rs.extractFencedJson("```json\n{bad}\n```").error, /not parseable/);
+});
+
+test("validateEmbeddedJson checks a markdown artifact's json block against a schema", () => {
+  const dir = tmp();
+  try {
+    const obj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
+    const md = path.join(dir, "GAME_THESIS.md");
+    fs.writeFileSync(md, "# t\n\n```json\n" + obj + "\n```\n");
+    assert.deepEqual(rs.validateEmbeddedJson(md, "game-thesis"), []);
+    const broken = JSON.parse(obj); delete broken.pitch;
+    fs.writeFileSync(md, "# t\n\n```json\n" + JSON.stringify(broken) + "\n```\n");
+    assert.ok(rs.validateEmbeddedJson(md, "game-thesis").length > 0, "missing required field must fail");
+    fs.writeFileSync(md, "# t\n\nno json block at all\n");
+    assert.match(rs.validateEmbeddedJson(md, "game-thesis")[0], /no fenced/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
