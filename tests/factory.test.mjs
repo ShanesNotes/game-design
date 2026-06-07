@@ -17,6 +17,21 @@ function node(script, args, opts = {}) {
 function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-test-"));
 }
+// A GAME_THESIS.md whose embedded ```json block is schema-valid (reuses the fixture).
+function thesisMd() {
+  const obj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
+  return "# GAME_THESIS.md\n\n```json\n" + obj + "\n```\n";
+}
+// An engine decision md with a schema-valid embedded ```json block.
+function engineMd(id) {
+  const obj = { seed_id: id, status: "accepted", decision: "x", profile: "p", rationale: "r", rejected: [], reversal_triggers: ["t"] };
+  return "# ADR 0001\n\n```json\n" + JSON.stringify(obj) + "\n```\n";
+}
+// A gate-passing (ADVANCE) depth vector: total 18, all six required axes nonzero.
+const ADVANCE_DV = {
+  scores: { meaningful_choice: 2, tradeoff: 2, pressure: 2, uncertainty: 2, progression: 2, mastery: 2, combinatorial: 2, emergence: 2, replayable_variation: 2, failure_recovery: 0, expression: 0, expansion_headroom: 0 },
+  total: 18, verdict: "ADVANCE"
+};
 
 test("all schemas parse and declare $schema/title/type", () => {
   for (const s of SCHEMAS) {
@@ -144,9 +159,172 @@ test("validate-artifacts --check run passes for a created run", () => {
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+// Drive an initialized run forward on disk: set manifest phase + artifact paths and
+// append a ledger row per phase hop. Lets the run-check be tested on in-progress runs.
+function advanceRun(dir, id, { phase, thesisPath, enginePath, ledgerPhases = [] }) {
+  const runDir = path.join(dir, ".tgf", "seeds", id);
+  const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
+  manifest.current_phase = phase;
+  if (thesisPath !== undefined) manifest.game_thesis_path = thesisPath;
+  if (enginePath !== undefined) manifest.engine_decision_path = enginePath;
+  fs.writeFileSync(path.join(runDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+  const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
+  for (const p of ledgerPhases) {
+    fs.appendFileSync(ledgerFile, JSON.stringify({
+      ts: "2026-06-07T00:00:00.000Z", seed_id: id, phase: p, event: "phase-advance", status: "checkpointed", actor: "test"
+    }) + "\n");
+  }
+  return runDir;
+}
+
+test("validate-artifacts --check run passes for an in-progress run past toolchain", () => {
+  const dir = tmp();
+  const id = "selftest-inprogress";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    advanceRun(dir, id, { phase: "engine-profile", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "engine-profile"] });
+    const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr); // pre-fix this failed on the toolchain|intake clamp
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts --check run flags manifest/ledger phase disagreement", () => {
+  const dir = tmp();
+  const id = "selftest-mismatch";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    advanceRun(dir, id, { phase: "thesis", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "engine-profile"] });
+    const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /current_phase 'thesis' != latest ledger phase 'engine-profile'/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts --check run flags a missing required thesis path downstream", () => {
+  const dir = tmp();
+  const id = "selftest-noartifact";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    advanceRun(dir, id, { phase: "engine-profile", thesisPath: null, ledgerPhases: ["thesis", "engine-profile"] });
+    const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /past 'thesis' but game_thesis_path is null/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("run-gates --dry-run proves all guards gate", () => {
   const r = node("run-gates.mjs", ["--dry-run"]);
   assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("advance-run performs a legal phase transition and keeps the run valid", () => {
+  const dir = tmp();
+  const id = "selftest-advance";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "thesis-compiled",
+      "--status", "passed", "--set", `game_thesis_path=.tgf/seeds/${id}/GAME_THESIS.md`], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    fs.writeFileSync(path.join(dir, ".tgf", "seeds", id, "GAME_THESIS.md"), thesisMd());
+    const m = JSON.parse(fs.readFileSync(path.join(dir, ".tgf", "seeds", id, "manifest.json"), "utf8"));
+    assert.equal(m.current_phase, "thesis");
+    assert.equal(m.game_thesis_path, `.tgf/seeds/${id}/GAME_THESIS.md`);
+    const chk = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(chk.status, 0, chk.stdout);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advance-run refuses an illegal phase transition", () => {
+  const dir = tmp();
+  const id = "selftest-illegal";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "fun-lock", "--event", "skip"], { cwd: dir });
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /illegal transition toolchain -> fun-lock/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advance-run refuses a transition that would invalidate the manifest", () => {
+  const dir = tmp();
+  const id = "selftest-invalidates";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t"], { cwd: dir }).status, 0);
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "engine-profile", "--event", "e"], { cwd: dir });
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /past 'thesis' but game_thesis_path is null/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts --check thesis validates a run's embedded thesis, and run-check enforces it", () => {
+  const dir = tmp();
+  const id = "selftest-thesis";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    const thesisObj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), "# GAME_THESIS.md\n\n```json\n" + thesisObj + "\n```\n");
+    assert.equal(node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t",
+      "--set", `game_thesis_path=.tgf/seeds/${id}/GAME_THESIS.md`], { cwd: dir }).status, 0);
+    assert.equal(node("validate-artifacts.mjs", ["--check", "thesis", "--seed-id", id], { cwd: dir }).status, 0);
+    assert.equal(node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir }).status, 0);
+    // corrupt the thesis json block -> run-check now fails on thesis content
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), "# GAME_THESIS.md\n\n```json\n{ \"seed\": \"x\" }\n```\n");
+    const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /thesis /);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts --check run gates fun-lock on a passing depth vector", () => {
+  const dir = tmp();
+  const id = "selftest-funlock";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
+    advanceRun(dir, id, {
+      phase: "fun-lock",
+      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
+      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch", "first-slice", "depth-review", "bakeoff", "fun-lock"]
+    });
+    // fun-lock with NO depth vector -> fail
+    let r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /at\/past fun-lock but reviews\/ has no gate-passing depth vector/);
+    // add a gate-passing ADVANCE depth vector -> pass
+    fs.mkdirSync(path.join(runDir, "reviews", "winner"), { recursive: true });
+    fs.writeFileSync(path.join(runDir, "reviews", "winner", "depth-vector.json"), JSON.stringify(ADVANCE_DV));
+    r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout);
+    // a DEEPEN-only vector does not satisfy the gate
+    fs.writeFileSync(path.join(runDir, "reviews", "winner", "depth-vector.json"), JSON.stringify({ ...ADVANCE_DV, verdict: "DEEPEN" }));
+    r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advance-run --dry-run writes nothing", () => {
+  const dir = tmp();
+  const id = "selftest-advdry";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const ledgerPath = path.join(dir, ".tgf", "seeds", id, "execution-ledger.jsonl");
+    const before = fs.readFileSync(ledgerPath, "utf8");
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t", "--dry-run"], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(JSON.parse(r.stdout).mode, "dry-run");
+    assert.equal(fs.readFileSync(ledgerPath, "utf8"), before, "ledger unchanged");
+    const m = JSON.parse(fs.readFileSync(path.join(dir, ".tgf", "seeds", id, "manifest.json"), "utf8"));
+    assert.equal(m.current_phase, "toolchain", "manifest unchanged");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
 test("factory-contract registry matches the filesystem", () => {

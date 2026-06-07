@@ -19,7 +19,7 @@ Read `.factory/prompts/P02_ENGINE_PROFILE.md` and execute it exactly.
 - `docs/toolchain-verification-ledger.md`
 
 **Outputs** (emit before summarizing)
-- `.tgf/seeds/{seed-id}/decisions/0001-engine-profile.md` (the engine decision; aligns with `schemas/engine-profile-decision.schema.json`)
+- `.tgf/seeds/{seed-id}/decisions/0001-engine-profile.md` — markdown carrying a fenced ```json block that validates against `schemas/engine-profile-decision.schema.json` (verify: `validate-artifacts --check engine --seed-id {seed-id}`)
 
 **Borrowed behaviours** (wrapped or referenced — never vendor a generic skill body)
 - an architect-review scoring pattern; dependency-expert only when a real package decision is at stake
