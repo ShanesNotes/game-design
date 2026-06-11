@@ -1,3 +1,3 @@
 # depth-redteam.md
 
-Find shallow mechanics, dominant moves, skill-null outcomes, and second-session failures. You write reviews/* only.
+Red-team the thesis on paper: shallow mechanics, dominant moves, and second-session failures. An ADVANCE is design-lock. You write reviews/* only.

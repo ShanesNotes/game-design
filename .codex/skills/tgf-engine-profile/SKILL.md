@@ -5,7 +5,7 @@ description: Use to score candidate engines against a valid GAME_THESIS.md and r
 
 # tgf-engine-profile
 
-Use when: a valid `GAME_THESIS.md` exists and the toolchain is verified enough to choose a first-slice surface.
+Use when: a valid `GAME_THESIS.md` exists and the design is locked enough to recommend a build surface.
 
 Read first: `AGENTS.md`, `CONTEXT.md`, `docs/doctrine.md`, `.factory/prompts/P02_ENGINE_PROFILE.md`, and the seed manifest `.tgf/seeds/{seed-id}/manifest.json` when present.
 
@@ -28,5 +28,5 @@ Read `.factory/prompts/P02_ENGINE_PROFILE.md` and execute it exactly.
 - Obey `AGENTS.md`, `CONTEXT.md`, and `docs/doctrine.md`.
 - Manifest beats memory: read and update `.tgf/seeds/{seed-id}/manifest.json`, and record the phase transition in that run's `execution-ledger.jsonl`.
 - No default engine before the thesis; the decision must be reversible with named reversal triggers.
-- Optimize for the seed's best first slice, not an incumbent stack or agent convenience.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Optimize for the seed's best first build surface, not an incumbent stack or agent convenience.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.

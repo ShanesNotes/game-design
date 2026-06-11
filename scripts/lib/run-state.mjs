@@ -31,11 +31,14 @@ export function runDirFor(cwd, seedId) {
 export function runRelFor(seedId) {
   return path.join(".tgf", "seeds", seedId);
 }
-export function childGameRootFor(seedId) {
+// Default export destination for a finished spec pack: the clean co-development
+// folder the user opens with the next session. Declared, never created by the
+// factory until an explicit package-spec step.
+export function specPackRootFor(seedId) {
   return `/home/ark/tgf-games/${seedId}`;
 }
 
-function pathIsInside(parent, child) {
+export function pathIsInside(parent, child) {
   const rel = path.relative(parent, child);
   return rel === "" || (!!rel && !rel.startsWith("..") && !path.isAbsolute(rel));
 }
@@ -138,7 +141,7 @@ export function appendRunFileSync(cwd, seedId, runPath, contents) {
 export function ownedRunPaths(runDir) {
   return [
     runDir,
-    ...["decisions", "playtests", "reviews", "handoffs"].map((d) => path.join(runDir, d)),
+    ...["decisions", "reviews", "handoffs", "issues"].map((d) => path.join(runDir, d)),
     ...["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl"]
       .map((f) => path.join(runDir, f))
   ];
@@ -174,13 +177,22 @@ export function extractFencedJson(text) {
   catch (e) { return { obj: null, error: `embedded json is not parseable: ${e.message}` }; }
 }
 
+// Read, parse, and schema-validate a markdown artifact's embedded JSON block in
+// one pass. Returns { obj, errors }: obj is the parsed block when it validates,
+// null otherwise. Callers that need both the verdict and the object use this so
+// the file is read once, not validated and then re-read.
+export function readEmbeddedArtifact(filePath, schemaName) {
+  if (!fs.existsSync(filePath)) return { obj: null, errors: [`file missing: ${filePath}`] };
+  const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
+  if (error) return { obj: null, errors: [error] };
+  const errors = validate(loadSchema(schemaName), obj);
+  return { obj: errors.length ? null : obj, errors };
+}
+
 // Validate the JSON block embedded in a markdown artifact against a named schema.
 // Returns an array of error strings ([] = valid).
 export function validateEmbeddedJson(filePath, schemaName) {
-  if (!fs.existsSync(filePath)) return [`file missing: ${filePath}`];
-  const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
-  if (error) return [error];
-  return validate(loadSchema(schemaName), obj);
+  return readEmbeddedArtifact(filePath, schemaName).errors;
 }
 
 // --- Reading (crash-safe: a malformed file is reported, never thrown to the caller) ---
@@ -219,23 +231,23 @@ export function readLedger(runDir, seedId = null, cwd = process.cwd()) {
 // --- Path policy ---
 
 // The only absolute /home/ark/... value a manifest may contain is its own
-// default_child_game_root, which must equal /home/ark/tgf-games/{seed-id}. This keeps
+// default_spec_pack_root, which must equal /home/ark/tgf-games/{seed-id}. This keeps
 // a run from pointing writes at source repos or anywhere outside its declared sandbox.
 export function manifestPathPolicyErrors(manifest, seedId, cwd = process.cwd()) {
   const errors = [];
-  const childGameRoot = childGameRootFor(seedId);
+  const specPackRoot = specPackRootFor(seedId);
   const absPaths = JSON.stringify(manifest).match(/\/home\/ark\/[A-Za-z0-9._/-]+/g) || [];
-  for (const p of absPaths) if (p !== childGameRoot) errors.push(`illegal absolute source path in manifest: ${p}`);
-  if (manifest.default_child_game_root !== childGameRoot) {
-    errors.push(`default_child_game_root must be ${childGameRoot}`);
+  for (const p of absPaths) if (p !== specPackRoot) errors.push(`illegal absolute source path in manifest: ${p}`);
+  if (manifest.default_spec_pack_root !== specPackRoot) {
+    errors.push(`default_spec_pack_root must be ${specPackRoot}`);
   }
   const runPathFields = [
     ["seed_path", manifest.seed_path],
     ["game_thesis_path", manifest.game_thesis_path],
     ["engine_decision_path", manifest.engine_decision_path],
+    ["spec_path", manifest.spec_path],
     ["execution_ledger_path", manifest.execution_ledger_path],
     ["resume_point.artifact_path", manifest.resume_point?.artifact_path],
-    ...((manifest.playtest_report_paths || []).map((p, i) => [`playtest_report_paths[${i}]`, p])),
     ...((manifest.review_report_paths || []).map((p, i) => [`review_report_paths[${i}]`, p])),
     ...((manifest.handoff_paths || []).map((p, i) => [`handoff_paths[${i}]`, p]))
   ];
@@ -244,10 +256,10 @@ export function manifestPathPolicyErrors(manifest, seedId, cwd = process.cwd()) 
     try { resolveRunPath(cwd, seedId, value, label); }
     catch (e) { errors.push(e.message); }
   }
-  if (manifest.child_game_path) {
-    const childPath = path.resolve(manifest.child_game_path);
-    if (!pathIsInside(childGameRoot, childPath)) {
-      errors.push(`child_game_path must resolve inside ${childGameRoot}: ${manifest.child_game_path}`);
+  if (manifest.spec_pack_path) {
+    const packPath = path.resolve(manifest.spec_pack_path);
+    if (!pathIsInside(specPackRoot, packPath)) {
+      errors.push(`spec_pack_path must resolve inside ${specPackRoot}: ${manifest.spec_pack_path}`);
     }
   }
   return errors;
@@ -264,24 +276,16 @@ export function symlinkWriteThroughPaths(runDir) {
 export const TERMINAL_PHASES = ["blocked", "failed", "killed", "complete"];
 
 // Forward edges of the phase graph. docs/doctrine.md is the source of truth; this is
-// its machine-readable form. `deepen` re-enters first-slice (one transform, ≤2 tries);
-// solo runs may go depth-review→fun-lock without a bakeoff (lane policy default).
+// its machine-readable form. `deepen` re-enters thesis (one named transform, ≤2 tries);
+// design-review ADVANCE is the design-lock that opens engine-profile → decompose.
 const FORWARD = {
   intake: ["toolchain"],
   toolchain: ["thesis"],
-  thesis: ["engine-profile"],
-  "engine-profile": ["prototype-dispatch"],
-  "prototype-dispatch": ["first-slice"],
-  "first-slice": ["depth-review"],
-  "depth-review": ["bakeoff", "deepen", "fun-lock"],
-  deepen: ["first-slice"],
-  bakeoff: ["fun-lock", "deepen"],
-  "fun-lock": ["content"],
-  content: ["art"],
-  art: ["polish"],
-  polish: ["qa"],
-  qa: ["release-candidate"],
-  "release-candidate": ["handoff"],
+  thesis: ["design-review"],
+  "design-review": ["engine-profile", "deepen"],
+  deepen: ["thesis"],
+  "engine-profile": ["decompose"],
+  decompose: ["handoff"],
   handoff: ["complete"]
 };
 
@@ -321,9 +325,17 @@ export function ledgerTransitionErrors(rows) {
 // Terminal phases (blocked/failed/killed/complete) are off-spine: a run may end at
 // any point, so they are exempt from "must have produced artifact Y by now" rules.
 const SPINE = [
-  "intake", "toolchain", "thesis", "engine-profile", "prototype-dispatch",
-  "first-slice", "depth-review", "bakeoff", "deepen", "fun-lock",
-  "content", "art", "polish", "qa", "release-candidate", "handoff"
+  "intake", "toolchain", "thesis", "design-review", "deepen",
+  "engine-profile", "decompose", "handoff"
+];
+
+// Phases a run can only legitimately occupy after a design-review ADVANCE
+// (design-lock). Derived from the spine so the list cannot drift from the phase
+// machine: everything past design-review except `deepen` (the failed-gate path),
+// plus the terminal `complete`. Validators gate these on a passing depth vector.
+export const DESIGN_LOCKED_PHASES = [
+  ...SPINE.slice(SPINE.indexOf("design-review") + 1).filter((p) => p !== "deepen"),
+  "complete"
 ];
 
 // True when `phase` is strictly past `marker` on the spine (so the phase that
@@ -334,7 +346,7 @@ function isPastPhase(phase, marker) {
   return a >= 0 && b >= 0 && a > b;
 }
 
-// Doctrine ("No implementation before GAME_THESIS.md"; ADR 0002 "engine choice is
+// Doctrine ("No decomposition before GAME_THESIS.md"; ADR 0002 "engine choice is
 // recorded after the thesis") makes some manifest paths mandatory once their
 // producing phase is behind us. Enforced one phase *after* production so the phase
 // doing the work isn't required to have finished it. Returns error strings.
@@ -347,16 +359,20 @@ export function phaseArtifactConstraintErrors(manifest) {
   if (isPastPhase(phase, "engine-profile") && !manifest.engine_decision_path) {
     errors.push(`current_phase '${phase}' is past 'engine-profile' but engine_decision_path is null`);
   }
+  if (isPastPhase(phase, "decompose") && !manifest.spec_path) {
+    errors.push(`current_phase '${phase}' is past 'decompose' but spec_path is null`);
+  }
   return errors;
 }
 
-// Doctrine: at most one direction-changing taste question before the first slice
-// (factory.config.toml human_questions_max_before_first_slice). Returns error strings.
-const BEFORE_FIRST_SLICE = ["thesis", "engine-profile", "prototype-dispatch", "first-slice"];
+// Doctrine: at most one direction-changing taste question before the spec is
+// decomposed (factory.config.toml human_questions_max_before_decompose). Returns
+// error strings.
+const BEFORE_DECOMPOSE = ["thesis", "design-review", "deepen", "engine-profile", "decompose"];
 export function questionBudgetErrors(manifest) {
   const asked = Array.isArray(manifest.questions_asked) ? manifest.questions_asked.length : 0;
-  if (BEFORE_FIRST_SLICE.includes(manifest.current_phase) && asked > 1) {
-    return [`questions_asked=${asked} but at most 1 direction-changing question is allowed before first-slice`];
+  if (BEFORE_DECOMPOSE.includes(manifest.current_phase) && asked > 1) {
+    return [`questions_asked=${asked} but at most 1 direction-changing question is allowed before the spec is decomposed`];
   }
   return [];
 }

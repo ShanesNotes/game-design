@@ -2,9 +2,12 @@
 
 How MCP servers may participate in the factory. Default posture is conservative: prefer committed, diffable CLI artifacts over live tool state.
 
-## Browser / playtest
+## Browser / playtest (shipped-pack doctrine)
 
-- **Playwright CLI** — the default committed harness. All playtest runs that gate G1/G2 use the CLI so traces and reports land as text artifacts under `playtests/**`.
+Playtesting happens downstream, in the co-dev repo; the spec pack's
+`PLAYTEST_PLAN.md` and guards carry these rules:
+
+- **Playwright CLI** — the default committed harness. Playtest runs land traces and reports as text artifacts under `playtests/**` in the co-dev repo.
 - **Playwright MCP** — exploration and script-generation only. Use it to author or debug a flow interactively, then commit the generated CLI script. MCP output is never the artifact of record.
 
 ## Performance

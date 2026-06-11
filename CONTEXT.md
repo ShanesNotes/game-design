@@ -6,74 +6,78 @@ If a term is used elsewhere in the repo, it is defined here.
 
 ## What this repo is
 
-The **Tiny Game Factory (TGF)** is a local-first, evidence-first agentic
-game-development **meta-factory**. It converts a one-sentence game *seed* — or an
-inherited game repo — into a playable, bot-tested, anti-boring-gated **first
-slice**, while refusing to commit to an engine, content, or art before evidence
-earns it.
+The **Tiny Game Factory (TGF)** is a local-first, evidence-first agentic **spec
+factory** for games. It fertilizes a one-sentence game *seed* — or an inherited
+game repo — into a depth-gated **`GAME_THESIS.md`**, decomposes it into an
+issue-sliced **`SPEC.md`**, and exports the result as a **spec pack** for human+AI
+co-development elsewhere. **No game is built in this repo** (ADR 0006).
 
 TGF is **not** a game engine, an asset generator, a content platform, or a
-multi-agent framework. It is an orchestration harness for *finding playable
-loops* and recording proof.
+multi-agent framework. It is an orchestration harness for *finding deep,
+falsifiable game premises* and recording proof.
 
 ## Meta-factory, not a game (ADR 0001)
 
 `/home/ark/tiny-game-factory` is the **meta-factory repository**. It owns reusable
 doctrine, prompts, schemas, hooks, adapters, validators, and run ledgers. It is
-**never** the first generated game. Generated games are disposable, searchable
-prototypes; the factory is durable process memory.
+**never** the game. The factory's terminal artifact is the exported spec pack;
+games are co-developed downstream from the pack. The factory is durable process
+memory.
 
 ## Three location strata (ADR 0003)
 
 | Stratum | Path | Holds | Lifecycle |
 |---|---|---|---|
 | Factory repo | `/home/ark/tiny-game-factory/` | reusable doctrine, prompts, schemas, hooks, scripts, skills | durable |
-| Per-seed run state | `.tgf/seeds/{seed-id}/` | one seed's manifest, ledger, thesis, decisions, playtests, reviews, handoffs | durable temporal truth |
-| Child game repo | `/home/ark/tgf-games/{seed-id}/` (default) | the actual game | disposable prototype |
+| Per-seed run state | `.tgf/seeds/{seed-id}/` | one seed's manifest, ledger, thesis, decisions, SPEC, issues, reviews, handoffs | durable temporal truth |
+| Spec pack | `/home/ark/tgf-games/{seed-id}/` (default) | the exported spec + backlog, opened for co-dev | durable deliverable |
 
-The child game root is a **declared default, not a created path**. Nothing creates
-`/home/ark/tgf-games/` until an explicit child-game phase. An opt-in
-`runs/{seed-id}/game/` bundled mode exists but is not the default.
+The spec pack root is a **declared default, not a created path**
+(`manifest.default_spec_pack_root`). Nothing creates `/home/ark/tgf-games/` until
+the handoff phase exports the pack via `scripts/package-spec.mjs --write`; the
+export destination is recorded as `manifest.spec_pack_path`.
 
 **Separation is absolute:** factory state — `.tgf/`/`.omx/`/`.sandcastle/` paths,
 GStack/Pocock/OMX/Sandcastle markers, ledgers, handoffs, skill docs, source-product
-terms, and absolute `/home/ark/...` paths — must never leak into a generated child
-game. The `generated-leakage` validator forbids these across every generated-game
-surface (child-repo templates and example seeds).
+terms, and absolute `/home/ark/...` paths — must never leak into an exported spec
+pack. The `generated-leakage` validator forbids these across every generated
+surface (`templates/spec-pack/` and `examples/seeds/`; the forbidden tokens live in
+`scripts/lib/leakage.mjs`), and `package-spec.mjs` re-runs the scan before export.
 
 ## Manifest beats memory
 
 Every phase reads and writes `.tgf/seeds/{seed-id}/manifest.json`. The manifest's
 `current_phase` is the resumption source of truth — never a chat summary. Agents
-coordinate through artifacts (manifest, ledger, playtest reports, reviews), not
-through conversation.
+coordinate through artifacts (manifest, ledger, thesis, reviews, SPEC), not
+through conversation. Key manifest paths: `game_thesis_path`, `spec_path`,
+`default_spec_pack_root`, `spec_pack_path`.
 
 ## Phase vocabulary
 
 `manifest.current_phase` is exactly one of:
 
 ```
-intake · toolchain · thesis · engine-profile · prototype-dispatch · first-slice ·
-depth-review · bakeoff · deepen · fun-lock · content · art · polish · qa ·
-release-candidate · handoff · blocked · failed · killed · complete
+intake · toolchain · thesis · design-review · deepen · engine-profile · decompose ·
+handoff · blocked · failed · killed · complete
 ```
 
 `blocked`, `failed`, `killed`, and `complete` are terminal: resuming from them
 requires an evidence-backed ledger transition. A run is **initialized at
 `toolchain`** (the standard sentence-seed entry); **`intake`** is the entry phase
 only when a raw/vague seed or an inherited repo needs office-hours grilling before
-the thesis. `deepen` and `fun-lock` are gate *states*, not prompts: `deepen` is
-driven by a `DEEPEN` depth verdict (one transform, ≤2 attempts), and `fun-lock` is
-the state entered when the anti-boring gate + depth minimum pass, recorded by a
-ledger transition (owned by P08 — see the workflow contract). The ≤2-attempt cap is
-tracked by `manifest.deepen_attempt_count` and enforced by
-`validate-artifacts --check run`; applying the named transform is owned by the depth
-red-team / first-slice re-entry (a dedicated `deepen-apply` wrapper is deferred until
-a real run needs it). Legal phase transitions are the machine-readable graph in
-`scripts/lib/run-state.mjs` (derived from `docs/doctrine.md`), checked against each
-run's ledger.
+the thesis. `deepen` is driven by a `DEEPEN` depth verdict at `design-review`: the
+thesis re-enters `thesis` with **exactly one** named transform applied, then
+re-reviews (≤2 attempts, tracked by `manifest.deepen_attempt_count` and enforced
+by `validate-artifacts --check run`; after two failed attempts the run is killed).
+**Design-lock** is not a phase: it is the `ADVANCE` verdict from the design
+red-team at `design-review` (depth vector total ≥16/24 with nonzero Choice,
+Tradeoff, Pressure, Uncertainty, Mastery, and Replayable Variation) — it opens
+`engine-profile → decompose`. Design-lock replaces fun-lock *in the factory*;
+fun-lock remains downstream doctrine inside the spec pack. Legal phase transitions
+are the machine-readable graph in `scripts/lib/run-state.mjs` (derived from
+`docs/doctrine.md`), checked against each run's ledger.
 
-## Workflow contract (P00–P17)
+## Workflow contract (P00–P19)
 
 `P00_ORCHESTRATOR_ULTRAGOAL` (`tgf-harness`) is a **router**, not a phase: it reads
 `manifest.current_phase` and dispatches to the skills below. `orchestrate` is therefore
@@ -86,42 +90,68 @@ human-friendly view.
 | intake | (P00/P01 prelude) | `tgf-office-hours-grill` | `intake/office-hours.md`, ≤1 question |
 | toolchain | `P17_VERIFY_TOOLCHAIN` | `tgf-verify-toolchain` | toolchain ledger from real probes |
 | thesis | `P01_SEED_COMPILE` | `tgf-seed-compile` | `GAME_THESIS.md` |
+| design-review | `P07_DEPTH_RED_TEAM` | `tgf-depth-redteam` | `reviews/ANTI_BORING_VERDICT.md` + `reviews/depth-vector.json` |
 | engine-profile | `P02_ENGINE_PROFILE` | `tgf-engine-profile` | `decisions/0001-engine-profile.md` |
-| prototype-dispatch | `P03_BRANCH_BAKEOFF_DISPATCH` | `tgf-prototype-dispatch` (router) | lane plan |
-| first-slice | `P04_FIRST_PLAYABLE_SLICE` | `tgf-first-slice` | runnable slice + playtest report |
-| depth-review | `P07_DEPTH_RED_TEAM` | `tgf-depth-redteam` | `reviews/<branch>/ANTI_BORING_VERDICT.md` |
-| bakeoff | `P08_BRANCH_BAKEOFF` | `tgf-branch-bakeoff` | `reviews/BRANCH_BAKEOFF.md` |
+| decompose | `P18_DECOMPOSE_SPEC` | `tgf-decompose` | `SPEC.md` + `issues/*.md` (via `scripts/emit-local-issues.mjs --write`) |
+| handoff | `P19_PACKAGE_SPEC` | `tgf-handoff` | exported spec pack (`scripts/package-spec.mjs`) |
 | (rescue) | `P13_EXISTING_PROJECT_RESCUE` | `tgf-existing-project-rescue` | read-only rescue verdict |
 | (scout) | `P16_REPO_SCOUT` | `tgf-repo-scout` | `docs/borrowed-patterns.md` entry |
-| handoff | `P15_RELEASE_CANDIDATE` / handoff contract | `tgf-handoff` | `handoffs/{seed-id}.md` |
+| (kill/restart) | `P14_KILL_RESTART` | — | evidence-backed kill + new seed brief |
 
-Post-fun-lock prompts `P05`, `P06`, `P09`–`P12`, `P14` exist as contracts; their
-wrappers are deferred until gameplay proof exists.
+Retired build prompts (P03–P06, P08–P12, P15) live in `.factory/prompts/attic/`
+and are not registered in the contract (ADR 0006).
 
 ## Verdict vocabulary
 
 - **Depth verdict** (`tgf-depth-redteam`): `ADVANCE` | `DEEPEN` (name exactly one
-  transform) | `KILL`.
-- **Branch verdict** (`tgf-branch-bakeoff`): `WINNER` | `ADVANCE` | `DEEPEN` |
-  `KILL` | `DISCARD_ALL`. The winning *mechanic* is merged, not necessarily the
-  winning branch.
+  transform) | `KILL`. An `ADVANCE` at `design-review` **is design-lock**.
 
 ## The anti-boring gate
 
-A slice cannot advance to content/art/polish/multiplayer until it passes:
+The gate runs **on paper, against the thesis**, at `design-review` (P07). A thesis
+cannot be design-locked — and nothing may be decomposed — until it passes:
 
 1. **Naked Mechanics Test** — strip theme/art; is the bare system interesting?
-2. **Two-Bot Test** — random vs heuristic/skilled bot must diverge materially.
-3. **Dominant-Move Test** — fail if one action/sequence dominates (>70% of
-   meaningful actions across varied states).
-4. **Second-Session Test** — is there a reason to replay after understanding the
-   loop once? "More levels" and "better art" do not count.
+   (argued analytically against the thesis)
+2. **Dominant-Move Test** — fail if one action/sequence dominates (>70% of
+   meaningful actions across varied states). (argued analytically)
+3. **Second-Session Test** — is there a reason to replay after understanding the
+   loop once? "More levels" and "better art" do not count. (argued analytically)
+4. **Two-Bot Test** — cannot run on paper. It is **deferred into the spec** as
+   `bot_success_criteria` obligations carried by the slices; the co-dev repo must
+   prove a random vs heuristic/skilled bot diverge materially.
 
 Plus a **depth vector**: twelve named axes, each scored 0/1/2 — all twelve are
-required (`schemas/depth-vector`). **Minimum for fun-lock: total ≥ 16/24 with
+required (`schemas/depth-vector`). **Minimum for design-lock: total ≥ 16/24 with
 nonzero Choice, Tradeoff, Pressure, Uncertainty, Mastery, and Replayable
 Variation.** The ≥16 total and nonzero-axes rule is applied by the depth red-team
 (P07), not by the schema, which only checks the axes are present and in range.
+
+## Spec decomposition
+
+`SPEC.md` is the decompose-phase artifact: markdown carrying a canonical fenced
+`json` block that validates against `schemas/spec-decomposition`. It declares a
+`chosen_loop_id` (from the thesis), an `out_of_scope` list, and ordered **slices**
+— each with `id`, `title`, `type` (`slice` | `feature` | `chore`), `order`,
+`goal`, `acceptance`, `evidence_requirements`, `depends_on`, and
+`loop_verbs_covered`. The consistency policy lives in
+`scripts/lib/spec-decomposition.mjs`: the **tracer bullet comes first** (order 1
+must be type `slice`), orders are contiguous, dependencies must point earlier, and
+every chosen-loop verb must be covered across the slices.
+`scripts/emit-local-issues.mjs` is the **only renderer** of
+`.tgf/seeds/{seed-id}/issues/*.md` — one issue per slice, with pack-relative
+evidence links (dry-run by default; `--write`/`--force`).
+
+## Spec pack
+
+The **spec pack** is the factory's **terminal artifact** (ADR 0006): a clean
+folder containing the spec, the issue backlog, the thesis, the design review, a
+`PLAYTEST_PLAN.md` of falsifiers, the 8 build-time guards, and the evidence
+schemas — everything a co-dev repo needs to build the game and prove it is fun.
+It is produced **only** by `scripts/package-spec.mjs` (`npm run spec:package`),
+which is dry-run by default and gated by run validation plus the leakage scan.
+Completion is the verifier-clean pack, not prose. Fun-lock, playtesting, content,
+art, and release are **downstream doctrine inside the pack**, not factory phases.
 
 ## No default engine (ADR 0002 / `docs/engine-matrix.md`)
 
@@ -135,12 +165,11 @@ migration always requires a new decision file.
 
 ## Lane policy
 
-Default to **solo parent orchestration**. Dispatch 2–3 isolated prototype lanes
-only when uncertainty is high (close core-loop candidates, uncertain engine fit,
-cheap programmer-art prototypes can answer the fun question faster than debate).
-Lanes must be isolated with disjoint touch sets; the parent integrator owns
-manifest updates, branch selection, and final verification.
-
+**Solo orchestration.** One parent agent walks one seed through the spine. Lanes
+(parallel prototype branches and bakeoffs) were a build-era concept; they were
+retired with the build phases per ADR 0006. Subagents may still be used for
+disjoint research/review work, but the parent owns manifest updates and final
+verification.
 
 ## Module archive vocabulary
 
@@ -156,9 +185,9 @@ and smoke, and reject cargo-culting impressive repos.
 
 ## Human interaction
 
-At most **one** direction-changing taste question before the first slice, always
-with a recommended default. **Never** ask the user architecture/engine/art/lane
-questions before `GAME_THESIS.md`.
+At most **one** direction-changing taste question before the spec is decomposed
+(`human_questions_max_before_decompose = 1`), always with a recommended default.
+**Never** ask the user architecture/engine/art questions before `GAME_THESIS.md`.
 
 ## Borrowed skills
 
@@ -169,9 +198,12 @@ Generic issue/PRD skills must route through local artifacts and never publish
 remotely by default. The shared contract every `.codex/skills/` wrapper inherits —
 read order, manifest-first routing, run-dir confinement, no-leakage, completion-is-
 evidence — lives in `docs/agents/skill-wrapper-doctrine.md`, so a wrapper carries
-only its phase-specific difference. See `docs/agents/` and `docs/adr/0004`.
+only its phase-specific difference. The build-phase wrappers (`tgf-first-slice`,
+`tgf-prototype-dispatch`, `tgf-branch-bakeoff`) were deleted with the pivot
+(ADR 0006); ten wrappers remain. See `docs/agents/` and `docs/adr/0004`.
 
 ## Completion is evidence, not prose
 
-A phase is done when its verifier output exists — a passing validator, a playtest
-report, an anti-boring verdict — not when an agent says it is done.
+A phase is done when its verifier output exists — a passing validator, a
+gate-passing depth vector, an exported verifier-clean spec pack — not when an
+agent says it is done.

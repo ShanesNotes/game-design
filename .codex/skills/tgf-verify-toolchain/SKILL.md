@@ -30,4 +30,4 @@ Read `.factory/prompts/P17_VERIFY_TOOLCHAIN.md` and execute it exactly.
 - Manifest beats memory: read and update `.tgf/seeds/{seed-id}/manifest.json`, and record the phase transition in that run's `execution-ledger.jsonl`.
 - Memory is not proof: mark unavailable tools as unavailable/PROBE, not assumed.
 - Grok Build and mutation-capable MCP servers stay optional until locally verified.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.

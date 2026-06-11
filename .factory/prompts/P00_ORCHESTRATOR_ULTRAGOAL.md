@@ -13,35 +13,37 @@ INPUTS:
 - docs/toolchain-verification-ledger.md
 
 GOAL:
-Take the seed from zero to a playable, bot-tested, anti-boring-gated first slice. Do not optimize for architecture. Optimize for honest search.
+Take the seed from zero to an exported **spec pack**: a fertilized, design-locked
+idea decomposed into an issue-sliced spec in a clean co-dev folder. Do not optimize
+for architecture. Optimize for honest search of the design space.
 
 NON-NEGOTIABLES:
 - Do not ask architecture or engine questions.
-- Do not code before GAME_THESIS.md exists.
-- Do not preserve an incumbent stack by default.
-- Do not add content, polish, multiplayer, or opaque assets before fun-lock.
+- Do not decompose before GAME_THESIS.md exists; do not slice before design-lock.
+- Do not write game code in this repo — building happens in the exported pack's folder.
 - Agents communicate by files, not chat.
-- A branch is not alive until a bot has played it.
+- A spec is not done until its issues render and the pack passes the leakage gate.
 
-PHASES:
-1. Verify local tools and update docs/toolchain-verification-ledger.md.
-2. Compile seed into GAME_THESIS.md using P01.
-3. Pre-mortem GAME_THESIS.md against docs/anti-boring-gate.md as a design check before coding. (P07/P08 are evidence-gated and run only after a slice exists.)
-4. Select 2–3 prototype lanes using P02 and P03. Use Grok only if available.
-5. Dispatch isolated worktrees/branches.
-6. Each branch builds only the first playable slice using P04.
-7. Each branch emits playtest report, capture, replay/golden, and anti-boring verdict.
-8. Judge gameplay, not code. Merge the winning idea, not necessarily the winning branch.
-9. If none pass: deepen, pivot, or throw away. Do not drift.
-10. Stop after fun-lock with a written next-step plan. Do not silently expand.
+PHASES (route by `manifest.current_phase`):
+1. `toolchain` — verify local tools (P17) and update docs/toolchain-verification-ledger.md.
+2. `thesis` — compile the seed into GAME_THESIS.md using P01.
+3. `design-review` — red-team the thesis on paper using P07. ADVANCE = design-lock;
+   DEEPEN re-enters thesis with exactly one named transform (≤2 attempts); KILL ends the run.
+4. `engine-profile` — score engine candidates against the locked design using P02.
+5. `decompose` — author SPEC.md using P18, then render issues
+   (`node scripts/emit-local-issues.mjs --seed-id <id> --write`).
+6. `handoff` — export the spec pack using P19
+   (`node scripts/package-spec.mjs --seed-id <id> --write`).
+7. Stop. Do not silently expand into building the game here.
 
 OUTPUT:
 - GAME_THESIS.md
+- reviews/ANTI_BORING_VERDICT.md + reviews/depth-vector.json
 - decisions/0001-engine-profile.md
-- playtests/<branch>/playtest_report.json
-- reviews/<branch>/ANTI_BORING_VERDICT.md
-- reviews/BRANCH_BAKEOFF.md
-- README_NEXT_ACTIONS.md
+- SPEC.md + issues/*.md
+- an exported spec pack folder (the terminal artifact)
 
 SUCCESS:
-At least one slice is playable for ≥60 seconds by bot and passes the anti-boring gate, OR all branches are killed with evidence and a better next seed brief exists.
+A clean spec pack exists whose run validates (`--check run`), whose issues render
+from SPEC.md, and which carries zero factory leakage — OR the idea is killed with
+evidence and a better next seed brief exists.

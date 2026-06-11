@@ -21,7 +21,7 @@ Read `.factory/prompts/P01_SEED_COMPILE.md` and execute it exactly.
 **Outputs** (emit before summarizing)
 - `.tgf/seeds/{seed-id}/intake/office-hours.md` (all 10 pressure fields filled in game-loop language)
 - a question-log entry appended to the manifest (question, recommended default, answer, artifact field decided, rejected options)
-- manifest `current_phase` set to `thesis` when first-slice direction is stable, else a `resume_point` blocker
+- manifest `current_phase` set to `thesis` when the seed direction is stable, else a `resume_point` blocker
 
 **Borrowed behaviours** (wrapped or referenced — never vendor a generic skill body)
 - `grill-me` — one question at a time, always with a recommended default; ask only what evidence cannot answer
@@ -33,7 +33,7 @@ Read `.factory/prompts/P01_SEED_COMPILE.md` and execute it exactly.
 - Ask AT MOST one direction-changing question before the thesis; never ask engine/architecture/art/content/lane questions before `GAME_THESIS.md`.
 - Owns the ambiguity gate; convert most uncertainty into prototype hypotheses rather than questions.
 - GStack/Pocock names stay factory-side and must never leak into a generated game.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.
 
 ## Ten office-hours pressure fields (each a TGF game-loop question)
 1. **Demand reality** — why would a player voluntarily retry this loop?
@@ -43,6 +43,6 @@ Read `.factory/prompts/P01_SEED_COMPILE.md` and execute it exactly.
 5. **Observation evidence** — what telemetry would prove skill, pressure, variation, or boredom?
 6. **Premise challenge** — what assumption might be false (convert to a prototype hypothesis)?
 7. **Alternatives** — what adjacent loop might be better?
-8. **Future-fit** — what expansion is allowed only after fun-lock?
+8. **Future-fit** — what expansion is allowed only after the co-dev repo reaches fun-lock?
 9. **Store/positioning** — what phrase makes the game legible later (defer, do not chase polish)?
 10. **Reviewer concern** — what would make a playtester call this boring or derivative?

@@ -33,46 +33,54 @@ test("ALL_PHASES matches the seed-manifest current_phase enum", () => {
 
 test("phase machine: legal spine transitions pass, illegal jumps fail", () => {
   assert.ok(rs.isLegalTransition("toolchain", "thesis"));
-  assert.ok(rs.isLegalTransition("depth-review", "deepen"));
-  assert.ok(rs.isLegalTransition("depth-review", "fun-lock")); // solo path, no bakeoff
-  assert.ok(rs.isLegalTransition("deepen", "first-slice")); // re-test
-  assert.ok(rs.isLegalTransition("first-slice", "first-slice")); // re-entrant checkpoint
-  assert.ok(rs.isLegalTransition("first-slice", "blocked")); // any active phase may block
-  assert.ok(rs.isLegalTransition("blocked", "first-slice")); // resume from blocked
+  assert.ok(rs.isLegalTransition("thesis", "design-review"));
+  assert.ok(rs.isLegalTransition("design-review", "engine-profile")); // ADVANCE = design-lock
+  assert.ok(rs.isLegalTransition("design-review", "deepen"));
+  assert.ok(rs.isLegalTransition("deepen", "thesis")); // re-fertilize the idea
+  assert.ok(rs.isLegalTransition("engine-profile", "decompose"));
+  assert.ok(rs.isLegalTransition("decompose", "handoff"));
+  assert.ok(rs.isLegalTransition("decompose", "decompose")); // re-entrant checkpoint
+  assert.ok(rs.isLegalTransition("decompose", "blocked")); // any active phase may block
+  assert.ok(rs.isLegalTransition("blocked", "decompose")); // resume from blocked
 
-  assert.ok(!rs.isLegalTransition("thesis", "art")); // skips the whole middle
-  assert.ok(!rs.isLegalTransition("toolchain", "fun-lock"));
-  assert.ok(!rs.isLegalTransition("killed", "first-slice")); // terminal is absorbing
+  assert.ok(!rs.isLegalTransition("thesis", "decompose")); // skips the design gate
+  assert.ok(!rs.isLegalTransition("toolchain", "engine-profile"));
+  assert.ok(!rs.isLegalTransition("deepen", "engine-profile")); // deepen must go through thesis
+  assert.ok(!rs.isLegalTransition("killed", "decompose")); // terminal is absorbing
   assert.ok(!rs.isLegalTransition("complete", "handoff"));
 });
 
 test("ledgerTransitionErrors flags the first illegal hop only where it occurs", () => {
   const legal = [
-    { phase: "toolchain" }, { phase: "toolchain" }, { phase: "thesis" }, { phase: "engine-profile" }
+    { phase: "toolchain" }, { phase: "toolchain" }, { phase: "thesis" }, { phase: "design-review" }
   ];
   assert.deepEqual(rs.ledgerTransitionErrors(legal), []);
 
-  const illegal = [{ phase: "toolchain" }, { phase: "thesis" }, { phase: "art" }];
+  const illegal = [{ phase: "toolchain" }, { phase: "thesis" }, { phase: "handoff" }];
   const errs = rs.ledgerTransitionErrors(illegal);
   assert.equal(errs.length, 1);
-  assert.match(errs[0], /thesis -> art/);
+  assert.match(errs[0], /thesis -> handoff/);
 });
 
-test("phaseArtifactConstraintErrors enforces thesis/engine paths strictly after their phase", () => {
+test("phaseArtifactConstraintErrors enforces thesis/engine/spec paths strictly after their phase", () => {
   // toolchain: nothing required
   assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "toolchain", game_thesis_path: null, engine_decision_path: null }), []);
   // thesis: still producing the thesis, not yet required
   assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "thesis", game_thesis_path: null, engine_decision_path: null }), []);
-  // engine-profile: past thesis -> thesis required; engine still being produced -> not required
-  const ep = rs.phaseArtifactConstraintErrors({ current_phase: "engine-profile", game_thesis_path: null, engine_decision_path: null });
-  assert.equal(ep.length, 1);
-  assert.match(ep[0], /game_thesis_path/);
-  // prototype-dispatch: past engine-profile -> both required
-  const pd = rs.phaseArtifactConstraintErrors({ current_phase: "prototype-dispatch", game_thesis_path: "t.md", engine_decision_path: null });
-  assert.equal(pd.length, 1);
-  assert.match(pd[0], /engine_decision_path/);
+  // design-review: past thesis -> thesis required; engine not yet
+  const dr = rs.phaseArtifactConstraintErrors({ current_phase: "design-review", game_thesis_path: null, engine_decision_path: null });
+  assert.equal(dr.length, 1);
+  assert.match(dr[0], /game_thesis_path/);
+  // decompose: past engine-profile -> engine required
+  const dc = rs.phaseArtifactConstraintErrors({ current_phase: "decompose", game_thesis_path: "t.md", engine_decision_path: null });
+  assert.equal(dc.length, 1);
+  assert.match(dc[0], /engine_decision_path/);
+  // handoff: past decompose -> spec required
+  const ho = rs.phaseArtifactConstraintErrors({ current_phase: "handoff", game_thesis_path: "t.md", engine_decision_path: "d.md", spec_path: null });
+  assert.equal(ho.length, 1);
+  assert.match(ho[0], /spec_path/);
   // fully populated downstream phase passes
-  assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "first-slice", game_thesis_path: "t.md", engine_decision_path: "d.md" }), []);
+  assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "handoff", game_thesis_path: "t.md", engine_decision_path: "d.md", spec_path: "s.md" }), []);
   // a killed run is off-spine and exempt even with null artifacts
   assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "killed", game_thesis_path: null, engine_decision_path: null }), []);
 });
@@ -85,10 +93,10 @@ test("manifestPathPolicyErrors keeps run artifact paths inside the seed run", ()
     seed_path: `.tgf/seeds/${id}/GAME_SEED.md`,
     game_thesis_path: `.tgf/seeds/${id}/GAME_THESIS.md`,
     engine_decision_path: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-    default_child_game_root: rs.childGameRootFor(id),
-    child_game_path: null,
+    spec_path: `.tgf/seeds/${id}/SPEC.md`,
+    default_spec_pack_root: rs.specPackRootFor(id),
+    spec_pack_path: null,
     execution_ledger_path: `.tgf/seeds/${id}/execution-ledger.jsonl`,
-    playtest_report_paths: [`.tgf/seeds/${id}/playtests/smoke/playtest_report.json`],
     review_report_paths: [`.tgf/seeds/${id}/reviews/smoke/depth-vector.json`],
     handoff_paths: [`.tgf/seeds/${id}/handoffs/handoff.md`],
     resume_point: { artifact_path: `.tgf/seeds/${id}/README_AGENT_BOOT.md` }
@@ -101,31 +109,33 @@ test("manifestPathPolicyErrors keeps run artifact paths inside the seed run", ()
     assert.match(traversal.join("\n"), /game_thesis_path must resolve inside/);
     const absolute = rs.manifestPathPolicyErrors({ ...manifest, engine_decision_path: "/tmp/engine.md" }, id, dir);
     assert.match(absolute.join("\n"), /engine_decision_path must resolve inside/);
-    const child = rs.manifestPathPolicyErrors({ ...manifest, child_game_path: "/tmp/not-the-child-game" }, id, dir);
-    assert.match(child.join("\n"), /child_game_path must resolve inside/);
+    const specAbs = rs.manifestPathPolicyErrors({ ...manifest, spec_path: "/tmp/SPEC.md" }, id, dir);
+    assert.match(specAbs.join("\n"), /spec_path must resolve inside/);
+    const pack = rs.manifestPathPolicyErrors({ ...manifest, spec_pack_path: "/tmp/not-the-spec-pack" }, id, dir);
+    assert.match(pack.join("\n"), /spec_pack_path must resolve inside/);
     const outside = tmp();
     fs.symlinkSync(outside, path.join(runDir, "linked"));
     const linked = rs.manifestPathPolicyErrors({ ...manifest, game_thesis_path: `.tgf/seeds/${id}/linked/GAME_THESIS.md` }, id, dir);
     assert.match(linked.join("\n"), /game_thesis_path must not traverse symlink/);
     const linkedReports = rs.manifestPathPolicyErrors({
       ...manifest,
-      playtest_report_paths: [`.tgf/seeds/${id}/linked/playtest_report.json`],
       review_report_paths: [`.tgf/seeds/${id}/linked/depth-vector.json`],
       handoff_paths: [`.tgf/seeds/${id}/linked/handoff.md`]
     }, id, dir);
-    assert.match(linkedReports.join("\n"), /playtest_report_paths\[0\] must not traverse symlink/);
     assert.match(linkedReports.join("\n"), /review_report_paths\[0\] must not traverse symlink/);
     assert.match(linkedReports.join("\n"), /handoff_paths\[0\] must not traverse symlink/);
     fs.rmSync(outside, { recursive: true, force: true });
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("questionBudgetErrors enforces <=1 direction-changing question before first-slice", () => {
+test("questionBudgetErrors enforces <=1 direction-changing question before the spec is decomposed", () => {
   const q = (n) => Array.from({ length: n }, (_, i) => ({ question: `q${i}`, recommended_default: "d", phase_asked: "thesis" }));
   assert.deepEqual(rs.questionBudgetErrors({ current_phase: "thesis", questions_asked: q(1) }), []);
   assert.ok(rs.questionBudgetErrors({ current_phase: "thesis", questions_asked: q(2) }).length > 0);
+  assert.ok(rs.questionBudgetErrors({ current_phase: "decompose", questions_asked: q(2) }).length > 0);
   assert.deepEqual(rs.questionBudgetErrors({ current_phase: "toolchain", questions_asked: q(5) }), []); // not yet gated
-  assert.deepEqual(rs.questionBudgetErrors({ current_phase: "first-slice" }), []); // no field -> 0
+  assert.deepEqual(rs.questionBudgetErrors({ current_phase: "handoff", questions_asked: q(5) }), []); // spec already cut
+  assert.deepEqual(rs.questionBudgetErrors({ current_phase: "decompose" }), []); // no field -> 0
 });
 
 test("deepenAttemptErrors enforces the 2-attempt deepen cap", () => {

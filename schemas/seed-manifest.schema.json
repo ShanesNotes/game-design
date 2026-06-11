@@ -17,22 +17,20 @@
     "factory_version": { "type": "string" },
     "current_phase": {
       "enum": [
-        "intake", "toolchain", "thesis", "engine-profile", "prototype-dispatch",
-        "first-slice", "depth-review", "bakeoff", "deepen", "fun-lock", "content",
-        "art", "polish", "qa", "release-candidate", "handoff",
+        "intake", "toolchain", "thesis", "design-review", "deepen",
+        "engine-profile", "decompose", "handoff",
         "blocked", "failed", "killed", "complete"
       ]
     },
     "seed_path": { "type": "string" },
     "game_thesis_path": { "type": ["string", "null"] },
     "engine_decision_path": { "type": ["string", "null"] },
-    "default_child_game_root": { "type": "string" },
-    "child_game_path": { "type": ["string", "null"] },
+    "spec_path": { "type": ["string", "null"] },
+    "default_spec_pack_root": { "type": "string" },
+    "spec_pack_path": { "type": ["string", "null"] },
     "external_side_effects_allowed": { "type": "boolean" },
     "redaction_status": { "enum": ["unknown", "clean", "redacted", "needs-review"] },
     "execution_ledger_path": { "type": "string" },
-    "prototype_lanes": { "type": "object" },
-    "playtest_report_paths": { "type": "array", "items": { "type": "string" } },
     "review_report_paths": { "type": "array", "items": { "type": "string" } },
     "handoff_paths": { "type": "array", "items": { "type": "string" } },
     "resume_point": {

@@ -13,7 +13,7 @@ sections beneath it are the human view; keep the two in sync.
   "seed_id": "TODO",
   "status": "accepted",
   "date": "TODO",
-  "decision": "TODO chosen first-slice profile",
+  "decision": "TODO chosen profile the spec targets",
   "profile": "TODO",
   "rationale": "TODO two-line rationale",
   "scores": {
@@ -35,7 +35,7 @@ TODO
 Seed:
 Profile candidates:
 
-## Why this profile for the first slice
+## Why this profile for the spec's tracer-bullet slice
 
 TODO
 

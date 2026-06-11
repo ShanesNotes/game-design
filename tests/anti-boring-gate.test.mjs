@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  depthVectorConsistencyErrors, branchScoreConsistencyErrors, playtestConsistencyErrors
+  depthVectorConsistencyErrors, playtestConsistencyErrors
 } from "../scripts/lib/anti-boring-gate.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,13 +42,6 @@ test("depth-vector: DEEPEN/KILL carry no numeric floor", () => {
   const scores = { ...goodDV.scores };
   for (const k of Object.keys(scores)) scores[k] = 0;
   assert.deepEqual(depthVectorConsistencyErrors({ scores, total: 0, verdict: "KILL" }), []);
-});
-
-test("branch-score: a WINNER must have actually passed the gate", () => {
-  assert.ok(branchScoreConsistencyErrors({ verdict: "WINNER", anti_boring_pass: false, depth_total: 18 }).length > 0);
-  assert.ok(branchScoreConsistencyErrors({ verdict: "WINNER", anti_boring_pass: true, depth_total: 9 }).length > 0);
-  assert.deepEqual(branchScoreConsistencyErrors({ verdict: "WINNER", anti_boring_pass: true, depth_total: 18 }), []);
-  assert.deepEqual(branchScoreConsistencyErrors({ verdict: "KILL", anti_boring_pass: false, depth_total: 3 }), []);
 });
 
 test("playtest: dominant_move boolean must agree with action_distribution", () => {

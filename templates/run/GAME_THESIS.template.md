@@ -84,6 +84,9 @@ TODO
 
 ## First playable slice
 
+This becomes the spec's order-1 tracer-bullet slice. It is built downstream in
+the co-dev repo, never in the factory.
+
 Scope:
 - TODO
 
@@ -94,7 +97,7 @@ Explicitly excluded:
 - accounts/auth
 - meta-progression unless core loop requires it
 
-Bot success criteria:
+Bot success criteria (deferred Two-Bot obligations, carried into the spec):
 - 60s run
 - no crash
 - no stuck state
@@ -102,9 +105,9 @@ Bot success criteria:
 
 ## Taste gates
 
-- G1: Is the primitive loop worth playing again?
-- G2: What art direction should rung-2+ execute?
-- G3: Release candidate signoff
+- G1: Is the primitive loop worth playing again? (pre-decompose, in the factory)
+- G2: Art direction (downstream, inside the spec pack)
+- G3: Release candidate signoff (downstream, inside the spec pack)
 
 ## Kill conditions
 

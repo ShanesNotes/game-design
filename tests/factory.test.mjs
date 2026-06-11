@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "../scripts/lib/validate-json-schema.mjs";
-import { SKILLS, SCHEMAS, HOOKS, THRESHOLDS } from "../scripts/lib/factory-contract.mjs";
+import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, THRESHOLDS } from "../scripts/lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -22,17 +22,20 @@ function thesisMd() {
   const obj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
   return "# GAME_THESIS.md\n\n```json\n" + obj + "\n```\n";
 }
-function thesisMdWith(overrides) {
-  const obj = {
-    ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8")),
-    ...overrides
-  };
-  return "# GAME_THESIS.md\n\n```json\n" + JSON.stringify(obj, null, 2) + "\n```\n";
-}
 // An engine decision md with a schema-valid embedded ```json block.
 function engineMd(id, { status = "accepted", seedId = id } = {}) {
   const obj = { seed_id: seedId, status, decision: "x", profile: "p", rationale: "r", rejected: [], reversal_triggers: ["t"] };
   return "# ADR 0001\n\n```json\n" + JSON.stringify(obj) + "\n```\n";
+}
+// A SPEC.md whose embedded ```json block is schema-valid and consistent with the
+// thesis fixture (chosen loop-a covers plant/water/rotate-asteroid).
+function specMdWith(id, overrides = {}) {
+  const obj = {
+    ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8")),
+    seed_id: id,
+    ...overrides
+  };
+  return "# SPEC.md\n\n```json\n" + JSON.stringify(obj, null, 2) + "\n```\n";
 }
 // A gate-passing (ADVANCE) depth vector: total 18, all six required axes nonzero.
 const ADVANCE_DV = {
@@ -61,6 +64,7 @@ test("fixtures validate against their schemas", () => {
   const pairs = {
     "minimal-seed-manifest.json": "seed-manifest.schema.json",
     "minimal-game-thesis.json": "game-thesis.schema.json",
+    "minimal-spec-decomposition.json": "spec-decomposition.schema.json",
     "minimal-playtest-report.json": "playtest-report.schema.json",
     "minimal-depth-vector.json": "depth-vector.schema.json",
     "minimal-ledger-row.json": "execution-ledger-row.schema.json",
@@ -92,18 +96,18 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     const r = node("init-game-run.mjs", ["--seed-id", id, "--seed", "a tiny test seed"], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     const runDir = path.join(dir, ".tgf", "seeds", id);
-    for (const f of ["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl", "decisions/.gitkeep", "playtests/.gitkeep", "reviews/.gitkeep", "handoffs/.gitkeep"]) {
+    for (const f of ["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl", "decisions/.gitkeep", "reviews/.gitkeep", "handoffs/.gitkeep", "issues/.gitkeep"]) {
       assert.ok(fs.existsSync(path.join(runDir, f)), `expected ${f}`);
     }
     assert.ok(!fs.existsSync(path.join(runDir, "GAME_THESIS.md")), "must not create GAME_THESIS.md");
     assert.ok(!fs.existsSync(path.join(dir, "src")), "must not create src/");
-    assert.ok(!fs.existsSync(`/home/ark/tgf-games/${id}`), "must not create child game repo");
+    assert.ok(!fs.existsSync(`/home/ark/tgf-games/${id}`), "must not create spec pack folder");
 
     const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
     const schema = JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8"));
     assert.deepEqual(validate(schema, manifest), []);
     assert.equal(manifest.external_side_effects_allowed, false);
-    assert.equal(manifest.child_game_path, null);
+    assert.equal(manifest.spec_pack_path, null);
 
     const firstRow = JSON.parse(fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n")[0]);
     const ledgerSchema = JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8"));
@@ -169,12 +173,13 @@ test("validate-artifacts --check run passes for a created run", () => {
 
 // Drive an initialized run forward on disk: set manifest phase + artifact paths and
 // append a ledger row per phase hop. Lets the run-check be tested on in-progress runs.
-function advanceRun(dir, id, { phase, thesisPath, enginePath, ledgerPhases = [] }) {
+function advanceRun(dir, id, { phase, thesisPath, enginePath, specPath, ledgerPhases = [] }) {
   const runDir = path.join(dir, ".tgf", "seeds", id);
   const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
   manifest.current_phase = phase;
   if (thesisPath !== undefined) manifest.game_thesis_path = thesisPath;
   if (enginePath !== undefined) manifest.engine_decision_path = enginePath;
+  if (specPath !== undefined) manifest.spec_path = specPath;
   fs.writeFileSync(path.join(runDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
   for (const p of ledgerPhases) {
@@ -185,6 +190,26 @@ function advanceRun(dir, id, { phase, thesisPath, enginePath, ledgerPhases = [] 
   return runDir;
 }
 
+// Build a decompose-ready run: design-locked thesis, accepted engine ADR, valid
+// SPEC.md, gate-passing depth vector, legal ledger spine through `decompose`.
+function decomposeReadyRun(dir, id, { specOverrides = {}, spec = true } = {}) {
+  assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+  const runDir = path.join(dir, ".tgf", "seeds", id);
+  fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+  fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
+  if (spec) fs.writeFileSync(path.join(runDir, "SPEC.md"), specMdWith(id, specOverrides));
+  fs.mkdirSync(path.join(runDir, "reviews", "design"), { recursive: true });
+  fs.writeFileSync(path.join(runDir, "reviews", "design", "depth-vector.json"), JSON.stringify(ADVANCE_DV));
+  advanceRun(dir, id, {
+    phase: "decompose",
+    thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
+    enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+    specPath: spec ? `.tgf/seeds/${id}/SPEC.md` : undefined,
+    ledgerPhases: ["thesis", "design-review", "engine-profile", "decompose"]
+  });
+  return runDir;
+}
+
 test("validate-artifacts --check run passes for an in-progress run past toolchain", () => {
   const dir = tmp();
   const id = "selftest-inprogress";
@@ -192,7 +217,7 @@ test("validate-artifacts --check run passes for an in-progress run past toolchai
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    advanceRun(dir, id, { phase: "engine-profile", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "engine-profile"] });
+    advanceRun(dir, id, { phase: "design-review", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "design-review"] });
     const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr); // pre-fix this failed on the toolchain|intake clamp
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -205,10 +230,10 @@ test("validate-artifacts --check run flags manifest/ledger phase disagreement", 
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    advanceRun(dir, id, { phase: "thesis", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "engine-profile"] });
+    advanceRun(dir, id, { phase: "thesis", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "design-review"] });
     const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
-    assert.match(r.stdout, /current_phase 'thesis' != latest ledger phase 'engine-profile'/);
+    assert.match(r.stdout, /current_phase 'thesis' != latest ledger phase 'design-review'/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -287,7 +312,7 @@ test("validate-artifacts --check run flags a missing required thesis path downst
   const id = "selftest-noartifact";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    advanceRun(dir, id, { phase: "engine-profile", thesisPath: null, ledgerPhases: ["thesis", "engine-profile"] });
+    advanceRun(dir, id, { phase: "design-review", thesisPath: null, ledgerPhases: ["thesis", "design-review"] });
     const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
     assert.match(r.stdout, /past 'thesis' but game_thesis_path is null/);
@@ -321,9 +346,9 @@ test("advance-run refuses an illegal phase transition", () => {
   const id = "selftest-illegal";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "fun-lock", "--event", "skip"], { cwd: dir });
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "decompose", "--event", "skip"], { cwd: dir });
     assert.equal(r.status, 1);
-    assert.match(r.stderr, /illegal transition toolchain -> fun-lock/);
+    assert.match(r.stderr, /illegal transition toolchain -> decompose/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -377,7 +402,7 @@ test("advance-run refuses a transition that would invalidate the manifest", () =
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
     assert.equal(node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t"], { cwd: dir }).status, 0);
-    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "engine-profile", "--event", "e"], { cwd: dir });
+    const r = node("advance-run.mjs", ["--seed-id", id, "--to", "design-review", "--event", "e"], { cwd: dir });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /past 'thesis' but game_thesis_path is null/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -486,43 +511,42 @@ test("validate-artifacts --check thesis --file is confined by seed-id", () => {
   }
 });
 
-test("validate-artifacts --check run gates fun-lock on a passing depth vector", () => {
+test("validate-artifacts --check run gates design-lock on a passing depth vector", () => {
   const dir = tmp();
-  const id = "selftest-funlock";
+  const id = "selftest-designlock";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
     fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
     advanceRun(dir, id, {
-      phase: "fun-lock",
+      phase: "engine-profile",
       thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
       enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch", "first-slice", "depth-review", "bakeoff", "fun-lock"]
+      ledgerPhases: ["thesis", "design-review", "engine-profile"]
     });
-    // fun-lock with NO depth vector -> fail
+    // past design-review with NO depth vector -> fail
     let r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
-    assert.match(r.stdout, /at\/past fun-lock but reviews\/ has no gate-passing depth vector/);
+    assert.match(r.stdout, /past design-review but reviews\/ has no gate-passing depth vector/);
     // add a gate-passing ADVANCE depth vector -> pass
-    fs.mkdirSync(path.join(runDir, "reviews", "winner"), { recursive: true });
-    fs.writeFileSync(path.join(runDir, "reviews", "winner", "depth-vector.json"), JSON.stringify(ADVANCE_DV));
+    fs.mkdirSync(path.join(runDir, "reviews", "design"), { recursive: true });
+    fs.writeFileSync(path.join(runDir, "reviews", "design", "depth-vector.json"), JSON.stringify(ADVANCE_DV));
     r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stdout);
     // a symlinked depth vector must not satisfy the gate with outside evidence
     const outside = tmp();
     const targetDepth = path.join(outside, "depth-vector.json");
     fs.writeFileSync(targetDepth, JSON.stringify(ADVANCE_DV));
-    fs.rmSync(path.join(runDir, "reviews", "winner", "depth-vector.json"));
-    fs.symlinkSync(targetDepth, path.join(runDir, "reviews", "winner", "depth-vector.json"));
+    fs.rmSync(path.join(runDir, "reviews", "design", "depth-vector.json"));
+    fs.symlinkSync(targetDepth, path.join(runDir, "reviews", "design", "depth-vector.json"));
     r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
     assert.match(r.stdout, /reviews depth vector must not be a symlink/);
     fs.rmSync(outside, { recursive: true, force: true });
-    fs.rmSync(path.join(runDir, "reviews", "winner", "depth-vector.json"));
-    fs.writeFileSync(path.join(runDir, "reviews", "winner", "depth-vector.json"), JSON.stringify(ADVANCE_DV));
+    fs.rmSync(path.join(runDir, "reviews", "design", "depth-vector.json"));
     // a DEEPEN-only vector does not satisfy the gate
-    fs.writeFileSync(path.join(runDir, "reviews", "winner", "depth-vector.json"), JSON.stringify({ ...ADVANCE_DV, verdict: "DEEPEN" }));
+    fs.writeFileSync(path.join(runDir, "reviews", "design", "depth-vector.json"), JSON.stringify({ ...ADVANCE_DV, verdict: "DEEPEN" }));
     r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -570,20 +594,23 @@ test("emit-local-issues rejects seed-id traversal before path derivation", () =>
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("emit-local-issues refuses before SPEC.md exists", () => {
+  const dir = tmp();
+  const id = "selftest-emit-no-spec";
+  try {
+    decomposeReadyRun(dir, id, { spec: false });
+    const r = node("emit-local-issues.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /before SPEC\.md exists/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("emit-local-issues requires an accepted engine decision for the same seed", () => {
   const dir = tmp();
   const id = "selftest-emit-engine-status";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    const runDir = decomposeReadyRun(dir, id);
     fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id, { status: "rejected" }));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
     let r = node("emit-local-issues.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /engine decision must be accepted/);
@@ -594,75 +621,70 @@ test("emit-local-issues requires an accepted engine decision for the same seed",
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("emit-local-issues rejects a spec that contradicts the thesis loop coverage", () => {
+  const dir = tmp();
+  const id = "selftest-emit-coverage";
+  try {
+    const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+    spec.slices = spec.slices.map((s) => ({ ...s, loop_verbs_covered: ["plant"] }));
+    decomposeReadyRun(dir, id, { specOverrides: { slices: spec.slices } });
+    const r = node("emit-local-issues.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /core loop verb 'water' is not covered/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("emit-local-issues rejects manifest artifact paths outside the seed run", () => {
   const dir = tmp();
   const outside = tmp();
   const id = "selftest-emit-path-policy";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
+    const runDir = decomposeReadyRun(dir, id);
     const outsideThesis = path.join(outside, "GAME_THESIS.md");
     fs.writeFileSync(outsideThesis, thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
     const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
-    manifest.current_phase = "prototype-dispatch";
     manifest.game_thesis_path = outsideThesis;
-    manifest.engine_decision_path = `.tgf/seeds/${id}/decisions/0001-engine-profile.md`;
     fs.writeFileSync(path.join(runDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
     const r = node("emit-local-issues.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /game_thesis_path must resolve inside/);
-    assert.ok(!fs.existsSync(path.join(dir, ".tgf", "issues")), "unsafe manifest must not emit issues");
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "unsafe manifest must not emit issues");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(outside, { recursive: true, force: true });
   }
 });
 
-test("emit-local-issues dry-runs seed backlog without writing by default", () => {
+test("emit-local-issues dry-runs the spec backlog without writing by default", () => {
   const dir = tmp();
   const id = "selftest-emit";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const runDir = decomposeReadyRun(dir, id);
     const r = node("emit-local-issues.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /# Dry-run local issues/);
-    assert.match(r.stdout, /id: selftest-emit-first-slice/);
-    assert.match(r.stdout, /title: 'selftest-emit: build first playable slice'/);
+    assert.match(r.stdout, /id: tracer-loop/);
+    assert.match(r.stdout, /type: slice/);
     assert.match(r.stdout, /state: ready-for-agent/);
-    assert.match(r.stdout, /id: selftest-emit-depth-review/);
+    assert.match(r.stdout, /id: sunlight-pressure/);
     assert.match(r.stdout, /state: needs-info/);
-    assert.ok(!fs.existsSync(path.join(dir, ".tgf", "issues")), "dry-run must not write issue files");
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "dry-run must not write issue files");
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("emit-local-issues --write creates validator-clean local issues", () => {
+test("emit-local-issues --write renders validator-clean issues inside the seed run", () => {
   const dir = tmp();
   const id = "selftest-emit-write";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const runDir = decomposeReadyRun(dir, id);
     const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
-    assert.ok(fs.existsSync(path.join(dir, ".tgf", "issues", `${id}-first-slice.md`)));
-    assert.ok(fs.existsSync(path.join(dir, ".tgf", "issues", `${id}-depth-review.md`)));
+    assert.ok(fs.existsSync(path.join(runDir, "issues", "tracer-loop.md")));
+    assert.ok(fs.existsSync(path.join(runDir, "issues", "sunlight-pressure.md")));
+    // Evidence links are pack-relative, never .tgf paths (they travel into the pack).
+    const issue = fs.readFileSync(path.join(runDir, "issues", "tracer-loop.md"), "utf8");
+    assert.doesNotMatch(issue, /\.tgf/);
+    assert.match(issue, /'SPEC\.md'/);
     const chk = node("validate-artifacts.mjs", ["--check", "issues"], { cwd: dir });
     assert.equal(chk.status, 0, chk.stdout);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -672,24 +694,12 @@ test("emit-local-issues normalizes multiline front-matter source strings before 
   const dir = tmp();
   const id = "selftest-emit-yaml-safe";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMdWith({
-      bot_success_criteria: [
-        "bot survives line one\n---\nline two",
-        "player's route remains testable"
-      ]
-    }));
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+    spec.slices[0].acceptance = ["bot survives line one\n---\nline two", "player's route remains testable"];
+    const runDir = decomposeReadyRun(dir, id, { specOverrides: { slices: spec.slices } });
     const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    const issue = fs.readFileSync(path.join(dir, ".tgf", "issues", `${id}-first-slice.md`), "utf8");
+    const issue = fs.readFileSync(path.join(runDir, "issues", "tracer-loop.md"), "utf8");
     assert.equal((issue.match(/^---$/gm) || []).length, 2, "issue must contain exactly one front-matter block");
     assert.match(issue, /bot survives line one --- line two/);
     assert.match(issue, /player''s route remains testable/);
@@ -698,51 +708,17 @@ test("emit-local-issues normalizes multiline front-matter source strings before 
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("emit-local-issues rejects out-dir outside .tgf/issues", () => {
-  const dir = tmp();
-  const outside = tmp();
-  const id = "selftest-emit-outdir";
-  try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
-    const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write", "--out-dir", outside], { cwd: dir });
-    assert.equal(r.status, 1, r.stdout + r.stderr);
-    assert.match(r.stderr, /must be \.tgf\/issues/);
-    assert.equal(fs.readdirSync(outside).length, 0, "outside dir must remain untouched");
-  } finally {
-    fs.rmSync(dir, { recursive: true, force: true });
-    fs.rmSync(outside, { recursive: true, force: true });
-  }
-});
-
-test("emit-local-issues rejects symlinked issue output paths", () => {
+test("emit-local-issues rejects a symlinked issues directory", () => {
   const dir = tmp();
   const outside = tmp();
   const id = "selftest-emit-symlink";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
-    fs.mkdirSync(path.join(dir, ".tgf"), { recursive: true });
-    fs.symlinkSync(outside, path.join(dir, ".tgf", "issues"));
+    const runDir = decomposeReadyRun(dir, id);
+    fs.rmSync(path.join(runDir, "issues"), { recursive: true, force: true });
+    fs.symlinkSync(outside, path.join(runDir, "issues"));
     const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
-    assert.match(r.stderr, /cannot traverse symlink/);
+    assert.match(r.stderr, /must not traverse symlink/);
     assert.equal(fs.readdirSync(outside).length, 0, "symlink target must remain untouched");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -755,29 +731,77 @@ test("emit-local-issues refuses to overwrite symlinked issue files", () => {
   const outside = tmp();
   const id = "selftest-emit-file-symlink";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
-    const issuesDir = path.join(dir, ".tgf", "issues");
-    fs.mkdirSync(issuesDir, { recursive: true });
+    const runDir = decomposeReadyRun(dir, id);
     const target = path.join(outside, "outside.md");
     fs.writeFileSync(target, "ORIGINAL");
-    fs.symlinkSync(target, path.join(issuesDir, `${id}-first-slice.md`));
+    fs.symlinkSync(target, path.join(runDir, "issues", "tracer-loop.md"));
     const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write", "--force"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
-    assert.match(r.stderr, /issue file cannot be a symlink/);
+    assert.match(r.stderr, /symlink/);
     assert.equal(fs.readFileSync(target, "utf8"), "ORIGINAL", "symlink target must remain untouched");
-    assert.ok(!fs.existsSync(path.join(issuesDir, `${id}-depth-review.md`)), "preflight must block all writes");
+    assert.ok(!fs.existsSync(path.join(runDir, "issues", "sunlight-pressure.md")), "preflight must block all writes");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test("package-spec exports a leakage-clean pack and records the handoff", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    // dry-run lists the pack and writes nothing
+    let r = node("package-spec.mjs", ["--seed-id", id, "--to", target], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /Dry-run spec pack/);
+    assert.equal(fs.readdirSync(target).length, 0, "dry-run must not write the pack");
+    // export
+    r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md", "SPEC.md", "GAME_THESIS.md", "GAME_SEED.md",
+      "decisions/0001-engine-profile.md", "issues/tracer-loop.md", "guards/playtest_report_required.mjs",
+      "guards/lib/guard.mjs", "schemas/playtest-report.schema.json"]) {
+      assert.ok(fs.existsSync(path.join(target, f)), `pack must contain ${f}`);
+    }
+    // the pack carries zero factory state
+    const all = [];
+    (function walk(d) {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p); else all.push(p);
+      }
+    })(target);
+    for (const f of all) {
+      assert.doesNotMatch(fs.readFileSync(f, "utf8"), /\.tgf\b/, `${f} must not leak .tgf`);
+    }
+    // the export is recorded in the ledger
+    const rows = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+    assert.equal(rows.at(-1).event, "spec-pack-exported");
+    // refuses to clobber a non-empty target without --force
+    r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /pass --force/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("package-spec refuses an invalid or pre-decompose run", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package-blocked";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.equal(fs.readdirSync(target).length, 0, "blocked export must not write the pack");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
   }
 });
 
@@ -845,23 +869,14 @@ test("walk-game-idea --write-issues preflights run writes before emitting issues
   const outside = tmp();
   const id = "selftest-walk-write-preflight";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const runDir = decomposeReadyRun(dir, id);
     const targetWalk = path.join(outside, "walkthrough.md");
     fs.writeFileSync(targetWalk, "ORIGINAL");
     fs.symlinkSync(targetWalk, path.join(runDir, "IDEA_WALKTHROUGH.md"));
     const r = node("walk-game-idea.mjs", ["--seed-id", id, "--write-issues"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /IDEA_WALKTHROUGH\.md.*symlink|must not traverse symlink/);
-    assert.ok(!fs.existsSync(path.join(dir, ".tgf", "issues")), "issue files must not be emitted before run writes preflight");
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "issue files must not be emitted before run writes preflight");
     assert.equal(fs.readFileSync(targetWalk, "utf8"), "ORIGINAL", "outside walkthrough target must stay unchanged");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -926,46 +941,42 @@ test("walk-game-idea explains a non-accepted engine decision without emitting is
   const dir = tmp();
   const id = "selftest-walk-rejected-engine";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    const runDir = decomposeReadyRun(dir, id);
     fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id, { status: "rejected" }));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
     const r = node("walk-game-idea.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /Engine\/profile decision/);
     assert.match(r.stdout, /current status is rejected/);
-    assert.doesNotMatch(r.stdout, new RegExp(`id: ${id}-first-slice`));
+    assert.doesNotMatch(r.stdout, /id: tracer-loop/);
     assert.ok(fs.existsSync(path.join(runDir, "IDEA_WALKTHROUGH.md")), "blocked walkthrough should still be written");
-    assert.ok(!fs.existsSync(path.join(dir, ".tgf", "issues")), "blocked decomposition must not write issues");
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "blocked decomposition must not write issues");
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("walk-game-idea previews local issue decomposition after thesis and engine ADR", () => {
+test("walk-game-idea explains a missing SPEC.md without emitting issues", () => {
+  const dir = tmp();
+  const id = "selftest-walk-no-spec";
+  try {
+    const runDir = decomposeReadyRun(dir, id, { spec: false });
+    const r = node("walk-game-idea.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /blocked until SPEC\.md validates/);
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "blocked decomposition must not write issues");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("walk-game-idea previews local issue decomposition after thesis, engine ADR, and spec", () => {
   const dir = tmp();
   const id = "selftest-walk-ready";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const runDir = decomposeReadyRun(dir, id);
     const r = node("walk-game-idea.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /Thesis anchors/);
     assert.match(r.stdout, /Engine\/profile decision/);
-    assert.match(r.stdout, /id: selftest-walk-ready-first-slice/);
-    assert.ok(!fs.existsSync(path.join(dir, ".tgf", "issues")), "walkthrough previews issues without writing them");
+    assert.match(r.stdout, /Spec decomposition/);
+    assert.match(r.stdout, /id: tracer-loop/);
+    assert.equal(fs.readdirSync(path.join(runDir, "issues")).filter((f) => f.endsWith(".md")).length, 0, "walkthrough previews issues without writing them");
     const chk = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(chk.status, 0, chk.stdout);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -975,26 +986,17 @@ test("walk-game-idea --write-issues records emitted local issues in the run ledg
   const dir = tmp();
   const id = "selftest-walk-write";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
+    const runDir = decomposeReadyRun(dir, id);
     const r = node("walk-game-idea.mjs", ["--seed-id", id, "--write-issues"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.ok(fs.existsSync(path.join(dir, ".tgf", "issues", `${id}-first-slice.md`)));
-    assert.ok(fs.existsSync(path.join(dir, ".tgf", "issues", `${id}-depth-review.md`)));
+    assert.ok(fs.existsSync(path.join(runDir, "issues", "tracer-loop.md")));
+    assert.ok(fs.existsSync(path.join(runDir, "issues", "sunlight-pressure.md")));
     const ledgerRows = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line));
     const last = ledgerRows.at(-1);
     assert.deepEqual(last.changed_paths, [
       `.tgf/seeds/${id}/IDEA_WALKTHROUGH.md`,
-      `.tgf/issues/${id}-first-slice.md`,
-      `.tgf/issues/${id}-depth-review.md`
+      `.tgf/seeds/${id}/issues/tracer-loop.md`,
+      `.tgf/seeds/${id}/issues/sunlight-pressure.md`
     ]);
     assert.match(last.verification.evidence, /local issue files emitted/);
     const chk = node("validate-artifacts.mjs", ["--check", "issues"], { cwd: dir });
@@ -1006,19 +1008,8 @@ test("walk-game-idea write-issues preserves existing local issues unless force i
   const dir = tmp();
   const id = "selftest-walk-collision";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
-    fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id));
-    advanceRun(dir, id, {
-      phase: "prototype-dispatch",
-      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
-      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
-      ledgerPhases: ["thesis", "engine-profile", "prototype-dispatch"]
-    });
-    const issuesDir = path.join(dir, ".tgf", "issues");
-    fs.mkdirSync(issuesDir, { recursive: true });
-    const existing = path.join(issuesDir, `${id}-first-slice.md`);
+    const runDir = decomposeReadyRun(dir, id);
+    const existing = path.join(runDir, "issues", "tracer-loop.md");
     fs.writeFileSync(existing, "keep me");
     const r = node("walk-game-idea.mjs", ["--seed-id", id, "--write-issues"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
@@ -1030,17 +1021,26 @@ test("walk-game-idea write-issues preserves existing local issues unless force i
 test("factory-contract registry matches the filesystem", () => {
   for (const s of SKILLS) assert.ok(fs.existsSync(rel(".codex/skills", s, "SKILL.md")), `skill file for ${s}`);
   for (const s of SCHEMAS) assert.ok(fs.existsSync(rel("schemas", `${s}.schema.json`)), `schema file for ${s}`);
-  for (const h of HOOKS) assert.ok(fs.existsSync(rel("hooks", `${h}.mjs`)), `hook file for ${h}`);
+  for (const h of FACTORY_HOOKS) assert.ok(fs.existsSync(rel("hooks", `${h}.mjs`)), `hook file for ${h}`);
+  for (const h of SPEC_PACK_GUARDS) assert.ok(fs.existsSync(rel("templates/spec-pack/guards", `${h}.mjs`)), `shipped guard file for ${h}`);
   // and no stray files the registry forgot
   assert.equal(fs.readdirSync(rel(".codex/skills")).filter((d) => fs.existsSync(rel(".codex/skills", d, "SKILL.md"))).length, SKILLS.length, "skill count");
   assert.equal(fs.readdirSync(rel("schemas")).filter((f) => f.endsWith(".schema.json")).length, SCHEMAS.length, "schema count");
-  assert.equal(fs.readdirSync(rel("hooks")).filter((f) => f.endsWith(".mjs")).length, HOOKS.length, "hook count");
+  assert.equal(fs.readdirSync(rel("hooks")).filter((f) => f.endsWith(".mjs")).length, FACTORY_HOOKS.length, "factory hook count");
+  assert.equal(fs.readdirSync(rel("templates/spec-pack/guards")).filter((f) => f.endsWith(".mjs")).length, SPEC_PACK_GUARDS.length, "shipped guard count");
+  // the shipped guard lib must not drift from the factory's
+  assert.equal(
+    fs.readFileSync(rel("templates/spec-pack/guards/lib/guard.mjs"), "utf8"),
+    fs.readFileSync(rel("hooks/lib/guard.mjs"), "utf8"),
+    "guard.mjs copies must stay byte-identical"
+  );
 });
 
 test("schemas reject undeclared properties (additionalProperties:false)", () => {
   const pairs = {
     "minimal-seed-manifest.json": "seed-manifest.schema.json",
     "minimal-game-thesis.json": "game-thesis.schema.json",
+    "minimal-spec-decomposition.json": "spec-decomposition.schema.json",
     "minimal-playtest-report.json": "playtest-report.schema.json",
     "minimal-depth-vector.json": "depth-vector.schema.json",
     "minimal-ledger-row.json": "execution-ledger-row.schema.json",
