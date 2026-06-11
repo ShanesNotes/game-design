@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Non-destructive seed-run initializer. Creates ONLY .tgf/seeds/{seed-id}/ run state.
-// It never creates a child game repo, never picks an engine, never writes a GAME_THESIS.md,
+// It never creates a spec pack folder, never picks an engine, never writes a GAME_THESIS.md,
 // and never writes gameplay code. Contract: docs/adr/0003 + the run-initializer contract.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  SEED_ID_RE, runRelFor, runDirFor, childGameRootFor,
+  SEED_ID_RE, runRelFor, runDirFor, specPackRootFor,
   validateManifest, manifestPathPolicyErrors, symlinkWriteThroughPaths
 } from "./lib/run-state.mjs";
 
@@ -35,7 +35,7 @@ if (!SEED_ID_RE.test(seedId)) {
 
 const runRel = runRelFor(seedId);
 const runDir = runDirFor(process.cwd(), seedId);
-const childGameRoot = childGameRootFor(seedId);
+const specPackRoot = specPackRootFor(seedId);
 const iso = new Date().toISOString();
 
 // Load + substitute templates from the factory repo (independent of cwd).
@@ -88,24 +88,24 @@ if (pathPolicyErrors.length) fail(pathPolicyErrors.join("; "));
 
 const wouldCreate = ledgerRow.changed_paths.concat([
   `${runRel}/decisions/.gitkeep`,
-  `${runRel}/playtests/.gitkeep`,
   `${runRel}/reviews/.gitkeep`,
-  `${runRel}/handoffs/.gitkeep`
+  `${runRel}/handoffs/.gitkeep`,
+  `${runRel}/issues/.gitkeep`
 ]);
 
 if (dryRun) {
-  const childRepoAbsent = !fs.existsSync(childGameRoot);
+  const specPackAbsent = !fs.existsSync(specPackRoot);
   console.log(JSON.stringify({
     ok: true,
     mode: "dry-run",
     seed_id: seedId,
     would_create: wouldCreate,
-    would_not_create: [childGameRoot, `${runRel}/GAME_THESIS.md`, "src/", "app/", "public/", "assets/"],
+    would_not_create: [specPackRoot, `${runRel}/GAME_THESIS.md`, "src/", "app/", "public/", "assets/"],
     validation: {
       seed_id: "passed",
       manifest_schema: "passed",
       path_policy: "passed",
-      child_repo_absent: childRepoAbsent ? "passed" : "warn-exists"
+      spec_pack_absent: specPackAbsent ? "passed" : "warn-exists"
     }
   }, null, 2));
   process.exit(0);
@@ -126,7 +126,7 @@ if (fs.existsSync(runDir)) {
 
 // --- Write (only inside runDir) ---
 fs.mkdirSync(runDir, { recursive: true });
-for (const subdir of ["decisions", "playtests", "reviews", "handoffs"]) {
+for (const subdir of ["decisions", "reviews", "handoffs", "issues"]) {
   fs.mkdirSync(path.join(runDir, subdir), { recursive: true });
   fs.writeFileSync(path.join(runDir, subdir, ".gitkeep"), "");
 }
@@ -143,5 +143,5 @@ if (force && fs.existsSync(ledgerFile)) {
 }
 
 console.log(`[init-game-run] initialized ${runRel}`);
-console.log(`[init-game-run] phase=toolchain  child_game=none (${childGameRoot} not created)`);
+console.log(`[init-game-run] phase=toolchain  spec_pack=none (${specPackRoot} not created)`);
 console.log(`[init-game-run] next: read ${runRel}/README_AGENT_BOOT.md`);

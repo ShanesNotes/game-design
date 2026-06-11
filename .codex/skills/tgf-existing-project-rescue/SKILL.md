@@ -29,4 +29,4 @@ Read `.factory/prompts/P13_EXISTING_PROJECT_RESCUE.md` and execute it exactly.
 - Manifest beats memory: read and update `.tgf/seeds/{seed-id}/manifest.json`, and record the phase transition in that run's `execution-ledger.jsonl`.
 - Existing projects are evidence, not destiny: do not mutate the inherited project without an explicit gate pass.
 - The current engine is an option, not a constraint.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // End-to-end idea-factory entrypoint. Given a seed id plus optional one-line seed,
 // initialize/resume the run, write a durable IDEA_WALKTHROUGH.md, and when thesis +
-// engine ADR are present, decompose the idea through emit-local-issues.mjs.
+// engine ADR + SPEC.md are present, decompose the idea through emit-local-issues.mjs.
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -79,6 +79,7 @@ function readArtifact(manifestKey, schemaName) {
 
 const thesis = readArtifact("game_thesis_path", "game-thesis");
 const engine = readArtifact("engine_decision_path", "engine-profile-decision");
+const spec = readArtifact("spec_path", "spec-decomposition");
 function issueBlocker() {
   if (!thesis.obj) return "Backlog decomposition is blocked until GAME_THESIS.md validates.";
   if (!engine.obj) return "Backlog decomposition is blocked until an engine decision validates.";
@@ -87,6 +88,10 @@ function issueBlocker() {
   }
   if (engine.obj.seed_id !== seedId) {
     return `Backlog decomposition is blocked because engine decision seed_id '${engine.obj.seed_id}' does not match '${seedId}'.`;
+  }
+  if (!spec.obj) return "Backlog decomposition is blocked until SPEC.md validates (run the decompose phase).";
+  if (spec.obj.seed_id !== seedId) {
+    return `Backlog decomposition is blocked because spec seed_id '${spec.obj.seed_id}' does not match '${seedId}'.`;
   }
   return null;
 }
@@ -108,23 +113,15 @@ function nextAction(phase) {
     intake: "Run tgf-office-hours-grill, then initialize toolchain once the seed direction is stable.",
     toolchain: "Run tgf-verify-toolchain, then compile GAME_THESIS.md from the seed.",
     thesis: "Run tgf-seed-compile until GAME_THESIS.md is schema-valid and anchored in the anti-boring gate.",
-    "engine-profile": "Score engine/profile candidates and write decisions/0001-engine-profile.md.",
-    "prototype-dispatch": "Choose solo first slice or isolated prototype lanes based on core-loop uncertainty.",
-    "first-slice": "Build only the first playable loop and emit bot playtest_report.json evidence.",
-    "depth-review": "Run anti-boring depth red-team against playtest evidence.",
-    bakeoff: "Compare branches, pick the winning mechanic, and advance/deepen/kill with evidence.",
-    deepen: "Apply exactly one named transform, increment deepen attempts, then retest the first slice.",
-    "fun-lock": "Decompose the proven loop into local content/art/polish/QA slices without losing evidence links.",
-    content: "Add content only inside the fun-locked constraints.",
-    art: "Add art only after provenance and art-direction gates are satisfied.",
-    polish: "Polish feel after gameplay proof; keep regression playtests.",
-    qa: "Run adversarial QA and fix evidence-backed defects.",
-    "release-candidate": "Prepare release-candidate evidence and human signoff.",
-    handoff: "Write durable handoff with exact next action.",
+    "design-review": "Run the design red-team (tgf-depth-redteam) against the thesis: depth vector + verdict ADVANCE/DEEPEN/KILL.",
+    deepen: "Apply exactly one named transform to the thesis, increment deepen attempts, then re-run the design review.",
+    "engine-profile": "Score engine/profile candidates against the design-locked thesis and write decisions/0001-engine-profile.md.",
+    decompose: "Author SPEC.md (tgf-decompose): ordered tracer-bullet slices with falsifiable acceptance, then emit local issues.",
+    handoff: "Package the spec pack (package-spec.mjs) into the clean co-dev folder and record the export.",
     blocked: "Read the ledger blocker, resolve it with evidence, then resume the appropriate non-terminal phase.",
     failed: "Distill failure evidence into a new seed or explicit restart decision.",
     killed: "Do not resume without a new evidence-backed seed brief.",
-    complete: "No active game-idea work remains for this seed."
+    complete: "No active game-idea work remains for this seed; the spec pack is the deliverable."
   };
   return table[phase] || "Inspect manifest.current_phase and route through tgf-harness.";
 }
@@ -153,7 +150,7 @@ function issuePreview() {
   return stdout
     .replace(`# Dry-run local issues for ${seedId}`, `# Local issues planned for ${seedId}`)
     .replace(
-      "# Re-run with --write to create files under .tgf/issues.",
+      /# Re-run with --write to create files under .+\./,
       "# --write-issues will create these files after run-owned writes preflight."
     );
 }
@@ -170,13 +167,13 @@ lines.push(`- ledger rows: ${rows.length}${parseErrors.length ? ` (${parseErrors
 lines.push("");
 lines.push("## Architectural decision ladder");
 lines.push("");
-lines.push("1. **Premise / fantasy** — compile the seed into a falsifiable GAME_THESIS.md before any implementation.");
+lines.push("1. **Premise / fantasy** — compile the seed into a falsifiable GAME_THESIS.md before any decomposition.");
 lines.push("2. **Core loop candidates** — name the repeated verbs and why the naked mechanics might stay replayable.");
-lines.push("3. **Engine/profile decision** — choose the cheapest reversible surface only after the thesis exists.");
-lines.push("4. **Prototype lane policy** — stay solo unless uncertainty earns isolated lanes with disjoint touch sets.");
-lines.push("5. **First playable slice** — build the thinnest bot-played loop; no content, high-fidelity art, backend, or accounts.");
-lines.push("6. **Anti-boring proof** — require playtest reports, two-bot spread, dominant-move check, and depth vector.");
-lines.push("7. **Backlog decomposition** — emit local issues/slices only after thesis + engine ADR, with evidence links.");
+lines.push("3. **Design depth gate** — red-team the thesis on paper: depth vector >=16/24, required axes nonzero (design-lock).");
+lines.push("4. **Engine/profile decision** — recommend the cheapest reversible surface only after the design-locked thesis.");
+lines.push("5. **Spec decomposition** — slice the design into ordered tracer-bullet issues with falsifiable acceptance.");
+lines.push("6. **Spec pack handoff** — export a clean co-dev folder; the anti-boring falsifiers travel with it as obligations.");
+lines.push("7. **Proof happens downstream** — the co-dev repo builds the slices and produces the bot playtest evidence.");
 lines.push("");
 lines.push("## Current next action");
 lines.push("");
@@ -216,17 +213,30 @@ if (engine.errors.length) {
   lines.push(bullets(engine.obj.reversal_triggers || []));
   lines.push("");
 }
+if (spec.errors.length) {
+  lines.push("## Spec validation errors");
+  lines.push("");
+  lines.push(bullets(spec.errors));
+  lines.push("");
+} else if (spec.obj) {
+  lines.push("## Spec decomposition");
+  lines.push("");
+  lines.push(`- summary: ${spec.obj.summary}`);
+  lines.push(`- chosen loop: ${spec.obj.chosen_loop_id}`);
+  lines.push(`- slices: ${(spec.obj.slices || []).length}`);
+  lines.push("");
+}
 lines.push("## Decomposition preview");
 lines.push("");
 lines.push(issuePreview());
 lines.push("");
 lines.push("## Doctrine guardrails");
 lines.push("");
-lines.push("- No implementation before GAME_THESIS.md.");
+lines.push("- No decomposition before GAME_THESIS.md; no slicing before design-lock.");
 lines.push("- No default engine before thesis + engine ADR.");
 lines.push("- No remote issue publishing by default.");
-lines.push("- No mutation of `/game-dev` from this factory command.");
-lines.push("- Completion is validator/playtest/verdict evidence, not prose.");
+lines.push("- No game code in this factory; building happens in the exported spec pack's folder.");
+lines.push("- Completion is validator/verdict evidence, not prose.");
 lines.push("");
 const walkthrough = `${lines.join("\n").trim()}\n`;
 const walkthroughRel = `${runRel}/IDEA_WALKTHROUGH.md`;
@@ -248,8 +258,8 @@ if (!noWrite) {
       commands: [`node scripts/walk-game-idea.mjs --seed-id ${seedId}${seed ? " --seed <seed>" : ""}${writeIssues ? " --write-issues" : ""}${forceIssues ? " --force-issues" : ""}`],
       status: "passed",
       evidence: writeIssues && issuePaths.length
-        ? "IDEA_WALKTHROUGH.md written; local issue files emitted from valid thesis+engine ADR."
-        : "IDEA_WALKTHROUGH.md written; decomposition preview emitted when thesis+engine ADR were available."
+        ? "IDEA_WALKTHROUGH.md written; local issue files emitted from valid thesis+engine ADR+SPEC."
+        : "IDEA_WALKTHROUGH.md written; decomposition preview emitted when thesis+engine ADR+SPEC were available."
     }
   });
   const preflightRowErrors = validateLedgerRow(buildRow(writeIssues ? plannedIssuePaths : []));

@@ -36,4 +36,4 @@ The manifest-first parent orchestrator. Loads or creates the seed manifest and r
 - Manifest beats memory: read and update `.tgf/seeds/{seed-id}/manifest.json`, and record the phase transition in that run's `execution-ledger.jsonl`.
 - Owns manifest transitions and phase gating; do not skip a gate.
 - Default to solo parent orchestration; open lanes only per the lane policy in CONTEXT.md.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.

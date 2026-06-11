@@ -1,16 +1,23 @@
 #!/usr/bin/env node
 // Dry-run guard prover. Builds throwaway sandboxes and asserts each hook BLOCKS the unsafe
-// scenario (exit 2) and ALLOWS the safe one (exit 0). Proves the guards actually gate, without
-// touching the real repo. Usage: node scripts/run-gates.mjs --dry-run
+// scenario (exit 2) and ALLOWS the safe one (exit 0). Proves BOTH guard sets actually gate
+// without touching the real repo: the factory hooks (hooks/) and the build-time guards
+// shipped inside every spec pack (templates/spec-pack/guards/, ADR 0006) — a spec pack
+// must never carry a broken guard. Usage: node scripts/run-gates.mjs --dry-run
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOOKS } from "./lib/factory-contract.mjs";
+import { FACTORY_HOOKS, SPEC_PACK_GUARDS } from "./lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const HOOKS_DIR = path.join(REPO, "hooks");
+const ALL_GUARDS = [...FACTORY_HOOKS, ...SPEC_PACK_GUARDS];
+function guardFile(name) {
+  return FACTORY_HOOKS.includes(name)
+    ? path.join(REPO, "hooks", `${name}.mjs`)
+    : path.join(REPO, "templates", "spec-pack", "guards", `${name}.mjs`);
+}
 
 function write(dir, rel, content) {
   const p = path.join(dir, rel);
@@ -71,7 +78,7 @@ for (const sc of scenarios) {
   const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-gate-"));
   try {
     sc.setup(sandbox);
-    const r = spawnSync(process.execPath, [path.join(HOOKS_DIR, `${sc.guard}.mjs`), ...sc.args], { cwd: sandbox, encoding: "utf8", env: { ...process.env, ...(sc.env || {}) } });
+    const r = spawnSync(process.execPath, [guardFile(sc.guard), ...sc.args], { cwd: sandbox, encoding: "utf8", env: { ...process.env, ...(sc.env || {}) } });
     const got = r.status;
     results.push({ ...sc, got, pass: got === sc.expect });
   } finally {
@@ -79,10 +86,11 @@ for (const sc of scenarios) {
   }
 }
 
-// Coverage: every guard registered in the factory-contract must have at least one
-// proof scenario, so a newly added guard cannot ship unproven.
+// Coverage: every guard registered in the factory-contract (factory hooks AND
+// shipped spec-pack guards) must have at least one proof scenario, so a newly
+// added guard cannot ship unproven.
 const covered = new Set(scenarios.map((s) => s.guard));
-const uncovered = HOOKS.filter((h) => !covered.has(h));
+const uncovered = ALL_GUARDS.filter((h) => !covered.has(h));
 
 let failed = 0;
 for (const r of results) {
@@ -93,5 +101,5 @@ for (const h of uncovered) {
   failed++;
   console.log(`✗ ${h} [COVERAGE] registered guard has no gate scenario`);
 }
-console.log(failed ? `\n${failed} guard scenario(s) failed.` : `\nAll ${results.length} guard scenarios passed (${HOOKS.length} guards covered).`);
+console.log(failed ? `\n${failed} guard scenario(s) failed.` : `\nAll ${results.length} guard scenarios passed (${FACTORY_HOOKS.length} factory hooks + ${SPEC_PACK_GUARDS.length} shipped guards covered).`);
 process.exit(failed ? 2 : 0);

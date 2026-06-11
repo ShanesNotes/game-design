@@ -1,0 +1,36 @@
+{
+  "seed_id": "tiny-asteroid-gardening",
+  "chosen_loop_id": "loop-a",
+  "summary": "Tracer-bullet decomposition of the plant/water/rotate loop into falsifiable co-dev slices.",
+  "out_of_scope": ["content expansion", "high-fidelity art", "multiplayer"],
+  "slices": [
+    {
+      "id": "tracer-loop",
+      "title": "Tracer bullet: one asteroid, plant + water + rotate",
+      "type": "slice",
+      "order": 1,
+      "goal": "Prove the three core verbs fit together in the thinnest playable loop.",
+      "acceptance": [
+        "A 60s session exercises plant, water, and rotate-asteroid at least once",
+        "A scripted bot completes the loop with no stuck state"
+      ],
+      "evidence_requirements": ["playtests/**/playtest_report.json from a bot session >= 60s"],
+      "depends_on": [],
+      "loop_verbs_covered": ["plant", "water", "rotate-asteroid"]
+    },
+    {
+      "id": "sunlight-pressure",
+      "title": "Sunlight sweep creates timing pressure",
+      "type": "feature",
+      "order": 2,
+      "goal": "Add the drifting sunlight band so placement order starts to matter.",
+      "acceptance": [
+        "Plants outside the sunlight band wither on a visible timer",
+        "Random vs heuristic bot scores diverge measurably across 5 runs"
+      ],
+      "evidence_requirements": ["two playtest reports with distinct bot_type values"],
+      "depends_on": ["tracer-loop"],
+      "loop_verbs_covered": ["plant", "water"]
+    }
+  ]
+}

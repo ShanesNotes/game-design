@@ -1,4 +1,4 @@
-# Tiny Game Factory — guardrail config (factory v0.1.0; derived from init pack v0.3)
+# Tiny Game Factory — guardrail config (factory v0.2.0; spec-pack pivot, ADR 0006)
 # This is a desired/guardrail config, not a claim that every tool exists locally.
 
 [doctrine]
@@ -6,13 +6,15 @@ search_over_codegen = true
 fun_over_polish = true
 evidence_over_sunk_cost = true
 code_native_over_opaque = true
-human_questions_max_before_first_slice = 1
-no_code_before_game_thesis = true
-no_content_before_fun_lock = true
-no_opaque_assets_before_art_gate = true
-no_multiplayer_before_solo_or_hotseat_fun_lock = true
+human_questions_max_before_decompose = 1
+no_decomposition_before_game_thesis = true
+no_slicing_before_design_lock = true
+no_game_code_in_factory = true
+spec_pack_is_terminal_artifact = true
 
 [gates]
+# depth_vector_min_total gates design-lock in the factory; the bot-session and
+# spread thresholds govern the guards shipped inside every spec pack.
 minimum_bot_session_seconds = 60
 nightly_bot_session_seconds = 300
 depth_vector_min_total = 16
@@ -105,12 +107,17 @@ blender_mcp = "off_rung3_only"
 meshy_mcp = "off_rung3_only"
 unity_mcp = "off_seed_must_earn_it"
 
+# Factory hooks gate THIS repo (the spec pipeline). Executables: hooks/*.mjs.
 [hooks]
-scope_brake = true
+scope_brake = true                  # no game code in the factory
+engine_migration_requires_adr = true
+mcp_mutation_must_emit_text = true  # executable: hooks/mcp_mutation_must_emit_text.mjs
+
+# Build-time guards the factory ships inside every spec pack (ADR 0006).
+# Executables: templates/spec-pack/guards/*.mjs; still proven by run-gates.mjs.
+[spec_pack.guards]
 art_fidelity_cap = true
 asset_provenance = true
-mcp_mutation_must_emit_text = true  # executable: hooks/mcp_mutation_must_emit_text.mjs
-engine_migration_requires_adr = true
 phaser_version_pin = true
 playtest_report_required = true
 afk_heartbeat_required = true

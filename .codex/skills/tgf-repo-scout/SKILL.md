@@ -28,4 +28,4 @@ Read `.factory/prompts/P16_REPO_SCOUT.md` and execute it exactly.
 - Manifest beats memory: read and update `.tgf/seeds/{seed-id}/manifest.json`, and record the phase transition in that run's `execution-ledger.jsonl`.
 - No cargo-culting: pin source and date, build a tiny adapter, run a 60s smoke, and do not add a runtime dependency by default.
 - A repo is useful only if it improves a named factory capability.
-- Never create a child game repo by default, never copy `.tgf`/`.omx`/ledgers/skill docs into a generated game, and never assume an unverified tool.
+- Never create a spec pack folder from this skill, never copy `.tgf`/`.omx`/ledgers/skill docs into generated output, and never assume an unverified tool.

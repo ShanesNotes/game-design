@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Factory artifact validator. Proves the repo matches its own contracts without needing a
-// runtime game. Checks: required-tree | schemas | generated-leakage | no-default-engine | skill-refs | run | all.
-// `all` runs every check except `run`, which is on-demand (requires --seed-id).
+// runtime game. Checks: required-tree | schemas | generated-leakage | no-default-engine |
+// skill-refs | gate | issues | thesis | engine | spec | run | all.
+// `all` runs every repo-wide check; thesis/engine/spec/run are on-demand (require --seed-id).
 // Usage: node scripts/validate-artifacts.mjs --check <mode> [--seed-id <id>]
 import fs from "node:fs";
 import path from "node:path";
@@ -9,7 +10,9 @@ import { fileURLToPath } from "node:url";
 import { validate } from "./lib/validate-json-schema.mjs";
 import * as runState from "./lib/run-state.mjs";
 import * as gate from "./lib/anti-boring-gate.mjs";
-import { SKILLS, SCHEMAS, HOOKS, FIXTURE_SCHEMA, PROMPT_MAX } from "./lib/factory-contract.mjs";
+import { specConsistencyErrors } from "./lib/spec-decomposition.mjs";
+import { leakageErrors } from "./lib/leakage.mjs";
+import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -20,8 +23,9 @@ function arg(name) {
   return i >= 0 ? process.argv[i + 1] : null;
 }
 
-// SKILLS, SCHEMAS, HOOKS, FIXTURE_SCHEMA, PROMPT_MAX come from the factory-contract
-// registry (scripts/lib/factory-contract.mjs) — the single source of truth.
+// SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, FIXTURE_SCHEMA, PROMPTS come from
+// the factory-contract registry (scripts/lib/factory-contract.mjs) — the single
+// source of truth.
 
 // --- required tree ---
 function checkRequiredTree() {
@@ -33,31 +37,31 @@ function checkRequiredTree() {
     "docs/adr/0001-meta-factory-root.md", "docs/adr/0002-evidence-first-prototype-search.md",
     "docs/adr/0003-factory-game-separation.md", "docs/adr/0004-factory-layout-and-skill-packaging.md",
     "docs/adr/0005-gate-policy-in-checkers-not-schemas.md",
+    "docs/adr/0006-spec-pack-is-the-terminal-artifact.md",
     "docs/agents/domain.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md",
     "scripts/verify-local-tools.mjs", "scripts/init-game-run.mjs", "scripts/run-gates.mjs",
     "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs", "scripts/advance-run.mjs",
-    "scripts/emit-local-issues.mjs", "scripts/walk-game-idea.mjs",
+    "scripts/emit-local-issues.mjs", "scripts/walk-game-idea.mjs", "scripts/package-spec.mjs",
     "templates/run/manifest.json", "templates/run/GAME_SEED.md", "templates/run/GAME_THESIS.template.md",
     "templates/run/README_AGENT_BOOT.md", "templates/run/README_NEXT_ACTIONS.md",
     "templates/run/decisions/0001-engine-profile.md",
-    "templates/game-repo/AGENTS.md", "templates/game-repo/README.md", "templates/game-repo/PLAYTEST_PLAN.md"
+    "templates/spec-pack/AGENTS.md", "templates/spec-pack/README.md", "templates/spec-pack/PLAYTEST_PLAN.md",
+    "templates/spec-pack/guards/lib/guard.mjs"
   ];
   required.push(...SCHEMAS.map((s) => `schemas/${s}.schema.json`));
-  required.push(...HOOKS.map((h) => `hooks/${h}.mjs`));
+  required.push(...FACTORY_HOOKS.map((h) => `hooks/${h}.mjs`));
+  required.push(...SPEC_PACK_GUARDS.map((h) => `templates/spec-pack/guards/${h}.mjs`));
   required.push(...SKILLS.map((s) => `.codex/skills/${s}/SKILL.md`));
   required.push(...Object.keys(FIXTURE_SCHEMA).map((f) => `examples/fixtures/${f}`));
+  required.push(...PROMPTS.map((p) => `.factory/prompts/${p}`));
   for (const p of required) if (!exists(p)) errors.push(`missing: ${p}`);
 
-  // prompts P00..P17
-  const promptDir = rel(".factory/prompts");
-  const promptFiles = fs.existsSync(promptDir) ? fs.readdirSync(promptDir) : [];
-  for (let n = 0; n <= PROMPT_MAX; n++) {
-    const pre = `P${String(n).padStart(2, "0")}_`;
-    if (!promptFiles.some((f) => f.startsWith(pre) && f.endsWith(".md"))) errors.push(`missing prompt: .factory/prompts/${pre}*.md`);
-  }
-  // P07 must be the RED_TEAM-normalized name
-  if (promptFiles.includes("P07_DEPTH_REDTEAM.md") && !promptFiles.includes("P07_DEPTH_RED_TEAM.md")) {
-    errors.push("prompt P07 not normalized: expected P07_DEPTH_RED_TEAM.md");
+  // The shipped guard lib must stay byte-identical to the factory's, so a guard
+  // proven by run-gates.mjs behaves the same inside an exported spec pack.
+  if (exists("hooks/lib/guard.mjs") && exists("templates/spec-pack/guards/lib/guard.mjs")) {
+    const a = fs.readFileSync(rel("hooks/lib/guard.mjs"), "utf8");
+    const b = fs.readFileSync(rel("templates/spec-pack/guards/lib/guard.mjs"), "utf8");
+    if (a !== b) errors.push("templates/spec-pack/guards/lib/guard.mjs has drifted from hooks/lib/guard.mjs");
   }
   return errors;
 }
@@ -88,42 +92,11 @@ function checkSchemas() {
   return errors;
 }
 
-// --- generated leakage (child game templates must stay free of orchestration/source markers) ---
-const LEAK_TOKENS = [
-  [/\.tgf\b/, ".tgf run state"],
-  [/\.omx\b/i, ".omx state"],
-  [/\.sandcastle\b/i, ".sandcastle state"],
-  [/gstack/i, "GStack"],
-  [/pocock/i, "Pocock"],
-  [/sandcastle/i, "Sandcastle"],
-  [/\bOMX\b/, "OMX"],
-  [/tiny[ -]app[ -]factory/i, "Tiny App Factory product term"],
-  [/tiny[ -]game[ -]factory/i, "Tiny Game Factory orchestrator name"],
-  [/tincture/i, "Tincture of Mercy product term"],
-  [/rescue[ -]town[ -]builders/i, "Rescue Town Builders product term"],
-  [/\/home\/ark\//, "absolute /home/ark path"]
-];
-function scanDir(dir, acc = []) {
-  if (!fs.existsSync(dir)) return acc;
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) scanDir(p, acc);
-    else acc.push(p);
-  }
-  return acc;
-}
+// --- generated leakage (spec-pack templates must stay free of orchestration/source markers) ---
+// Token list + scanner live in scripts/lib/leakage.mjs, shared with package-spec.mjs
+// so the export gate and the template gate cannot drift.
 function checkGeneratedLeakage() {
-  const errors = [];
-  const scanRoots = [rel("templates/game-repo"), rel("examples/seeds")];
-  for (const root of scanRoots) {
-    for (const file of scanDir(root)) {
-      const text = fs.readFileSync(file, "utf8");
-      for (const [re, label] of LEAK_TOKENS) {
-        if (re.test(text)) errors.push(`leakage in ${path.relative(REPO, file)}: ${label}`);
-      }
-    }
-  }
-  return errors;
+  return leakageErrors([rel("templates/spec-pack"), rel("examples/seeds")], REPO);
 }
 
 // --- no default engine before thesis ---
@@ -194,6 +167,30 @@ function checkRun(seedId) {
       errors.push(e.message);
     }
   }
+  if (manifest.spec_path) {
+    try {
+      const sp = runState.resolveRunPath(process.cwd(), seedId, manifest.spec_path, "spec_path");
+      if (!fs.existsSync(sp)) errors.push(`spec_path set but file missing: ${manifest.spec_path}`);
+      else {
+        const embedded = runState.validateEmbeddedJson(sp, "spec-decomposition");
+        embedded.forEach((e) => errors.push(`spec ${e}`));
+        if (!embedded.length) {
+          const spec = runState.extractFencedJson(fs.readFileSync(sp, "utf8")).obj;
+          let thesis = null;
+          if (manifest.game_thesis_path) {
+            try {
+              const tp = runState.resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path");
+              if (fs.existsSync(tp)) thesis = runState.extractFencedJson(fs.readFileSync(tp, "utf8")).obj;
+            } catch { /* thesis path errors already reported above */ }
+          }
+          if (spec && spec.seed_id !== seedId) errors.push(`spec seed_id '${spec.seed_id}' does not match '${seedId}'`);
+          specConsistencyErrors(spec, thesis).forEach((e) => errors.push(`spec ${e}`));
+        }
+      }
+    } catch (e) {
+      errors.push(e.message);
+    }
+  }
 
   let ledger;
   try { ledger = runState.readLedger(runDir, seedId, process.cwd()); }
@@ -217,23 +214,23 @@ function checkRun(seedId) {
   }
 
   // Init-only invariants: a run that has not produced a thesis yet must not already
-  // contain downstream products. The child game root may exist only once both a
-  // thesis and an engine decision exist (README_AGENT_BOOT boot sequence).
+  // contain downstream products. The spec pack folder may exist only once thesis,
+  // engine decision, and spec all exist (README_AGENT_BOOT boot sequence).
   const beforeThesis = ["toolchain", "intake"].includes(manifest.current_phase) && !manifest.game_thesis_path;
   if (beforeThesis && fs.existsSync(path.join(runDir, "GAME_THESIS.md"))) {
-    errors.push("GAME_THESIS.md exists before the thesis phase (no implementation before the thesis)");
+    errors.push("GAME_THESIS.md exists before the thesis phase (no decomposition before the thesis)");
   }
-  const mayHaveChildRepo = manifest.game_thesis_path && manifest.engine_decision_path;
-  if (!mayHaveChildRepo && fs.existsSync(runState.childGameRootFor(seedId))) {
-    errors.push(`child game repo exists before thesis+engine decision: ${runState.childGameRootFor(seedId)}`);
+  const mayHaveSpecPack = manifest.game_thesis_path && manifest.engine_decision_path && manifest.spec_path;
+  if (!mayHaveSpecPack && fs.existsSync(runState.specPackRootFor(seedId))) {
+    errors.push(`spec pack folder exists before thesis+engine+spec: ${runState.specPackRootFor(seedId)}`);
   }
 
-  // Fun-lock (and beyond) is evidence-gated: completion is evidence, not prose. A run
-  // cannot be at/past fun-lock without a gate-passing depth vector in its reviews/ —
-  // verdict ADVANCE that actually clears the gate (>=16/24, required axes nonzero).
-  // Gate POLICY lives here (the checker), not in the schema (ADR 0005).
-  const FUNLOCK_AND_PAST = ["fun-lock", "content", "art", "polish", "qa", "release-candidate", "handoff", "complete"];
-  if (FUNLOCK_AND_PAST.includes(manifest.current_phase)) {
+  // Design-lock (and beyond) is evidence-gated: completion is evidence, not prose. A
+  // run cannot be past design-review without a gate-passing depth vector in its
+  // reviews/ — verdict ADVANCE that actually clears the gate (>=16/24, required axes
+  // nonzero). Gate POLICY lives here (the checker), not in the schema (ADR 0005).
+  const DESIGN_LOCKED_AND_PAST = ["engine-profile", "decompose", "handoff", "complete"];
+  if (DESIGN_LOCKED_AND_PAST.includes(manifest.current_phase)) {
     const dvFiles = [];
     (function walk(d) {
       if (!fs.existsSync(d)) return;
@@ -258,7 +255,7 @@ function checkRun(seedId) {
       if (dv.verdict === "ADVANCE" && gate.depthVectorConsistencyErrors(dv).length === 0) passing = true;
     }
     if (!passing) {
-      errors.push(`current_phase '${manifest.current_phase}' is at/past fun-lock but reviews/ has no gate-passing depth vector (verdict ADVANCE, total >=16, required axes nonzero)`);
+      errors.push(`current_phase '${manifest.current_phase}' is past design-review but reviews/ has no gate-passing depth vector (design-lock: verdict ADVANCE, total >=16, required axes nonzero)`);
     }
   }
   return errors;
@@ -295,7 +292,7 @@ function checkGate() {
   }
   const errors = [];
   for (const [fixture] of Object.entries(FIXTURE_SCHEMA)) {
-    if (!/depth-vector|playtest-report|branch-score/.test(fixture)) continue;
+    if (!/depth-vector|playtest-report/.test(fixture)) continue;
     const data = JSON.parse(fs.readFileSync(rel("examples/fixtures", fixture), "utf8"));
     gate.gateConsistencyErrors(data).forEach((e) => errors.push(`fixture ${fixture}: ${e}`));
   }
@@ -310,10 +307,25 @@ const ISSUE_STATES = ["needs-triage", "needs-info", "ready-for-agent", "ready-fo
 const ISSUE_AFK = ["ready-for-agent", "needs-human"];
 function checkIssues() {
   const errors = [];
-  const dir = path.join(process.cwd(), ".tgf", "issues");
+  // Two issue surfaces share one structural contract: the factory's own backlog
+  // (.tgf/issues) and each seed run's decomposed spec backlog (.tgf/seeds/*/issues).
+  const dirs = [path.join(process.cwd(), ".tgf", "issues")];
+  const seedsRoot = path.join(process.cwd(), ".tgf", "seeds");
+  if (fs.existsSync(seedsRoot) && !runState.firstSymlinkComponent(seedsRoot)) {
+    for (const e of fs.readdirSync(seedsRoot, { withFileTypes: true })) {
+      if (e.isDirectory()) dirs.push(path.join(seedsRoot, e.name, "issues"));
+    }
+  }
+  for (const dir of dirs) checkIssueDir(dir, errors);
+  return errors;
+}
+function checkIssueDir(dir, errors) {
   if (!fs.existsSync(dir)) return errors;
   const symlink = runState.firstSymlinkComponent(dir);
-  if (symlink) return [`issue directory must not traverse symlink: ${path.relative(process.cwd(), symlink) || symlink}`];
+  if (symlink) {
+    errors.push(`issue directory must not traverse symlink: ${path.relative(process.cwd(), symlink) || symlink}`);
+    return errors;
+  }
   for (const name of fs.readdirSync(dir)) {
     if (!name.endsWith(".md")) continue;
     const file = path.join(dir, name);
@@ -358,9 +370,13 @@ function checkIssues() {
 // --- thesis / engine decision: embedded ```json block validates against its schema ---
 // On-demand, like `run`: resolves the artifact through a seed run, so a phase can
 // self-verify its output without bypassing run path confinement.
+const EMBEDDED_KINDS = {
+  thesis: { schemaName: "game-thesis", manifestKey: "game_thesis_path" },
+  engine: { schemaName: "engine-profile-decision", manifestKey: "engine_decision_path" },
+  spec: { schemaName: "spec-decomposition", manifestKey: "spec_path" }
+};
 function checkEmbeddedArtifact(kind) {
-  const schemaName = kind === "thesis" ? "game-thesis" : "engine-profile-decision";
-  const manifestKey = kind === "thesis" ? "game_thesis_path" : "engine_decision_path";
+  const { schemaName, manifestKey } = EMBEDDED_KINDS[kind];
   const file = arg("file");
   const seedId = arg("seed-id");
   let p;
@@ -391,6 +407,7 @@ const CHECKS = {
   issues: checkIssues,
   thesis: () => checkEmbeddedArtifact("thesis"),
   engine: () => checkEmbeddedArtifact("engine"),
+  spec: () => checkEmbeddedArtifact("spec"),
   run: () => checkRun(arg("seed-id"))
 };
 
