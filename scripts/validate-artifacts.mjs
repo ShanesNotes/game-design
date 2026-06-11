@@ -12,16 +12,13 @@ import * as runState from "./lib/run-state.mjs";
 import * as gate from "./lib/anti-boring-gate.mjs";
 import { specConsistencyErrors } from "./lib/spec-decomposition.mjs";
 import { leakageErrors } from "./lib/leakage.mjs";
-import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
+import { frontMatterAccessors } from "./lib/issue-format.mjs";
+import { arg } from "./lib/argv.mjs";
+import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, ARTIFACT_KINDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
 const exists = (...p) => fs.existsSync(rel(...p));
-
-function arg(name) {
-  const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : null;
-}
 
 // SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, FIXTURE_SCHEMA, PROMPTS come from
 // the factory-contract registry (scripts/lib/factory-contract.mjs) — the single
@@ -46,6 +43,7 @@ function checkRequiredTree() {
     "templates/run/README_AGENT_BOOT.md", "templates/run/README_NEXT_ACTIONS.md",
     "templates/run/decisions/0001-engine-profile.md",
     "templates/spec-pack/AGENTS.md", "templates/spec-pack/README.md", "templates/spec-pack/PLAYTEST_PLAN.md",
+    "templates/spec-pack/MISSION.md", "templates/spec-pack/RESOURCES.md",
     "templates/spec-pack/guards/lib/guard.mjs"
   ];
   required.push(...SCHEMAS.map((s) => `schemas/${s}.schema.json`));
@@ -333,13 +331,7 @@ function checkIssueDir(dir, errors) {
     }
     const fm = fs.readFileSync(file, "utf8").match(/^---\n([\s\S]*?)\n---/);
     if (!fm) { errors.push(`${name}: missing YAML front matter`); continue; }
-    const front = fm[1];
-    const field = (k) => { const m = front.match(new RegExp(`^${k}:\\s*(.+)$`, "m")); return m ? m[1].trim() : null; };
-    const hasKey = (k) => new RegExp(`^${k}:\\s*$`, "m").test(front) || field(k) !== null;
-    const listItems = (k) => {
-      const m = front.match(new RegExp(`^${k}:\\s*\\n((?:  - .+\\n?)*)`, "m"));
-      return m ? m[1].split("\n").filter((line) => line.trim().startsWith("- ")).map((line) => line.trim().slice(2)) : [];
-    };
+    const { field, hasKey, listItems } = frontMatterAccessors(fm[1]);
     const stem = name.replace(/\.md$/, "");
     if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(stem)) errors.push(`${name}: filename must be a kebab-case slug`);
     if (field("id") !== stem) errors.push(`${name}: id '${field("id")}' must match filename '${stem}'`);
@@ -367,14 +359,10 @@ function checkIssueDir(dir, errors) {
 
 // --- thesis / engine decision: embedded ```json block validates against its schema ---
 // On-demand, like `run`: resolves the artifact through a seed run, so a phase can
-// self-verify its output without bypassing run path confinement.
-const EMBEDDED_KINDS = {
-  thesis: { schemaName: "game-thesis", manifestKey: "game_thesis_path" },
-  engine: { schemaName: "engine-profile-decision", manifestKey: "engine_decision_path" },
-  spec: { schemaName: "spec-decomposition", manifestKey: "spec_path" }
-};
+// self-verify its output without bypassing run path confinement. The kind →
+// manifest-key/schema mapping is ARTIFACT_KINDS in the factory-contract registry.
 function checkEmbeddedArtifact(kind) {
-  const { schemaName, manifestKey } = EMBEDDED_KINDS[kind];
+  const { schemaName, manifestKey } = ARTIFACT_KINDS[kind];
   const file = arg("file");
   const seedId = arg("seed-id");
   let p;

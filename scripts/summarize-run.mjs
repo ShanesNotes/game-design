@@ -4,10 +4,9 @@
 // parsing live in one place; a single malformed ledger row no longer aborts the
 // summary. Usage: node scripts/summarize-run.mjs --seed-id <seed-id>
 import { runDirFor, readManifest, readLedger, isValidSeedId, validateLedgerRow } from "./lib/run-state.mjs";
+import { arg } from "./lib/argv.mjs";
 
-const args = process.argv.slice(2);
-const i = args.indexOf("--seed-id");
-const seedId = i >= 0 ? args[i + 1] : null;
+const seedId = arg("seed-id");
 if (!seedId) {
   console.error("Usage: node scripts/summarize-run.mjs --seed-id <seed-id>");
   process.exit(1);

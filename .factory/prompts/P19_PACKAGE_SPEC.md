@@ -6,7 +6,7 @@ self-contained spec pack a fresh session can open cold and start co-developing f
 INPUT:
 - a seed run at phase `decompose` or `handoff` whose `--check run` passes
 - SPEC.md + rendered issues/
-- templates/spec-pack/ (co-dev README, AGENTS, PLAYTEST_PLAN, guards)
+- templates/spec-pack/ (co-dev README, AGENTS, PLAYTEST_PLAN, MISSION/RESOURCES, guards)
 
 TASK:
 1. Dry-run the export and review the file list:

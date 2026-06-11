@@ -10,19 +10,18 @@ import {
   runDirFor, runRelFor, readManifest, readLedger, readEmbeddedArtifact,
   validateLedgerRow, isValidSeedId, resolveRunPath, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
+import { ARTIFACT_KINDS } from "./lib/factory-contract.mjs";
+import { arg, hasFlag } from "./lib/argv.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 function fail(msg) { console.error(`[walk-game-idea] ERROR: ${msg}`); process.exit(1); }
-const argv = process.argv.slice(2);
-function arg(name, defaultValue = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : defaultValue; }
-const has = (name) => argv.includes(`--${name}`);
 
 const seedId = arg("seed-id");
 const seed = arg("seed");
-const writeIssues = has("write-issues");
-const forceIssues = has("force-issues");
-const noWrite = has("no-write");
+const writeIssues = hasFlag("write-issues");
+const forceIssues = hasFlag("force-issues");
+const noWrite = hasFlag("no-write");
 
 if (!seedId) fail("usage: --seed-id <id> [--seed '<one-line seed>'] [--write-issues] [--force-issues] [--no-write]");
 if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
@@ -66,7 +65,7 @@ const seedText = rawSeedText
   .filter((line) => line && line !== "# GAME_SEED.md")
   .join(" / ");
 
-function readArtifact(manifestKey, schemaName) {
+function readArtifact({ manifestKey, schemaName }) {
   const relPath = manifest[manifestKey];
   if (!relPath) return { relPath, obj: null, errors: [] };
   let file;
@@ -76,9 +75,9 @@ function readArtifact(manifestKey, schemaName) {
   return { relPath, obj, errors };
 }
 
-const thesis = readArtifact("game_thesis_path", "game-thesis");
-const engine = readArtifact("engine_decision_path", "engine-profile-decision");
-const spec = readArtifact("spec_path", "spec-decomposition");
+const thesis = readArtifact(ARTIFACT_KINDS.thesis);
+const engine = readArtifact(ARTIFACT_KINDS.engine);
+const spec = readArtifact(ARTIFACT_KINDS.spec);
 function issueBlocker() {
   if (!thesis.obj) return "Backlog decomposition is blocked until GAME_THESIS.md validates.";
   if (!engine.obj) return "Backlog decomposition is blocked until an engine decision validates.";

@@ -13,21 +13,21 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  runDirFor, runRelFor, readManifest, isValidSeedId, resolveRunPath,
+  runDirFor, runRelFor, readManifest, readEmbeddedArtifact, isValidSeedId, resolveRunPath,
   specPackRootFor, validateManifest, manifestPathPolicyErrors, pathIsInside,
   writeRunFileSync, appendRunFileSync, validateLedgerRow, firstSymlinkComponent
 } from "./lib/run-state.mjs";
 import { leakageErrors, listFiles } from "./lib/leakage.mjs";
+import { renderTemplate } from "./lib/template.mjs";
+import { arg, hasFlag } from "./lib/argv.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function fail(msg) { console.error(`[package-spec] ERROR: ${msg}`); process.exit(1); }
 
-const argv = process.argv.slice(2);
-function arg(name, defaultValue = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : defaultValue; }
 const seedId = arg("seed-id");
-const write = argv.includes("--write");
-const force = argv.includes("--force");
+const write = hasFlag("write");
+const force = hasFlag("force");
 
 if (!seedId) fail("usage: --seed-id <id> [--to <dir>] [--write] [--force]");
 if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
@@ -73,9 +73,17 @@ try {
   fail(e.message);
 }
 
+// The pack doubles as a teaching workspace: MISSION.md and RESOURCES.md (the files
+// a teaching skill boots from) are seeded from the validated thesis so the first
+// co-dev session starts grounded in why this game, not with an empty mission.
+const { obj: thesis, errors: thesisErrors } = readEmbeddedArtifact(thesisPath, "game-thesis");
+if (!thesis) fail(`thesis invalid:\n  ${thesisErrors.join("\n  ")}`);
+
 // --- Assemble in staging, prove cleanliness, only then touch the target ---
 const tplDir = path.join(FACTORY_ROOT, "templates", "spec-pack");
-const sub = (s) => s.replaceAll("{{SEED_ID}}", seedId).replaceAll("{{SEED}}", seedText);
+const sub = (s) => renderTemplate(s, {
+  SEED_ID: seedId, SEED: seedText, PITCH: thesis.pitch, PLAYER_FANTASY: thesis.player_fantasy
+});
 const staging = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-spec-pack-"));
 function put(relPath, contents) {
   const p = path.join(staging, relPath);
@@ -91,7 +99,7 @@ function copyTree(fromDir, toRel) {
 }
 
 try {
-  for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md"]) {
+  for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md", "MISSION.md", "RESOURCES.md"]) {
     put(f, sub(fs.readFileSync(path.join(tplDir, f), "utf8")));
   }
   copyTree(path.join(tplDir, "guards"), "guards");

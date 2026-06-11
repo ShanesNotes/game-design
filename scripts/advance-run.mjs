@@ -17,12 +17,9 @@ import {
   manifestPathPolicyErrors, phaseArtifactConstraintErrors, isLegalTransition, legalNextPhases,
   isValidSeedId, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
+import { arg, multi, hasFlag } from "./lib/argv.mjs";
 
 function fail(msg) { console.error(`[advance-run] ERROR: ${msg}`); process.exit(1); }
-
-const argv = process.argv.slice(2);
-function arg(name, defaultValue = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : defaultValue; }
-function multi(name) { const out = []; argv.forEach((a, i) => { if (a === `--${name}`) out.push(argv[i + 1]); }); return out; }
 
 const seedId = arg("seed-id");
 const to = arg("to");
@@ -32,7 +29,7 @@ const actor = arg("actor", "agent");
 const lane = arg("lane");
 const note = arg("note");
 const resumeArtifact = arg("resume-artifact");
-const dryRun = argv.includes("--dry-run");
+const dryRun = hasFlag("dry-run");
 
 if (!seedId || !to || !event) {
   fail('usage: --seed-id <id> --to <phase> --event <event> [--status] [--actor] [--lane] [--note] [--resume-artifact] [--set k=v] [--append k=v] [--dry-run]');

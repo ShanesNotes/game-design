@@ -29,7 +29,6 @@
     "default_spec_pack_root": { "type": "string" },
     "spec_pack_path": { "type": ["string", "null"] },
     "external_side_effects_allowed": { "type": "boolean" },
-    "redaction_status": { "enum": ["unknown", "clean", "redacted", "needs-review"] },
     "execution_ledger_path": { "type": "string" },
     "review_report_paths": { "type": "array", "items": { "type": "string" } },
     "handoff_paths": { "type": "array", "items": { "type": "string" } },

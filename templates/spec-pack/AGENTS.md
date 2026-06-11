@@ -22,6 +22,16 @@ approach before writing code, let the human drive where they want to, and review
 the result together against the issue's acceptance list. Keep slices thin — the
 tracer bullet comes first and proves the verbs fit together end to end.
 
+## Learning workspace
+
+This folder doubles as a teaching workspace. `MISSION.md` (seeded from the thesis)
+is the compass — refine it with the human before slice 1 and keep it current.
+`RESOURCES.md` tracks trusted sources; fill its gaps before trusting parametric
+knowledge about the engine. If a teaching skill is in use, its artifacts
+(`lessons/`, `learning-records/`, `reference/`, `NOTES.md`) live here too — treat
+them as first-class: a learning record about why a mechanic works is evidence,
+the same as a playtest report.
+
 ## Non-negotiables (inherited from the spec)
 
 - The engine decision is recorded; migrating engines requires a new file in `decisions/`.

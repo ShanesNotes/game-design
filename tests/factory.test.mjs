@@ -761,11 +761,14 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
     // export
     r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md", "SPEC.md", "GAME_THESIS.md", "GAME_SEED.md",
+    for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md", "MISSION.md", "RESOURCES.md",
+      "SPEC.md", "GAME_THESIS.md", "GAME_SEED.md",
       "decisions/0001-engine-profile.md", "issues/tracer-loop.md", "guards/playtest_report_required.mjs",
       "guards/lib/guard.mjs", "schemas/playtest-report.schema.json"]) {
       assert.ok(fs.existsSync(path.join(target, f)), `pack must contain ${f}`);
     }
+    // the teaching-workspace mission is seeded from the thesis, not left templated
+    assert.doesNotMatch(fs.readFileSync(path.join(target, "MISSION.md"), "utf8"), /\{\{/, "MISSION.md must have all placeholders substituted");
     // the pack carries zero factory state
     const all = [];
     (function walk(d) {

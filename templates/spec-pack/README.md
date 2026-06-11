@@ -14,6 +14,8 @@ Seed: {{SEED}}
 - `decisions/0001-engine-profile.md` — the recommended engine profile and its reversal triggers.
 - `issues/` — one issue per slice. Build them in `order`, starting with the tracer bullet.
 - `PLAYTEST_PLAN.md` — the falsifiers every gameplay slice must survive.
+- `MISSION.md` / `RESOURCES.md` — the learning workspace: why the human is building
+  this and where trusted knowledge lives. A teaching skill boots from these.
 - `guards/` — optional dependency-free checks (run `node guards/<name>.mjs`) that block
   scope drift: content before fun-lock, opaque assets without provenance, missing
   playtest evidence, and more.
@@ -26,6 +28,8 @@ Seed: {{SEED}}
 3. Open `issues/` and take the order-1 tracer-bullet issue.
 4. Build the thinnest version that satisfies its acceptance, produce its evidence,
    then move to the next issue.
+5. Learning as you build? Refine `MISSION.md` together first, then let lessons and
+   learning records accumulate here — this folder is also the teaching workspace.
 
 ## Doctrine
 

@@ -146,8 +146,10 @@ evidence links (dry-run by default; `--write`/`--force`).
 
 The **spec pack** is the factory's **terminal artifact** (ADR 0006): a clean
 folder containing the spec, the issue backlog, the thesis, the design review, a
-`PLAYTEST_PLAN.md` of falsifiers, the 8 build-time guards, and the evidence
-schemas — everything a co-dev repo needs to build the game and prove it is fun.
+`PLAYTEST_PLAN.md` of falsifiers, the 8 build-time guards, the evidence
+schemas, and a learning workspace (`MISSION.md`/`RESOURCES.md`, seeded from the
+thesis so a teaching skill boots grounded) — everything a co-dev repo needs to
+build the game, learn from it, and prove it is fun.
 It is produced **only** by `scripts/package-spec.mjs` (`npm run spec:package`),
 which is dry-run by default and gated by run validation plus the leakage scan.
 Completion is the verifier-clean pack, not prose. Fun-lock, playtesting, content,

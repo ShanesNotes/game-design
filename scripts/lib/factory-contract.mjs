@@ -33,6 +33,15 @@ export const SPEC_PACK_GUARDS = [
   "minimum_bot_session_gate", "two_bot_spread_gate"
 ];
 
+// The run's markdown artifacts that carry a canonical fenced ```json block: which
+// manifest field locates each one and which schema its block validates against.
+// Validators, the issue renderer, and the walkthrough all read this mapping.
+export const ARTIFACT_KINDS = {
+  thesis: { manifestKey: "game_thesis_path", schemaName: "game-thesis" },
+  engine: { manifestKey: "engine_decision_path", schemaName: "engine-profile-decision" },
+  spec: { manifestKey: "spec_path", schemaName: "spec-decomposition" }
+};
+
 export const FIXTURE_SCHEMA = {
   "minimal-seed-manifest.json": "seed-manifest.schema.json",
   "minimal-game-thesis.json": "game-thesis.schema.json",

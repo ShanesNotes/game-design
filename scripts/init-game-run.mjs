@@ -6,20 +6,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  SEED_ID_RE, runRelFor, runDirFor, specPackRootFor,
+  SEED_ID_RE, RUN_DIRS, runRelFor, runDirFor, specPackRootFor,
   validateManifest, manifestPathPolicyErrors, symlinkWriteThroughPaths
 } from "./lib/run-state.mjs";
+import { renderTemplate } from "./lib/template.mjs";
+import { arg, hasFlag } from "./lib/argv.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function arg(name, fallback = null) {
-  const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : fallback;
-}
 const seedId = arg("seed-id");
 const seed = arg("seed");
-const dryRun = process.argv.includes("--dry-run");
-const force = process.argv.includes("--force");
+const dryRun = hasFlag("dry-run");
+const force = hasFlag("force");
 
 function fail(msg) {
   console.error(`[init-game-run] ERROR: ${msg}`);
@@ -40,8 +38,8 @@ const iso = new Date().toISOString();
 
 // Load + substitute templates from the factory repo (independent of cwd).
 const tplDir = path.join(FACTORY_ROOT, "templates", "run");
-const sub = (s) => s.replaceAll("{{SEED_ID}}", seedId).replaceAll("{{SEED}}", seed).replaceAll("{{ISO}}", iso);
-const readTpl = (name) => sub(fs.readFileSync(path.join(tplDir, name), "utf8"));
+const readTpl = (name) =>
+  renderTemplate(fs.readFileSync(path.join(tplDir, name), "utf8"), { SEED_ID: seedId, SEED: seed, ISO: iso });
 
 const manifest = JSON.parse(readTpl("manifest.json"));
 const bootDoc = readTpl("README_AGENT_BOOT.md");
@@ -86,12 +84,7 @@ if (manifestErrors.length) fail(`manifest does not validate:\n  ${manifestErrors
 const pathPolicyErrors = manifestPathPolicyErrors(manifest, seedId);
 if (pathPolicyErrors.length) fail(pathPolicyErrors.join("; "));
 
-const wouldCreate = ledgerRow.changed_paths.concat([
-  `${runRel}/decisions/.gitkeep`,
-  `${runRel}/reviews/.gitkeep`,
-  `${runRel}/handoffs/.gitkeep`,
-  `${runRel}/issues/.gitkeep`
-]);
+const wouldCreate = ledgerRow.changed_paths.concat(RUN_DIRS.map((d) => `${runRel}/${d}/.gitkeep`));
 
 if (dryRun) {
   const specPackAbsent = !fs.existsSync(specPackRoot);
@@ -126,7 +119,7 @@ if (fs.existsSync(runDir)) {
 
 // --- Write (only inside runDir) ---
 fs.mkdirSync(runDir, { recursive: true });
-for (const subdir of ["decisions", "reviews", "handoffs", "issues"]) {
+for (const subdir of RUN_DIRS) {
   fs.mkdirSync(path.join(runDir, subdir), { recursive: true });
   fs.writeFileSync(path.join(runDir, subdir, ".gitkeep"), "");
 }

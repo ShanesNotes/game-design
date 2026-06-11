@@ -136,12 +136,16 @@ export function appendRunFileSync(cwd, seedId, runPath, contents) {
   }
 }
 
+// The subdirectories every run dir carries. The initializer creates them and the
+// symlink guard inspects them — one list so the two cannot drift.
+export const RUN_DIRS = ["decisions", "reviews", "handoffs", "issues"];
+
 // The files/dirs the initializer owns inside a run dir — the only paths `--force`
 // may rewrite, and the only paths the symlink guard inspects.
-export function ownedRunPaths(runDir) {
+function ownedRunPaths(runDir) {
   return [
     runDir,
-    ...["decisions", "reviews", "handoffs", "issues"].map((d) => path.join(runDir, d)),
+    ...RUN_DIRS.map((d) => path.join(runDir, d)),
     ...["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl"]
       .map((f) => path.join(runDir, f))
   ];

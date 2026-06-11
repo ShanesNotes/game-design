@@ -79,7 +79,3 @@ export function validate(schema, data, path = "$") {
 
   return errors;
 }
-
-export function isValid(schema, data) {
-  return validate(schema, data).length === 0;
-}

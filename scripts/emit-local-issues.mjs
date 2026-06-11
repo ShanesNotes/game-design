@@ -12,14 +12,15 @@ import {
   isValidSeedId, resolveRunPath, writeRunFileSync
 } from "./lib/run-state.mjs";
 import { specConsistencyErrors } from "./lib/spec-decomposition.mjs";
+import { frontMatterAccessors } from "./lib/issue-format.mjs";
+import { arg, hasFlag } from "./lib/argv.mjs";
+import { ARTIFACT_KINDS } from "./lib/factory-contract.mjs";
 
 function fail(msg) { console.error(`[emit-local-issues] ERROR: ${msg}`); process.exit(1); }
 
-const argv = process.argv.slice(2);
-function arg(name, defaultValue = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : defaultValue; }
 const seedId = arg("seed-id");
-const write = argv.includes("--write");
-const force = argv.includes("--force");
+const write = hasFlag("write");
+const force = hasFlag("force");
 
 if (!seedId) fail("usage: --seed-id <id> [--write] [--force]");
 if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
@@ -34,21 +35,12 @@ if (!manifest.game_thesis_path) fail("refusing to emit issues before GAME_THESIS
 if (!manifest.engine_decision_path) fail("refusing to emit issues before an engine decision exists");
 if (!manifest.spec_path) fail("refusing to emit issues before SPEC.md exists (run the decompose phase first)");
 
-let thesisPath; let enginePath; let specPath;
-try {
-  thesisPath = resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path");
-  enginePath = resolveRunPath(process.cwd(), seedId, manifest.engine_decision_path, "engine_decision_path");
-  specPath = resolveRunPath(process.cwd(), seedId, manifest.spec_path, "spec_path");
-} catch (e) {
-  fail(e.message);
-}
 const artifacts = {};
-for (const [kind, file, schema] of [
-  ["thesis", thesisPath, "game-thesis"],
-  ["engine", enginePath, "engine-profile-decision"],
-  ["spec", specPath, "spec-decomposition"]
-]) {
-  const { obj, errors } = readEmbeddedArtifact(file, schema);
+for (const [kind, { manifestKey, schemaName }] of Object.entries(ARTIFACT_KINDS)) {
+  let file;
+  try { file = resolveRunPath(process.cwd(), seedId, manifest[manifestKey], manifestKey); }
+  catch (e) { fail(e.message); }
+  const { obj, errors } = readEmbeddedArtifact(file, schemaName);
   if (errors.length) fail(`${kind} artifact invalid:\n  ${errors.join("\n  ")}`);
   artifacts[kind] = obj;
 }
@@ -136,16 +128,7 @@ function generatedIssueErrors({ id, md }) {
   if (extraDelimiter >= 0) {
     errors.push(`${id}: generated issue contains an extra YAML front matter delimiter`);
   }
-  const front = lines.slice(1, closing).join("\n");
-  const field = (k) => {
-    const m = front.match(new RegExp(`^${k}:\\s*(.+)$`, "m"));
-    return m ? m[1].trim() : null;
-  };
-  const hasKey = (k) => new RegExp(`^${k}:\\s*$`, "m").test(front) || field(k) !== null;
-  const listItems = (k) => {
-    const m = front.match(new RegExp(`^${k}:\\s*\\n((?:  - .+\\n?)*)`, "m"));
-    return m ? m[1].split("\n").filter((line) => line.trim().startsWith("- ")).map((line) => line.trim().slice(2)) : [];
-  };
+  const { field, hasKey, listItems } = frontMatterAccessors(lines.slice(1, closing).join("\n"));
   if (field("id") !== id) errors.push(`${id}: id must match generated issue id`);
   for (const req of ["title", "type", "state", "afk"]) {
     if (!field(req)) errors.push(`${id}: missing generated front-matter key '${req}'`);
