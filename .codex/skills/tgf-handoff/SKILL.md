@@ -16,7 +16,7 @@ Read `.factory/prompts/P19_PACKAGE_SPEC.md` and execute it exactly.
 **Inputs**
 - the manifest and `execution-ledger.jsonl`
 - `SPEC.md`, rendered `issues/`, thesis, engine decision, review verdicts
-- `templates/spec-pack/` via `scripts/package-spec.mjs`
+- `templates/spec-pack/` via `scripts/package-spec.mjs` (seeds the pack's `MISSION.md`/`RESOURCES.md` learning workspace from the thesis)
 
 **Outputs** (emit before summarizing)
 - the exported spec pack folder (default: the run's `default_spec_pack_root`)

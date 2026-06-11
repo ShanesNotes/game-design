@@ -23,7 +23,7 @@ export function hasFlag(flag) {
 }
 
 export function block(msg) {
-  console.error(`[TGF ${guardName()}] BLOCK: ${msg}`);
+  console.error(`[guard:${guardName()}] BLOCK: ${msg}`);
   process.exit(2);
 }
 export function allow() {

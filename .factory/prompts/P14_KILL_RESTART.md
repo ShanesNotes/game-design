@@ -1,27 +1,23 @@
 # P14 — Kill / Restart Decision
 
-ROLE: Search discipline enforcer.
+ROLE: Search discipline enforcer for the idea pipeline.
 
 INPUT:
-- anti-boring verdicts
-- branch bakeoff
-- depth transforms attempted
-- playtest telemetry
+- design-review verdicts and depth vectors (`reviews/`)
+- `manifest.deepen_attempt_count` (at most 2 allowed)
+- the thesis `kill_conditions`
 
 TASK:
 Choose one:
-- ADVANCE
-- DEEPEN_ONCE
-- PIVOT_ENGINE
-- PIVOT_LOOP
-- FRESH_PROTOTYPE
-- KILL_SEED
+- DEEPEN_ONCE: attempts remain and a named transform plausibly clears the design gate.
+- KILL_SEED: attempts are exhausted, a kill condition fired, or no transform is credible.
 
 Rules:
-- No more than two deepen attempts on the same loop.
-- Do not polish before fun.
-- Do not keep a branch because it has more code.
-- If branch is ugly but fun, preserve the mechanic and optionally reimplement.
+- No more than two deepen attempts on the same loop — then the run is killed.
+- Evidence is the depth vector, not effort: do not keep a seed because words were written.
+- A killed seed should still pay rent: distill what the reviews proved into a sharper seed.
 
 OUTPUT:
-`decisions/NNNN-kill-restart.md`
+- `decisions/NNNN-kill-restart.md` recording the choice and its evidence
+- on KILL_SEED: advance the run to `killed` with a ledger row, and optionally a new
+  one-line seed brief for a fresh `init-game-run` (a new seed-id — never reuse the run)

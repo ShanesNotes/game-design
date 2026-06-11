@@ -7,6 +7,7 @@ import path from "node:path";
 
 export const LEAK_TOKENS = [
   [/\.tgf\b/, ".tgf run state"],
+  [/\bTGF\b/, "TGF orchestrator initialism"],
   [/\.omx\b/i, ".omx state"],
   [/\.sandcastle\b/i, ".sandcastle state"],
   [/gstack/i, "GStack"],

@@ -64,7 +64,7 @@ const scenarios = [
   // trigger, other engine configs, more asset types, devDependencies, packs/ path).
   { guard: "asset_provenance", kind: "ALLOW", setup: (d) => write(d, "assets/hero.provenance.json", "{}"), args: ["assets/hero.png"], expect: 0 },
   { guard: "asset_provenance", kind: "ALLOW", setup: (d) => write(d, "assets/ASSET_PROVENANCE.md", "x"), args: ["assets/hero.png"], expect: 0 },
-  { guard: "afk_heartbeat_required", kind: "ALLOW", setup: (d) => write(d, "playtests/loop-a/playtest_report.json", JSON.stringify({ duration_seconds: 320 })), args: [], env: { TGF_AFK: "1" }, expect: 0 },
+  { guard: "afk_heartbeat_required", kind: "ALLOW", setup: (d) => write(d, "playtests/loop-a/playtest_report.json", JSON.stringify({ duration_seconds: 320 })), args: [], env: { GUARD_AFK: "1" }, expect: 0 },
   { guard: "engine_migration_requires_adr", kind: "BLOCK", setup: () => {}, args: ["Cargo.toml"], expect: 2 },
   { guard: "engine_migration_requires_adr", kind: "BLOCK", setup: () => {}, args: ["project.godot"], expect: 2 },
   { guard: "art_fidelity_cap", kind: "BLOCK", setup: () => {}, args: ["assets/theme.ogg"], expect: 2 },
