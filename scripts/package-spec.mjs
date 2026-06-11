@@ -14,10 +14,10 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   runDirFor, runRelFor, readManifest, isValidSeedId, resolveRunPath,
-  specPackRootFor, validateManifest, manifestPathPolicyErrors,
+  specPackRootFor, validateManifest, manifestPathPolicyErrors, pathIsInside,
   writeRunFileSync, appendRunFileSync, validateLedgerRow, firstSymlinkComponent
 } from "./lib/run-state.mjs";
-import { leakageErrors } from "./lib/leakage.mjs";
+import { leakageErrors, listFiles } from "./lib/leakage.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -118,13 +118,7 @@ try {
   const leaks = leakageErrors([staging], staging);
   if (leaks.length) fail(`spec pack failed leakage gate; redact these in the run artifacts and re-export:\n  ${leaks.join("\n  ")}`);
 
-  const packFiles = [];
-  (function list(d, prefix = "") {
-    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      if (e.isDirectory()) list(path.join(d, e.name), path.join(prefix, e.name));
-      else packFiles.push(path.join(prefix, e.name));
-    }
-  })(staging);
+  const packFiles = listFiles(staging).map((p) => path.relative(staging, p)).sort();
 
   if (!write) {
     console.log(`# Dry-run spec pack for ${seedId}`);
@@ -147,8 +141,7 @@ try {
   // Record the export in the run: ledger row always; spec_pack_path only when the
   // target is the declared default root (the path policy forbids anything else).
   const iso = new Date().toISOString();
-  const insideDefaultRoot = target === specPackRootFor(seedId)
-    || (target.startsWith(specPackRootFor(seedId) + path.sep));
+  const insideDefaultRoot = pathIsInside(specPackRootFor(seedId), target);
   const row = {
     ts: iso, seed_id: seedId, phase: manifest.current_phase,
     event: "spec-pack-exported", status: "passed", actor: "package-spec.mjs",

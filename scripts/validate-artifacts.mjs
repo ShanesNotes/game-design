@@ -148,12 +148,19 @@ function checkRun(seedId) {
     if (fs.existsSync(path.join(runDir, bad))) errors.push(`run dir contains forbidden ${bad}/`);
   }
   // A declared artifact path must point at a real file whose embedded ```json block
-  // validates against its schema (the artifact is markdown carrying a canonical block).
+  // validates against its schema (the artifact is markdown carrying a canonical
+  // block). Each artifact is read once; the parsed thesis is reused by the spec
+  // consistency check below.
+  let thesisObj = null;
   if (manifest.game_thesis_path) {
     try {
       const tp = runState.resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path");
       if (!fs.existsSync(tp)) errors.push(`game_thesis_path set but file missing: ${manifest.game_thesis_path}`);
-      else runState.validateEmbeddedJson(tp, "game-thesis").forEach((e) => errors.push(`thesis ${e}`));
+      else {
+        const { obj, errors: tErrors } = runState.readEmbeddedArtifact(tp, "game-thesis");
+        tErrors.forEach((e) => errors.push(`thesis ${e}`));
+        thesisObj = obj;
+      }
     } catch (e) {
       errors.push(e.message);
     }
@@ -172,19 +179,11 @@ function checkRun(seedId) {
       const sp = runState.resolveRunPath(process.cwd(), seedId, manifest.spec_path, "spec_path");
       if (!fs.existsSync(sp)) errors.push(`spec_path set but file missing: ${manifest.spec_path}`);
       else {
-        const embedded = runState.validateEmbeddedJson(sp, "spec-decomposition");
-        embedded.forEach((e) => errors.push(`spec ${e}`));
-        if (!embedded.length) {
-          const spec = runState.extractFencedJson(fs.readFileSync(sp, "utf8")).obj;
-          let thesis = null;
-          if (manifest.game_thesis_path) {
-            try {
-              const tp = runState.resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path");
-              if (fs.existsSync(tp)) thesis = runState.extractFencedJson(fs.readFileSync(tp, "utf8")).obj;
-            } catch { /* thesis path errors already reported above */ }
-          }
-          if (spec && spec.seed_id !== seedId) errors.push(`spec seed_id '${spec.seed_id}' does not match '${seedId}'`);
-          specConsistencyErrors(spec, thesis).forEach((e) => errors.push(`spec ${e}`));
+        const { obj: spec, errors: sErrors } = runState.readEmbeddedArtifact(sp, "spec-decomposition");
+        sErrors.forEach((e) => errors.push(`spec ${e}`));
+        if (spec) {
+          if (spec.seed_id !== seedId) errors.push(`spec seed_id '${spec.seed_id}' does not match '${seedId}'`);
+          specConsistencyErrors(spec, thesisObj).forEach((e) => errors.push(`spec ${e}`));
         }
       }
     } catch (e) {
@@ -229,8 +228,7 @@ function checkRun(seedId) {
   // run cannot be past design-review without a gate-passing depth vector in its
   // reviews/ — verdict ADVANCE that actually clears the gate (>=16/24, required axes
   // nonzero). Gate POLICY lives here (the checker), not in the schema (ADR 0005).
-  const DESIGN_LOCKED_AND_PAST = ["engine-profile", "decompose", "handoff", "complete"];
-  if (DESIGN_LOCKED_AND_PAST.includes(manifest.current_phase)) {
+  if (runState.DESIGN_LOCKED_PHASES.includes(manifest.current_phase)) {
     const dvFiles = [];
     (function walk(d) {
       if (!fs.existsSync(d)) return;
@@ -280,7 +278,7 @@ function checkSkillRefs() {
 }
 
 // --- anti-boring gate consistency (artifact must not contradict its own numbers) ---
-// `--check gate --file <path>` checks one depth-vector/playtest/branch-score artifact;
+// `--check gate --file <path>` checks one depth-vector/playtest artifact;
 // with no --file it proves the example fixtures are internally gate-consistent.
 function checkGate() {
   const file = arg("file");

@@ -7,7 +7,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  runDirFor, runRelFor, readManifest, readLedger, extractFencedJson, validateEmbeddedJson,
+  runDirFor, runRelFor, readManifest, readLedger, readEmbeddedArtifact,
   validateLedgerRow, isValidSeedId, resolveRunPath, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
 
@@ -72,9 +72,8 @@ function readArtifact(manifestKey, schemaName) {
   let file;
   try { file = resolveRunPath(process.cwd(), seedId, relPath, manifestKey); }
   catch (e) { return { relPath, obj: null, errors: [e.message] }; }
-  const errors = validateEmbeddedJson(file, schemaName);
-  if (errors.length) return { relPath, obj: null, errors };
-  return { relPath, obj: extractFencedJson(fs.readFileSync(file, "utf8")).obj, errors: [] };
+  const { obj, errors } = readEmbeddedArtifact(file, schemaName);
+  return { relPath, obj, errors };
 }
 
 const thesis = readArtifact("game_thesis_path", "game-thesis");

@@ -38,7 +38,7 @@ export function specPackRootFor(seedId) {
   return `/home/ark/tgf-games/${seedId}`;
 }
 
-function pathIsInside(parent, child) {
+export function pathIsInside(parent, child) {
   const rel = path.relative(parent, child);
   return rel === "" || (!!rel && !rel.startsWith("..") && !path.isAbsolute(rel));
 }
@@ -177,13 +177,22 @@ export function extractFencedJson(text) {
   catch (e) { return { obj: null, error: `embedded json is not parseable: ${e.message}` }; }
 }
 
+// Read, parse, and schema-validate a markdown artifact's embedded JSON block in
+// one pass. Returns { obj, errors }: obj is the parsed block when it validates,
+// null otherwise. Callers that need both the verdict and the object use this so
+// the file is read once, not validated and then re-read.
+export function readEmbeddedArtifact(filePath, schemaName) {
+  if (!fs.existsSync(filePath)) return { obj: null, errors: [`file missing: ${filePath}`] };
+  const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
+  if (error) return { obj: null, errors: [error] };
+  const errors = validate(loadSchema(schemaName), obj);
+  return { obj: errors.length ? null : obj, errors };
+}
+
 // Validate the JSON block embedded in a markdown artifact against a named schema.
 // Returns an array of error strings ([] = valid).
 export function validateEmbeddedJson(filePath, schemaName) {
-  if (!fs.existsSync(filePath)) return [`file missing: ${filePath}`];
-  const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
-  if (error) return [error];
-  return validate(loadSchema(schemaName), obj);
+  return readEmbeddedArtifact(filePath, schemaName).errors;
 }
 
 // --- Reading (crash-safe: a malformed file is reported, never thrown to the caller) ---
@@ -318,6 +327,15 @@ export function ledgerTransitionErrors(rows) {
 const SPINE = [
   "intake", "toolchain", "thesis", "design-review", "deepen",
   "engine-profile", "decompose", "handoff"
+];
+
+// Phases a run can only legitimately occupy after a design-review ADVANCE
+// (design-lock). Derived from the spine so the list cannot drift from the phase
+// machine: everything past design-review except `deepen` (the failed-gate path),
+// plus the terminal `complete`. Validators gate these on a passing depth vector.
+export const DESIGN_LOCKED_PHASES = [
+  ...SPINE.slice(SPINE.indexOf("design-review") + 1).filter((p) => p !== "deepen"),
+  "complete"
 ];
 
 // True when `phase` is strictly past `marker` on the spine (so the phase that

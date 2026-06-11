@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  runDirFor, runRelFor, readManifest, extractFencedJson, validateEmbeddedJson,
+  runDirFor, runRelFor, readManifest, readEmbeddedArtifact,
   isValidSeedId, resolveRunPath, writeRunFileSync
 } from "./lib/run-state.mjs";
 import { specConsistencyErrors } from "./lib/spec-decomposition.mjs";
@@ -42,18 +42,17 @@ try {
 } catch (e) {
   fail(e.message);
 }
+const artifacts = {};
 for (const [kind, file, schema] of [
   ["thesis", thesisPath, "game-thesis"],
   ["engine", enginePath, "engine-profile-decision"],
   ["spec", specPath, "spec-decomposition"]
 ]) {
-  const errors = validateEmbeddedJson(file, schema);
+  const { obj, errors } = readEmbeddedArtifact(file, schema);
   if (errors.length) fail(`${kind} artifact invalid:\n  ${errors.join("\n  ")}`);
+  artifacts[kind] = obj;
 }
-
-const thesis = extractFencedJson(fs.readFileSync(thesisPath, "utf8")).obj;
-const engine = extractFencedJson(fs.readFileSync(enginePath, "utf8")).obj;
-const spec = extractFencedJson(fs.readFileSync(specPath, "utf8")).obj;
+const { thesis, engine, spec } = artifacts;
 if (engine.status !== "accepted") {
   fail(`engine decision must be accepted before emitting issues, got ${engine.status}`);
 }
@@ -182,11 +181,9 @@ if (!write) {
 // so a collision cannot leave a half-rendered backlog.
 for (const issue of issues) {
   let file;
+  // resolveRunPath also rejects symlinked components, including the file itself.
   try { file = resolveRunPath(process.cwd(), seedId, issueRel(issue.id), issueRel(issue.id)); }
   catch (e) { fail(e.message); }
-  if (fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) {
-    fail(`issue file cannot be a symlink: ${path.relative(process.cwd(), file)}`);
-  }
   if (fs.existsSync(file) && !force) fail(`${path.relative(process.cwd(), file)} exists; pass --force to overwrite`);
 }
 fs.mkdirSync(path.join(runDir, "issues"), { recursive: true });
