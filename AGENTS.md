@@ -3,8 +3,8 @@
 You are operating the **meta-factory**, not a game. Read `CONTEXT.md` first; it is
 the domain dictionary. This file is the operating procedure.
 
-> If you are inside a generated child game repo instead, read that repo's own
-> `AGENTS.md` (derived from `templates/game-repo/AGENTS.md`), not this one.
+> If you are inside an exported spec pack instead, read that pack's own
+> `AGENTS.md` (derived from `templates/spec-pack/AGENTS.md`), not this one.
 
 ## Read path (in order)
 
@@ -12,22 +12,25 @@ the domain dictionary. This file is the operating procedure.
 2. `docs/doctrine.md` — the non-negotiable doctrine.
 3. `docs/adr/` — decisions: **accepted** 0001 (root), 0002 (evidence-first), 0003
    (separation), 0004 (layout — owner-confirmed 2026-06-06; register D013 resolved),
-   0005 (gate policy in checkers, not schemas).
+   0005 (gate policy in checkers, not schemas), 0006 (spec pack is the terminal
+   artifact — the pivot).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 
 ## What the factory does
 
-Seed → toolchain check → thesis → engine ADR → (optional) prototype lanes → first
-playable slice → depth red-team → branch bakeoff → fun-lock, then optional
-content/art/polish/QA/release → handoff. State lives in
-`.tgf/seeds/{seed-id}/manifest.json`. See the phase/prompt/skill table in
-`CONTEXT.md`.
+Seed → toolchain check → thesis → paper design review (anti-boring gate →
+design-lock) → engine decision → decompose into `SPEC.md` + `issues/` → handoff
+(export the spec pack) → complete. On a `DEEPEN` verdict the thesis re-enters
+`thesis` with one transform (≤2 attempts, then killed). No game is built here;
+building, playtesting, and fun-lock happen downstream inside the exported pack.
+State lives in `.tgf/seeds/{seed-id}/manifest.json`. See the phase/prompt/skill
+table in `CONTEXT.md`.
 
 ## Starting or resuming a run
 
 ```bash
-# Initialize durable run state only (no child game, no engine, no code):
+# Initialize durable run state only (no spec pack, no engine, no code):
 node scripts/init-game-run.mjs --seed-id <kebab-id> --seed "<one-line seed>"
 
 # Then route by the manifest's current_phase. Resume reads the manifest, never chat.
@@ -35,26 +38,34 @@ node scripts/summarize-run.mjs --seed-id <kebab-id>
 
 # Advance a phase (refuses illegal transitions; re-validates before writing):
 node scripts/advance-run.mjs --seed-id <kebab-id> --to <phase> --event <event> --status passed
+
+# At decompose: render SPEC.md into the issue backlog (dry-run by default):
+node scripts/emit-local-issues.mjs --seed-id <kebab-id> --write
+
+# At handoff: export the spec pack (dry-run by default; leakage-gated):
+npm run spec:package -- --seed-id <kebab-id> --write
 ```
 
-The initializer creates **only** `.tgf/seeds/{seed-id}/`. It never creates a child
-game repo, picks an engine, or writes `GAME_THESIS.md`.
+The initializer creates **only** `.tgf/seeds/{seed-id}/`. It never creates a spec
+pack, picks an engine, or writes `GAME_THESIS.md`.
 
 ## Non-negotiables
 
-- No implementation before `GAME_THESIS.md` exists.
-- No architecture/engine/art/lane questions to the user before the thesis. At most
-  **one** direction-changing taste question (with a recommended default) before the
-  first slice.
+- No game code in the factory — ever (`no_game_code_in_factory`, `scope_brake`).
+- No decomposition before `GAME_THESIS.md` exists; no slicing before design-lock
+  (a gate-passing depth vector in `reviews/`).
+- No architecture/engine/art questions to the user before the thesis. At most
+  **one** direction-changing taste question (with a recommended default) before
+  the spec is decomposed.
 - Existing projects are evidence, not destiny; the current engine is an option, not
   a constraint.
-- A gameplay change must emit a `playtests/**/playtest_report.json`.
-- A branch is not alive until a bot has played it for ≥60s.
-- No content / high-fidelity or opaque art / multiplayer backend / accounts before
-  fun-lock and the relevant gate.
 - Engine migration requires a new `decisions/NNNN-*.md` ADR.
-- Factory vocabulary, ledgers, hooks, and skill docs must never leak into a child
-  game repo.
+- The spec pack is exported only by `scripts/package-spec.mjs`, gated by run
+  validation and the leakage scan. Factory vocabulary, ledgers, hooks, and skill
+  docs must never leak into a pack.
+- Playtest evidence, bot-session minimums, and content-before-fun-lock rules are
+  **shipped-pack doctrine**: the pack's guards enforce them downstream in the
+  co-dev repo, not in this repo.
 - Completion is verifier evidence, not agent prose.
 
 ## Skills
@@ -63,9 +74,9 @@ Project-local TGF skills live in `.codex/skills/`. Each wraps one prompt/contrac
 (or declares itself a router) and owns its paths, gates, and leakage rules:
 
 `tgf-harness` · `tgf-office-hours-grill` · `tgf-verify-toolchain` ·
-`tgf-seed-compile` · `tgf-engine-profile` · `tgf-prototype-dispatch` ·
-`tgf-first-slice` · `tgf-depth-redteam` · `tgf-branch-bakeoff` ·
-`tgf-existing-project-rescue` · `tgf-repo-scout` · `tgf-handoff`.
+`tgf-seed-compile` · `tgf-depth-redteam` · `tgf-engine-profile` ·
+`tgf-decompose` · `tgf-handoff` · `tgf-existing-project-rescue` ·
+`tgf-repo-scout`.
 
 Borrowed Matt Pocock skills are wrapped/referenced, never vendored. Generic
 issue/PRD/triage skills route through `docs/agents/` and local artifacts; they must
@@ -73,8 +84,11 @@ not publish remotely by default.
 
 ## Gates (must block, not warn)
 
-`scripts/run-gates.mjs --dry-run` proves every guard in `factory.config.toml` `[hooks]`
-blocks its unsafe scenario (11 guards — see `docs/hooks-and-guards.md` and
+The factory keeps 3 hooks (`factory.config.toml` `[hooks]`, executables in
+`hooks/`); 8 build-time guards ship inside every spec pack
+(`[spec_pack.guards]`, executables in `templates/spec-pack/guards/`).
+`scripts/run-gates.mjs --dry-run` proves all 11 block their unsafe scenarios
+(31 scenarios — see `docs/hooks-and-guards.md` and
 `scripts/lib/factory-contract.mjs`). Harden them if needed; do not remove one
 without an ADR.
 
@@ -89,6 +103,6 @@ changed paths, verification commands/results, and any blockers.
 
 ## Lane policy
 
-Solo parent by default. Use isolated prototype lanes / worktrees / subagents only
-when uncertainty warrants it and touch sets are disjoint; the parent integrates and
-owns final verification. See `CONTEXT.md` → Lane policy.
+Solo orchestration. Lanes and bakeoffs were build-era concepts, retired per
+ADR 0006. Subagents may handle disjoint research/review work; the parent
+integrates and owns final verification. See `CONTEXT.md` → Lane policy.

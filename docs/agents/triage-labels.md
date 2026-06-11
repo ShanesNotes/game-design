@@ -24,18 +24,20 @@ add a label.
 
 Readiness is **evidence-gated**, not vibe-gated. "Completion is evidence, not prose."
 
-- **A slice issue is `ready-for-agent` only when its thesis and engine ADR exist** —
-  i.e. `GAME_THESIS.md` is written and `decisions/0001-engine-profile.md` is
-  accepted. No first-slice work is agent-ready before the engine is earned (ADR
-  0002: no default engine before the thesis). Absent either, label `needs-info`.
-- **A gameplay-completion issue is `ready-for-human` only with a playtest report
-  plus an anti-boring verdict** — a `playtests/` report and a
-  `reviews/<branch>/ANTI_BORING_VERDICT.md` (depth verdict `ADVANCE`/`DEEPEN`/`KILL`,
-  vector ≥16/24 with nonzero Choice/Tradeoff/Pressure/Uncertainty/Mastery/Replayable).
-  Without both artifacts it stays `needs-info`; the human is not asked to judge fun
-  on prose.
+- **A decompose/slice issue is `ready-for-agent` only when the thesis is
+  design-locked and the engine decision exists** — i.e. `GAME_THESIS.md` is
+  written, a gate-passing depth vector sits in `reviews/`, and
+  `decisions/0001-engine-profile.md` is accepted (ADR 0002: no default engine
+  before the thesis; ADR 0006: no slicing before design-lock). Absent any of
+  these, label `needs-info`.
+- **A design-review-completion issue is `ready-for-human` only with the gate
+  artifacts** — `reviews/ANTI_BORING_VERDICT.md` plus `reviews/depth-vector.json`
+  (depth verdict `ADVANCE`/`DEEPEN`/`KILL`, vector ≥16/24 with nonzero
+  Choice/Tradeoff/Pressure/Uncertainty/Mastery/Replayable). Without both artifacts
+  it stays `needs-info`; the human is not asked to judge depth on prose. Playtest
+  evidence is shipped-pack doctrine and lands downstream, not here.
 - **Direction/taste questions are `ready-for-human`** — but at most one before the
-  first slice, and never engine/art/lane questions before `GAME_THESIS.md`.
+  spec is decomposed, and never engine/art questions before `GAME_THESIS.md`.
 - **A toolchain/setup issue is `ready-for-agent`** once it names a real probe to run
   (`tgf-verify-toolchain`); a verifier with no probe is `needs-info`.
 - **A `DEEPEN` issue** carries exactly one named transform; if the transform is

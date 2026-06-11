@@ -15,15 +15,16 @@ a wrapper should only restate a rule when it genuinely narrows it for that phase
    from chat history. Update the manifest and append an `execution-ledger.jsonl` row
    for every phase transition the wrapper owns.
 3. **Stay in the run dir.** Writes are confined to `.tgf/seeds/{seed-id}/`. Never
-   create a child game repo or `/home/ark/tgf-games/` by default; never pick an engine
-   before `GAME_THESIS.md`.
+   create `/home/ark/tgf-games/` by hand — only `scripts/package-spec.mjs` exports
+   the spec pack there, at handoff; never pick an engine before `GAME_THESIS.md`.
 4. **No leakage.** Never copy `.tgf`/`.omx`/ledgers/handoffs/skill docs/factory
-   vocabulary or absolute `/home/ark/...` paths into a generated game (ADR 0003).
+   vocabulary or absolute `/home/ark/...` paths into an exported spec pack (ADR 0003).
 5. **Borrowed, not vendored.** Matt Pocock-style behaviours are wrapped or referenced,
    never copied into the wrapper body (ADR 0004). Generic issue/PRD/triage skills route
    through local files per `issue-tracker.md` — never a remote tracker by default.
 6. **Completion is evidence.** A phase is done when its verifier output exists (a
-   passing validator, playtest report, or verdict), not when the agent says so.
+   passing validator, a gate-passing depth vector, an exported verifier-clean
+   pack), not when the agent says so.
 7. **Never assume an unverified tool.** Capabilities come from a real probe (P17), not
    memory.
 

@@ -1,11 +1,11 @@
 # Grok Build adapter
 
-Status: **PROBE**. Optional **third competitor lane** alongside the Claude Code
-and Codex lanes — account-tier gated and not provisioned by default.
+Status: **PROBE**. Optional **third builder surface** alongside Claude Code and
+Codex — account-tier gated and not provisioned by default.
 
-**The factory must NOT depend on this lane.** Every core loop (scaffold,
-build, gameplay falsification, selection) has to run with Grok Build absent.
-Treat it strictly as an extra competitor whose output is judged like any other.
+**The factory must NOT depend on this surface.** Every core step (thesis,
+design review, decomposition, packaging) has to run with Grok Build absent.
+Treat it strictly as an extra contributor whose output is judged like any other.
 
 ## Before use — local verification
 
@@ -14,11 +14,11 @@ locally before wiring it into `factory.config.toml`:
 
 1. `grok-build --version` — confirms the binary exists for this account tier.
 2. Headless `-p` invocation works (non-interactive prompt mode).
-3. Git worktrees behave (each candidate gets an isolated worktree).
+3. Git worktrees behave (isolated working copies when fanned out).
 4. Any Arena-like scoring is reproducible locally — do not trust hosted scores.
 
 ## Selection rule
 
-If used, feed it **gameplay falsifier results** — never code taste alone. A
-Grok Build candidate wins only by surviving the same falsifiers as every other
-lane. "Arena Mode" / model self-judgment is advisory at most; it never selects.
+If used, judge its output by the **same paper falsifiers and validators** as any
+other contributor — never code taste alone. "Arena Mode" / model self-judgment
+is advisory at most; it never selects.

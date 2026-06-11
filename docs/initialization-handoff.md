@@ -59,3 +59,13 @@ thesis; no orchestration/source leakage into child-game templates; the three sou
 repos (`tiny-app-factory`, `tincture-of-mercy`, `rescue-town-builders`) were
 byte-unchanged at init. OMX ultragoal audit artifacts were local-only (not committed);
 committed handoff records live under `docs/handoffs/`.
+
+## v0.2.0 pivot (2026-06-11)
+
+The build pipeline described above is historical. **ADR 0006** pivoted the factory:
+the terminal artifact is now an exported **spec pack** (depth-gated thesis +
+issue-sliced `SPEC.md`), and no game is built in this repo. Build phases, prompts,
+and the three build skills were retired (prompts to `.factory/prompts/attic/`);
+8 of the 11 guards now ship inside `templates/spec-pack/guards/`. Legacy v0.1.0
+seed runs are archived under `.tgf/archive/` (untracked). See
+`docs/adr/0006-spec-pack-is-the-terminal-artifact.md` for the authoritative record.
