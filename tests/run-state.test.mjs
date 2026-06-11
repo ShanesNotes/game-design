@@ -77,6 +77,49 @@ test("phaseArtifactConstraintErrors enforces thesis/engine paths strictly after 
   assert.deepEqual(rs.phaseArtifactConstraintErrors({ current_phase: "killed", game_thesis_path: null, engine_decision_path: null }), []);
 });
 
+test("manifestPathPolicyErrors keeps run artifact paths inside the seed run", () => {
+  const dir = tmp();
+  const id = "rs-path-policy";
+  const manifest = {
+    seed_id: id,
+    seed_path: `.tgf/seeds/${id}/GAME_SEED.md`,
+    game_thesis_path: `.tgf/seeds/${id}/GAME_THESIS.md`,
+    engine_decision_path: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+    default_child_game_root: rs.childGameRootFor(id),
+    child_game_path: null,
+    execution_ledger_path: `.tgf/seeds/${id}/execution-ledger.jsonl`,
+    playtest_report_paths: [`.tgf/seeds/${id}/playtests/smoke/playtest_report.json`],
+    review_report_paths: [`.tgf/seeds/${id}/reviews/smoke/depth-vector.json`],
+    handoff_paths: [`.tgf/seeds/${id}/handoffs/handoff.md`],
+    resume_point: { artifact_path: `.tgf/seeds/${id}/README_AGENT_BOOT.md` }
+  };
+  try {
+    const runDir = rs.runDirFor(dir, id);
+    fs.mkdirSync(runDir, { recursive: true });
+    assert.deepEqual(rs.manifestPathPolicyErrors(manifest, id, dir), []);
+    const traversal = rs.manifestPathPolicyErrors({ ...manifest, game_thesis_path: `.tgf/seeds/${id}/../other/GAME_THESIS.md` }, id, dir);
+    assert.match(traversal.join("\n"), /game_thesis_path must resolve inside/);
+    const absolute = rs.manifestPathPolicyErrors({ ...manifest, engine_decision_path: "/tmp/engine.md" }, id, dir);
+    assert.match(absolute.join("\n"), /engine_decision_path must resolve inside/);
+    const child = rs.manifestPathPolicyErrors({ ...manifest, child_game_path: "/tmp/not-the-child-game" }, id, dir);
+    assert.match(child.join("\n"), /child_game_path must resolve inside/);
+    const outside = tmp();
+    fs.symlinkSync(outside, path.join(runDir, "linked"));
+    const linked = rs.manifestPathPolicyErrors({ ...manifest, game_thesis_path: `.tgf/seeds/${id}/linked/GAME_THESIS.md` }, id, dir);
+    assert.match(linked.join("\n"), /game_thesis_path must not traverse symlink/);
+    const linkedReports = rs.manifestPathPolicyErrors({
+      ...manifest,
+      playtest_report_paths: [`.tgf/seeds/${id}/linked/playtest_report.json`],
+      review_report_paths: [`.tgf/seeds/${id}/linked/depth-vector.json`],
+      handoff_paths: [`.tgf/seeds/${id}/linked/handoff.md`]
+    }, id, dir);
+    assert.match(linkedReports.join("\n"), /playtest_report_paths\[0\] must not traverse symlink/);
+    assert.match(linkedReports.join("\n"), /review_report_paths\[0\] must not traverse symlink/);
+    assert.match(linkedReports.join("\n"), /handoff_paths\[0\] must not traverse symlink/);
+    fs.rmSync(outside, { recursive: true, force: true });
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("questionBudgetErrors enforces <=1 direction-changing question before first-slice", () => {
   const q = (n) => Array.from({ length: n }, (_, i) => ({ question: `q${i}`, recommended_default: "d", phase_asked: "thesis" }));
   assert.deepEqual(rs.questionBudgetErrors({ current_phase: "thesis", questions_asked: q(1) }), []);
@@ -114,6 +157,56 @@ test("summarize-run prints an evidence-first summary for a created run", () => {
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /# Seed run: rs-summary/);
     assert.match(r.stdout, /phase:\s+toolchain/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("summarize-run rejects invalid seed-id before path derivation", () => {
+  const dir = tmp();
+  try {
+    const r = node("summarize-run.mjs", ["--seed-id", "../escape"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /invalid --seed-id/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("summarize-run rejects a symlinked seed run root before reading content", () => {
+  const dir = tmp();
+  const outside = tmp();
+  const id = "rs-summary-symlink";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "outside content"], { cwd: outside }).status, 0);
+    fs.mkdirSync(path.join(dir, ".tgf", "seeds"), { recursive: true });
+    fs.symlinkSync(path.join(outside, ".tgf", "seeds", id), path.join(dir, ".tgf", "seeds", id));
+    const r = node("summarize-run.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /path must not traverse symlink/);
+    assert.doesNotMatch(r.stdout, /outside content/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test("summarize-run rejects ledger parse or seed-id errors before output", () => {
+  const dir = tmp();
+  const id = "rs-summary-bad-ledger";
+  try {
+    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const first = JSON.parse(fs.readFileSync(ledgerPath, "utf8").trim().split("\n")[0]);
+    fs.writeFileSync(ledgerPath, JSON.stringify(first) + "\n" + JSON.stringify({ ...first, seed_id: "other-seed", event: "tampered" }) + "\n");
+    let r = node("summarize-run.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /execution-ledger\.jsonl.*invalid/);
+    assert.match(r.stderr, /seed_id 'other-seed' does not match/);
+    assert.doesNotMatch(r.stdout, /# Seed run/);
+
+    fs.writeFileSync(ledgerPath, JSON.stringify(first) + "\n" + "{ bad json\n");
+    r = node("summarize-run.mjs", ["--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /not valid JSON/);
+    assert.doesNotMatch(r.stdout, /# Seed run/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

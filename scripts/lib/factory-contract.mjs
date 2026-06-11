@@ -16,7 +16,8 @@ export const SKILLS = [
 
 export const SCHEMAS = [
   "seed-manifest", "game-thesis", "engine-profile-decision", "playtest-report",
-  "depth-vector", "branch-score", "execution-ledger-row", "asset-provenance"
+  "depth-vector", "branch-score", "execution-ledger-row", "asset-provenance",
+  "module-card"
 ];
 
 export const HOOKS = [
@@ -31,7 +32,8 @@ export const FIXTURE_SCHEMA = {
   "minimal-game-thesis.json": "game-thesis.schema.json",
   "minimal-playtest-report.json": "playtest-report.schema.json",
   "minimal-depth-vector.json": "depth-vector.schema.json",
-  "minimal-ledger-row.json": "execution-ledger-row.schema.json"
+  "minimal-ledger-row.json": "execution-ledger-row.schema.json",
+  "minimal-module-card.json": "module-card.schema.json"
 };
 
 // Prompts P00..P17 (inclusive).

@@ -36,6 +36,7 @@ function checkRequiredTree() {
     "docs/agents/domain.md", "docs/agents/issue-tracker.md", "docs/agents/triage-labels.md",
     "scripts/verify-local-tools.mjs", "scripts/init-game-run.mjs", "scripts/run-gates.mjs",
     "scripts/validate-artifacts.mjs", "scripts/summarize-run.mjs", "scripts/advance-run.mjs",
+    "scripts/emit-local-issues.mjs", "scripts/walk-game-idea.mjs",
     "templates/run/manifest.json", "templates/run/GAME_SEED.md", "templates/run/GAME_THESIS.template.md",
     "templates/run/README_AGENT_BOOT.md", "templates/run/README_NEXT_ACTIONS.md",
     "templates/run/decisions/0001-engine-profile.md",
@@ -155,10 +156,11 @@ function checkNoDefaultEngine() {
 function checkRun(seedId) {
   const errors = [];
   if (!seedId) return ["--check run requires --seed-id <id>"];
+  if (!runState.isValidSeedId(seedId)) return [`invalid --seed-id: ${seedId}`];
   const runDir = runState.runDirFor(process.cwd(), seedId);
   let manifest;
-  try { manifest = runState.readManifest(runDir); }
-  catch { return [`run manifest is not parseable JSON: .tgf/seeds/${seedId}/manifest.json`]; }
+  try { manifest = runState.readManifest(runDir, seedId, process.cwd()); }
+  catch (e) { return [`run manifest rejected: ${e.message}`]; }
   if (!manifest) return [`run manifest missing: .tgf/seeds/${seedId}/manifest.json`];
 
   // Whole-life invariants (every phase).
@@ -175,21 +177,37 @@ function checkRun(seedId) {
   // A declared artifact path must point at a real file whose embedded ```json block
   // validates against its schema (the artifact is markdown carrying a canonical block).
   if (manifest.game_thesis_path) {
-    const tp = path.resolve(process.cwd(), manifest.game_thesis_path);
-    if (!fs.existsSync(tp)) errors.push(`game_thesis_path set but file missing: ${manifest.game_thesis_path}`);
-    else runState.validateEmbeddedJson(tp, "game-thesis").forEach((e) => errors.push(`thesis ${e}`));
+    try {
+      const tp = runState.resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path");
+      if (!fs.existsSync(tp)) errors.push(`game_thesis_path set but file missing: ${manifest.game_thesis_path}`);
+      else runState.validateEmbeddedJson(tp, "game-thesis").forEach((e) => errors.push(`thesis ${e}`));
+    } catch (e) {
+      errors.push(e.message);
+    }
   }
   if (manifest.engine_decision_path) {
-    const ep = path.resolve(process.cwd(), manifest.engine_decision_path);
-    if (!fs.existsSync(ep)) errors.push(`engine_decision_path set but file missing: ${manifest.engine_decision_path}`);
-    else runState.validateEmbeddedJson(ep, "engine-profile-decision").forEach((e) => errors.push(`engine ${e}`));
+    try {
+      const ep = runState.resolveRunPath(process.cwd(), seedId, manifest.engine_decision_path, "engine_decision_path");
+      if (!fs.existsSync(ep)) errors.push(`engine_decision_path set but file missing: ${manifest.engine_decision_path}`);
+      else runState.validateEmbeddedJson(ep, "engine-profile-decision").forEach((e) => errors.push(`engine ${e}`));
+    } catch (e) {
+      errors.push(e.message);
+    }
   }
 
-  const { rows, parseErrors } = runState.readLedger(runDir);
+  let ledger;
+  try { ledger = runState.readLedger(runDir, seedId, process.cwd()); }
+  catch (e) {
+    errors.push(`ledger rejected: ${e.message}`);
+    ledger = { rows: [], parseErrors: [] };
+  }
+  const { rows, parseErrors } = ledger;
   parseErrors.forEach((e) => errors.push(`ledger ${e}`));
   if (!rows.length) errors.push("execution-ledger.jsonl missing or empty");
   else {
-    runState.validateLedgerRow(rows[0]).forEach((e) => errors.push(`ledger ${e}`));
+    rows.forEach((row, i) => {
+      runState.validateLedgerRow(row).forEach((e) => errors.push(`ledger row ${i + 1} ${e}`));
+    });
     runState.ledgerTransitionErrors(rows).forEach((e) => errors.push(e));
     // Manifest beats memory: current_phase must equal the latest ledger phase.
     const lastPhase = [...rows].reverse().map((r) => r.phase).find((p) => typeof p === "string");
@@ -219,10 +237,17 @@ function checkRun(seedId) {
     const dvFiles = [];
     (function walk(d) {
       if (!fs.existsSync(d)) return;
+      if (fs.lstatSync(d).isSymbolicLink()) {
+        errors.push(`reviews path must not be a symlink: ${path.relative(process.cwd(), d)}`);
+        return;
+      }
       for (const e of fs.readdirSync(d, { withFileTypes: true })) {
         const p = path.join(d, e.name);
         if (e.isDirectory()) walk(p);
-        else if (e.name === "depth-vector.json") dvFiles.push(p);
+        else if (e.name === "depth-vector.json") {
+          if (fs.lstatSync(p).isSymbolicLink()) errors.push(`reviews depth vector must not be a symlink: ${path.relative(process.cwd(), p)}`);
+          else dvFiles.push(p);
+        }
       }
     })(path.join(runDir, "reviews"));
     let passing = false;
@@ -281,44 +306,77 @@ function checkGate() {
 // No-op when .tgf/issues/ is absent (the convention is not active yet). Keeps the
 // borrowed to-issues/to-prd/triage output honest the moment it lands locally.
 const ISSUE_TYPES = ["bug", "feature", "chore", "slice"];
+const ISSUE_STATES = ["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "wontfix"];
+const ISSUE_AFK = ["ready-for-agent", "needs-human"];
 function checkIssues() {
   const errors = [];
   const dir = path.join(process.cwd(), ".tgf", "issues");
   if (!fs.existsSync(dir)) return errors;
+  const symlink = runState.firstSymlinkComponent(dir);
+  if (symlink) return [`issue directory must not traverse symlink: ${path.relative(process.cwd(), symlink) || symlink}`];
   for (const name of fs.readdirSync(dir)) {
     if (!name.endsWith(".md")) continue;
-    const fm = fs.readFileSync(path.join(dir, name), "utf8").match(/^---\n([\s\S]*?)\n---/);
+    const file = path.join(dir, name);
+    if (fs.lstatSync(file).isSymbolicLink()) {
+      errors.push(`${name}: issue file must not be a symlink`);
+      continue;
+    }
+    const fm = fs.readFileSync(file, "utf8").match(/^---\n([\s\S]*?)\n---/);
     if (!fm) { errors.push(`${name}: missing YAML front matter`); continue; }
     const front = fm[1];
     const field = (k) => { const m = front.match(new RegExp(`^${k}:\\s*(.+)$`, "m")); return m ? m[1].trim() : null; };
+    const hasKey = (k) => new RegExp(`^${k}:\\s*$`, "m").test(front) || field(k) !== null;
+    const listItems = (k) => {
+      const m = front.match(new RegExp(`^${k}:\\s*\\n((?:  - .+\\n?)*)`, "m"));
+      return m ? m[1].split("\n").filter((line) => line.trim().startsWith("- ")).map((line) => line.trim().slice(2)) : [];
+    };
     const stem = name.replace(/\.md$/, "");
     if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(stem)) errors.push(`${name}: filename must be a kebab-case slug`);
     if (field("id") !== stem) errors.push(`${name}: id '${field("id")}' must match filename '${stem}'`);
     for (const req of ["title", "type", "state", "afk"]) {
       if (!field(req)) errors.push(`${name}: missing required front-matter key '${req}'`);
     }
+    for (const req of ["acceptance", "evidence"]) {
+      if (!hasKey(req)) errors.push(`${name}: missing required front-matter key '${req}'`);
+    }
+    if (hasKey("acceptance") && listItems("acceptance").length === 0) {
+      errors.push(`${name}: acceptance must list at least one falsifiable criterion`);
+    }
+    if (field("state") === "ready-for-agent" && listItems("evidence").length === 0) {
+      errors.push(`${name}: ready-for-agent issues must include at least one evidence link`);
+    }
     const type = field("type");
     if (type && !ISSUE_TYPES.includes(type)) errors.push(`${name}: type '${type}' not in ${ISSUE_TYPES.join("|")}`);
+    const state = field("state");
+    if (state && !ISSUE_STATES.includes(state)) errors.push(`${name}: state '${state}' not in ${ISSUE_STATES.join("|")}`);
+    const afk = field("afk");
+    if (afk && !ISSUE_AFK.includes(afk)) errors.push(`${name}: afk '${afk}' not in ${ISSUE_AFK.join("|")}`);
   }
   return errors;
 }
 
 // --- thesis / engine decision: embedded ```json block validates against its schema ---
-// On-demand, like `run`: resolves the artifact from a run's manifest (--seed-id) or a
-// direct --file, so a phase can self-verify its output the moment it writes it.
+// On-demand, like `run`: resolves the artifact through a seed run, so a phase can
+// self-verify its output without bypassing run path confinement.
 function checkEmbeddedArtifact(kind) {
   const schemaName = kind === "thesis" ? "game-thesis" : "engine-profile-decision";
   const manifestKey = kind === "thesis" ? "game_thesis_path" : "engine_decision_path";
   const file = arg("file");
+  const seedId = arg("seed-id");
   let p;
-  if (file) p = path.resolve(process.cwd(), file);
-  else {
-    const seedId = arg("seed-id");
-    if (!seedId) return [`--check ${kind} requires --seed-id <id> or --file <path>`];
-    const m = runState.readManifest(runState.runDirFor(process.cwd(), seedId));
+  if (!seedId) return [`--check ${kind} requires --seed-id <id>`];
+  if (!runState.isValidSeedId(seedId)) return [`invalid --seed-id: ${seedId}`];
+  if (file) {
+    try { p = runState.resolveRunPath(process.cwd(), seedId, file, "file"); }
+    catch (e) { return [e.message]; }
+  } else {
+    let m;
+    try { m = runState.readManifest(runState.runDirFor(process.cwd(), seedId), seedId, process.cwd()); }
+    catch (e) { return [`manifest rejected: ${e.message}`]; }
     if (!m) return [`no run at .tgf/seeds/${seedId}`];
     if (!m[manifestKey]) return [`run ${seedId} has no ${manifestKey} set yet`];
-    p = path.resolve(process.cwd(), m[manifestKey]);
+    try { p = runState.resolveRunPath(process.cwd(), seedId, m[manifestKey], manifestKey); }
+    catch (e) { return [e.message]; }
   }
   return runState.validateEmbeddedJson(p, schemaName).map((e) => `${path.relative(process.cwd(), p)}: ${e}`);
 }

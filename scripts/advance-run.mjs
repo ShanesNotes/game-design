@@ -12,17 +12,16 @@
 //     [--status <ledger-status>] [--actor <name>] [--lane <lane>]
 //     [--note <resume reason>] [--resume-artifact <path>]
 //     [--set <key>=<jsonOrString> ...] [--append <key>=<value> ...] [--dry-run]
-import fs from "node:fs";
-import path from "node:path";
 import {
   runDirFor, runRelFor, readManifest, readLedger, validateManifest, validateLedgerRow,
-  manifestPathPolicyErrors, phaseArtifactConstraintErrors, isLegalTransition, legalNextPhases
+  manifestPathPolicyErrors, phaseArtifactConstraintErrors, isLegalTransition, legalNextPhases,
+  isValidSeedId, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
 
 function fail(msg) { console.error(`[advance-run] ERROR: ${msg}`); process.exit(1); }
 
 const argv = process.argv.slice(2);
-function arg(name, fallback = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback; }
+function arg(name, defaultValue = null) { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : defaultValue; }
 function multi(name) { const out = []; argv.forEach((a, i) => { if (a === `--${name}`) out.push(argv[i + 1]); }); return out; }
 
 const seedId = arg("seed-id");
@@ -38,12 +37,21 @@ const dryRun = argv.includes("--dry-run");
 if (!seedId || !to || !event) {
   fail('usage: --seed-id <id> --to <phase> --event <event> [--status] [--actor] [--lane] [--note] [--resume-artifact] [--set k=v] [--append k=v] [--dry-run]');
 }
+if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
 
 const runDir = runDirFor(process.cwd(), seedId);
 const runRel = runRelFor(seedId);
 let manifest;
-try { manifest = readManifest(runDir); } catch (e) { fail(`manifest not parseable: ${e.message}`); }
+try { manifest = readManifest(runDir, seedId, process.cwd()); } catch (e) { fail(`manifest rejected: ${e.message}`); }
 if (!manifest) fail(`no run at ${runRel}`);
+let currentLedger;
+try { currentLedger = readLedger(runDir, seedId, process.cwd()); }
+catch (e) { fail(`ledger rejected: ${e.message}`); }
+if (currentLedger.parseErrors.length) fail(`ledger invalid:\n  ${currentLedger.parseErrors.join("\n  ")}`);
+currentLedger.rows.forEach((row, i) => {
+  const errors = validateLedgerRow(row);
+  if (errors.length) fail(`ledger row ${i + 1} invalid:\n  ${errors.join("\n  ")}`);
+});
 
 const from = manifest.current_phase;
 if (!isLegalTransition(from, to)) {
@@ -92,6 +100,10 @@ if (dryRun) {
   process.exit(0);
 }
 
-fs.writeFileSync(path.join(runDir, "manifest.json"), JSON.stringify(next, null, 2) + "\n");
-fs.appendFileSync(path.join(runDir, "execution-ledger.jsonl"), JSON.stringify(ledgerRow) + "\n");
+try {
+  writeRunFileSync(process.cwd(), seedId, `${runRel}/manifest.json`, JSON.stringify(next, null, 2) + "\n");
+  appendRunFileSync(process.cwd(), seedId, `${runRel}/execution-ledger.jsonl`, JSON.stringify(ledgerRow) + "\n");
+} catch (e) {
+  fail(e.message);
+}
 console.log(`[advance-run] ${from} -> ${to} (${event}/${status}) — ${runRel}`);

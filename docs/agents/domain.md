@@ -25,6 +25,7 @@
 - **Run state** — Per-seed durable temporal truth under `.tgf/seeds/{seed-id}/` (manifest, ledger, thesis, decisions, playtests, reviews, handoffs).
 - **Child game repo** — The disposable, searchable generated game at `/home/ark/tgf-games/{seed-id}/` (declared default, not auto-created); separate from the factory (ADR 0003).
 - **Engine profile / ADR** — The scored, reversible engine decision recorded after the thesis as `decisions/0001-engine-profile.md`; there is no default engine before `GAME_THESIS.md` (ADR 0002).
+- **Module card** — A schema-valid reusable primitive candidate with provenance, engine-fit notes, interfaces, deterministic/bot hooks, adoption guard, and slice acceptance; it is evidence, not copied code.
 - **Programmer art** — Throwaway placeholder visuals used so the fun question can be answered before any art investment; never counts toward depth or anti-boring passes.
 - **Kill criteria** — The conditions that justify a `KILL` verdict — a loop that fails the falsifiers or cannot clear the depth minimum — ending pursuit of that branch or seed.
 

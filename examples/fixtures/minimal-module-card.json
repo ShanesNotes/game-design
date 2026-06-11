@@ -1,0 +1,35 @@
+{
+  "id": "click-targeting",
+  "name": "Click targeting",
+  "status": "candidate",
+  "summary": "Select an entity by pointer input and expose the selected target to combat or interaction systems.",
+  "problem_solved": "Turns ambiguous player intent into a single game entity without coupling selection to combat rules.",
+  "source": {
+    "kind": "local-repo",
+    "reference": "local:/game-dev/projects/first-steps/player.gd",
+    "inspected_on": "2026-06-11",
+    "license": "local-owner workspace; do not redistribute without owner confirmation",
+    "copied_paths": []
+  },
+  "engine_fits": [
+    { "engine": "Godot 4.x / GDScript", "fit": "possible", "reason": "Source primitive came from a Godot learning project; still requires a seed engine ADR before adoption." },
+    { "engine": "Vanilla JS / Canvas", "fit": "possible", "reason": "The interface is input-to-entity selection and can be reimplemented without Godot APIs." }
+  ],
+  "interfaces": {
+    "inputs": ["pointer position", "selectable entity bounds"],
+    "outputs": ["selected entity id", "selection changed event"],
+    "events": ["target-selected", "target-cleared"]
+  },
+  "verification_hooks": {
+    "deterministic_test": "given fixed entities and pointer positions, selection resolves to the same entity id",
+    "bot_hook": "bot can choose target ids through the same selection interface",
+    "smoke_command": "run the owning slice test suite; no standalone command until adopted"
+  },
+  "adoption_guard": "Only adopt after a seed thesis needs explicit entity selection and the engine ADR earns a matching input surface.",
+  "slice_acceptance": [
+    "A bot can select a target through the same interface as a player.",
+    "Selection has a deterministic headless test independent of rendering."
+  ],
+  "explicit_non_adoption": ["Do not copy Godot scene files or learning-workspace code into a child repo by default."],
+  "risks": ["Selection can become UI polish instead of core-loop proof if adopted before a slice needs it."]
+}

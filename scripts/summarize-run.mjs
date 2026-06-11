@@ -3,7 +3,7 @@
 // Reads run state through scripts/lib/run-state.mjs so path math and crash-safe
 // parsing live in one place; a single malformed ledger row no longer aborts the
 // summary. Usage: node scripts/summarize-run.mjs --seed-id <seed-id>
-import { runDirFor, readManifest, readLedger } from "./lib/run-state.mjs";
+import { runDirFor, readManifest, readLedger, isValidSeedId, validateLedgerRow } from "./lib/run-state.mjs";
 
 const args = process.argv.slice(2);
 const i = args.indexOf("--seed-id");
@@ -12,13 +12,17 @@ if (!seedId) {
   console.error("Usage: node scripts/summarize-run.mjs --seed-id <seed-id>");
   process.exit(1);
 }
+if (!isValidSeedId(seedId)) {
+  console.error(`invalid --seed-id: ${seedId}`);
+  process.exit(1);
+}
 
 const runDir = runDirFor(process.cwd(), seedId);
 let manifest;
 try {
-  manifest = readManifest(runDir);
+  manifest = readManifest(runDir, seedId, process.cwd());
 } catch (e) {
-  console.error(`manifest.json for ${seedId} is not valid JSON: ${e.message}`);
+  console.error(`manifest.json for ${seedId} rejected: ${e.message}`);
   process.exit(1);
 }
 if (!manifest) {
@@ -26,7 +30,25 @@ if (!manifest) {
   process.exit(1);
 }
 
-const { rows, parseErrors } = readLedger(runDir);
+let ledger;
+try {
+  ledger = readLedger(runDir, seedId, process.cwd());
+} catch (e) {
+  console.error(`execution-ledger.jsonl for ${seedId} rejected: ${e.message}`);
+  process.exit(1);
+}
+const { rows, parseErrors } = ledger;
+if (parseErrors.length) {
+  console.error(`execution-ledger.jsonl for ${seedId} invalid:\n  ${parseErrors.join("\n  ")}`);
+  process.exit(1);
+}
+for (const [i, row] of rows.entries()) {
+  const errors = validateLedgerRow(row);
+  if (errors.length) {
+    console.error(`execution-ledger.jsonl row ${i + 1} invalid:\n  ${errors.join("\n  ")}`);
+    process.exit(1);
+  }
+}
 const last = rows[rows.length - 1];
 
 console.log(`# Seed run: ${manifest.seed_id}`);

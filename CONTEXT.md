@@ -141,6 +141,19 @@ cheap programmer-art prototypes can answer the fun question faster than debate).
 Lanes must be isolated with disjoint touch sets; the parent integrator owns
 manifest updates, branch selection, and final verification.
 
+
+## Module archive vocabulary
+
+A **module card** is a schema-valid description of a reusable game primitive
+candidate: what problem it solves, where it came from, which engines it may fit,
+its inputs/outputs, deterministic and bot hooks, adoption guard, and slice
+acceptance. A module card is evidence for future reuse; it is not permission to
+copy code, choose an engine, skip `GAME_THESIS.md`, or bypass the engine ADR.
+
+A future **module archive** can collect module cards as lego-brick game primitives,
+but adoption still follows the scout protocol: borrow the primitive, prove license
+and smoke, and reject cargo-culting impressive repos.
+
 ## Human interaction
 
 At most **one** direction-changing taste question before the first slice, always

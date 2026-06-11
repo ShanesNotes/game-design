@@ -44,8 +44,11 @@ report, or verdict — not when an agent says "done".
 
 `scripts/validate-artifacts.mjs --check issues` enforces this format: every
 `.tgf/issues/*.md` must have front matter with a kebab-case `id` matching its
-filename, a `title`, a `type` from the set above, and `state` + `afk`. The check is
-a no-op until `.tgf/issues/` exists, so the convention activates the moment the
+filename, a `title`, a `type` from the set above, a canonical `state`, and a
+canonical `afk` readiness value. It also requires an `acceptance` list and an
+`evidence` list; `acceptance` must contain at least one falsifiable criterion, and
+`ready-for-agent` issues must carry at least one evidence link. The check is a
+no-op until `.tgf/issues/` exists, so the convention activates the moment the
 borrowed skills first write a local issue.
 
 ## Tracer-bullet vertical slices

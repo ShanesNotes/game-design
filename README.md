@@ -23,6 +23,10 @@ node scripts/init-game-run.mjs --seed-id tiny-asteroid-gardening \
 node scripts/init-game-run.mjs --seed-id tiny-asteroid-gardening \
   --seed "tiny asteroid gardening"               # write
 
+# Or start/resume the guided idea-factory walkthrough:
+node scripts/walk-game-idea.mjs --seed-id tiny-asteroid-gardening \
+  --seed "tiny asteroid gardening"
+
 # Verify the whole factory:
 npm run verify     # lint + artifact validation + guard dry-run + tests
 ```
@@ -30,6 +34,21 @@ npm run verify     # lint + artifact validation + guard dry-run + tests
 No child game repo, engine, or gameplay code is created by initialization. The next
 agent reads `.tgf/seeds/{seed-id}/README_AGENT_BOOT.md` and proceeds through the
 phases.
+
+## Backlog bridge
+
+Use `walk-game-idea.mjs` as the end-to-end seed walkthrough. It initializes or
+resumes a seed, writes `.tgf/seeds/{seed-id}/IDEA_WALKTHROUGH.md`, shows the
+architectural decision ladder, and previews backlog decomposition when enough
+evidence exists. After a seed has both `GAME_THESIS.md` and an accepted engine
+decision, dry-run local backlog issues directly with:
+
+```bash
+node scripts/emit-local-issues.mjs --seed-id <seed-id>
+```
+
+Add `--write` only when you want to create `.tgf/issues/*.md`. No remote tracker is
+published by default.
 
 ## How it works
 
@@ -48,9 +67,9 @@ AGENTS.md CONTEXT.md DESIGN.md README.md factory.config.toml package.json
 docs/            doctrine, engine matrix, anti-boring gate, ledgers; adr/; agents/
 .factory/prompts P00–P17 task contracts
 .codex/skills/   12 project-local TGF skill wrappers
-schemas/         8 JSON schemas (manifest, thesis, playtest, depth, branch, ...)
+schemas/         9 JSON schemas (manifest, thesis, playtest, depth, branch, ...)
 hooks/           11 executable guard prototypes
-scripts/         verify-local-tools · init-game-run · advance-run · validate-artifacts · run-gates · summarize-run
+scripts/         verify-local-tools · init-game-run · walk-game-idea · advance-run · emit-local-issues · validate-artifacts · run-gates · summarize-run
 templates/       run/ (seed-run state) · game-repo/ (future child game)
 examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
 ```
@@ -64,6 +83,7 @@ examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
 - `docs/anti-boring-gate.md` — falsifiers and the depth vector.
 - `docs/adr/` — accepted architectural decisions.
 - `docs/agents/` — domain, issue-tracker, and triage-label context for borrowed skills.
+- `docs/game-dev-bridge.md` — future seam from idea factory to local game-dev backlog.
 - `docs/handoffs/` — completed factory passes (e2e validation, architecture deepening).
 
 ## Status

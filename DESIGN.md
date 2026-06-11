@@ -44,11 +44,13 @@ Agents communicate by files, not chat:
 | Component | Responsibility |
 |---|---|
 | `scripts/init-game-run.mjs` | Create ONLY `.tgf/seeds/{seed-id}/`. Never a child repo, engine, or thesis. Validates manifest + path policy. |
+| `scripts/walk-game-idea.mjs` | End-to-end idea-factory entrypoint: initialize/resume one seed, write `IDEA_WALKTHROUGH.md`, show the architectural decision ladder, and call the local issue emitter once thesis + engine ADR are valid. |
 | `scripts/advance-run.mjs` | Advance a run to its next phase: refuses illegal transitions, appends a schema-valid ledger row, updates `current_phase`/`resume_point`, and re-validates the whole manifest before writing — the write-side counterpart to `summarize-run` (so manifest and ledger can't desync). |
 | `scripts/validate-artifacts.mjs` | `required-tree`, `schemas` (+fixtures), `generated-leakage`, `no-default-engine`, `skill-refs`, `gate`, `issues`, `thesis`/`engine` (embedded-json artifacts), `run`. The acceptance engine. `run` validates a seed run at **any** phase: manifest schema + path policy, manifest↔ledger phase agreement, legal ledger transitions, phase-gated artifacts (incl. thesis/engine embedded-json), and **fun-lock gate evidence** (a passing depth vector must exist before a run is fun-locked). |
 | `scripts/run-gates.mjs` | Sandboxes each `hooks/*` guard and proves it blocks the unsafe case and allows the safe case; fails if a registered guard has no scenario. |
 | `scripts/verify-local-tools.mjs` | Probes tools via real commands (grouped by category); refreshes a generated block in the toolchain ledger. Memory is never proof. |
 | `scripts/summarize-run.mjs` | Evidence-first run summary from manifest + ledger (crash-safe). |
+| `scripts/emit-local-issues.mjs` | Dry-run-first bridge from a seed with thesis + engine ADR into local `.tgf/issues/*.md` backlog files; writes only with `--write` and refuses pre-thesis/pre-engine emission. |
 | `scripts/lib/validate-json-schema.mjs` | ~90-line dependency-free JSON-schema subset validator. |
 | `scripts/lib/run-state.mjs` | Deep module for one seed run: paths, owned files, manifest/ledger read + schema validation, path policy, symlink guard, the phase state machine (legal transitions + phase-gated artifacts), and embedded-`json`-block extraction/validation for markdown artifacts (thesis, engine decision). |
 | `scripts/lib/factory-contract.mjs` | Single source of truth for the contract surface: phases, skills, schemas, hooks, fixtures, prompt count, gate thresholds. |
@@ -66,10 +68,11 @@ as the one accepted dev dependency is the documented escape hatch.
 ## Schemas (`schemas/`)
 
 `seed-manifest` · `game-thesis` · `engine-profile-decision` · `playtest-report` ·
-`depth-vector` · `branch-score` · `execution-ledger-row` · `asset-provenance`.
-Each declares `$schema`/`title`/`type`. Five core schemas have fixtures in
+`depth-vector` · `branch-score` · `execution-ledger-row` · `asset-provenance` ·
+`module-card`.
+Each declares `$schema`/`title`/`type`. Six core schemas have fixtures in
 `examples/fixtures/`; thesis and engine-profile use embedded-json checks on real runs;
-branch-score and asset-provenance are validated at gate/run time.
+branch-score and asset-provenance are validated at gate/run time; module-card validates harvested primitive candidates before code adoption.
 
 ## Hooks (`hooks/`)
 

@@ -35,6 +35,104 @@ export function childGameRootFor(seedId) {
   return `/home/ark/tgf-games/${seedId}`;
 }
 
+function pathIsInside(parent, child) {
+  const rel = path.relative(parent, child);
+  return rel === "" || (!!rel && !rel.startsWith("..") && !path.isAbsolute(rel));
+}
+
+export function firstSymlinkComponent(absPath) {
+  let current = path.parse(absPath).root;
+  for (const segment of path.relative(current, absPath).split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    if (fs.existsSync(current) && fs.lstatSync(current).isSymbolicLink()) return current;
+  }
+  return null;
+}
+
+function nearestExistingPath(absPath) {
+  let current = absPath;
+  while (!fs.existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) return current;
+    current = parent;
+  }
+  return current;
+}
+
+// Resolve a manifest-owned run artifact path and prove it stays inside
+// `.tgf/seeds/{seed-id}`. This is intentionally stricter than "file exists": a
+// manifest may not redirect thesis/ADR/playtest/review/handoff reads to another
+// repository, `/tmp`, or a sibling seed.
+export function resolveRunPath(cwd, seedId, manifestPath, label = "manifest path") {
+  const runDir = runDirFor(cwd, seedId);
+  const resolved = path.resolve(cwd, manifestPath);
+  if (!pathIsInside(runDir, resolved)) {
+    throw new Error(`${label} must resolve inside ${runRelFor(seedId)}: ${manifestPath}`);
+  }
+  const symlink = firstSymlinkComponent(resolved);
+  if (symlink) {
+    throw new Error(`${label} must not traverse symlink: ${path.relative(cwd, symlink) || symlink}`);
+  }
+  if (fs.existsSync(runDir)) {
+    const realRunDir = fs.realpathSync.native(runDir);
+    const existingTarget = nearestExistingPath(resolved);
+    const realTarget = fs.realpathSync.native(existingTarget);
+    if (!pathIsInside(realRunDir, realTarget)) {
+      throw new Error(`${label} must resolve inside ${runRelFor(seedId)}: ${manifestPath}`);
+    }
+  }
+  return resolved;
+}
+
+function openNoFollow(file, flags, mode = 0o666) {
+  return fs.openSync(file, flags | (fs.constants.O_NOFOLLOW || 0), mode);
+}
+
+function readFileNoFollow(file, cwd = process.cwd()) {
+  const symlink = firstSymlinkComponent(file);
+  if (symlink) {
+    throw new Error(`path must not traverse symlink: ${path.relative(cwd, symlink) || symlink}`);
+  }
+  let fd;
+  try {
+    fd = openNoFollow(file, fs.constants.O_RDONLY);
+    return fs.readFileSync(fd, "utf8");
+  } catch (e) {
+    if (e.code === "ELOOP") throw new Error(`path must not be a symlink: ${path.relative(cwd, file) || file}`);
+    throw e;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+export function writeRunFileSync(cwd, seedId, runPath, contents) {
+  const file = resolveRunPath(cwd, seedId, runPath, runPath);
+  let fd;
+  try {
+    fd = openNoFollow(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC);
+    fs.writeFileSync(fd, contents);
+  } catch (e) {
+    if (e.code === "ELOOP") throw new Error(`${runPath} must not be a symlink`);
+    throw e;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+export function appendRunFileSync(cwd, seedId, runPath, contents) {
+  const file = resolveRunPath(cwd, seedId, runPath, runPath);
+  let fd;
+  try {
+    fd = openNoFollow(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_APPEND);
+    fs.writeFileSync(fd, contents);
+  } catch (e) {
+    if (e.code === "ELOOP") throw new Error(`${runPath} must not be a symlink`);
+    throw e;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
 // The files/dirs the initializer owns inside a run dir — the only paths `--force`
 // may rewrite, and the only paths the symlink guard inspects.
 export function ownedRunPaths(runDir) {
@@ -87,22 +185,32 @@ export function validateEmbeddedJson(filePath, schemaName) {
 
 // --- Reading (crash-safe: a malformed file is reported, never thrown to the caller) ---
 
-export function readManifest(runDir) {
+export function readManifest(runDir, seedId = null, cwd = process.cwd()) {
   const p = path.join(runDir, "manifest.json");
   if (!fs.existsSync(p)) return null;
-  return JSON.parse(fs.readFileSync(p, "utf8"));
+  const manifest = JSON.parse(readFileNoFollow(p, cwd));
+  if (seedId && manifest.seed_id !== seedId) {
+    throw new Error(`manifest seed_id '${manifest.seed_id}' does not match '${seedId}'`);
+  }
+  return manifest;
 }
 
 // Returns { rows, parseErrors }. A bad JSONL line is recorded in parseErrors and
 // skipped, so a single corrupt row never crashes a summary or a validation pass.
-export function readLedger(runDir) {
+export function readLedger(runDir, seedId = null, cwd = process.cwd()) {
   const p = path.join(runDir, "execution-ledger.jsonl");
   const rows = [];
   const parseErrors = [];
   if (!fs.existsSync(p)) return { rows, parseErrors };
-  fs.readFileSync(p, "utf8").split("\n").forEach((line, i) => {
+  readFileNoFollow(p, cwd).split("\n").forEach((line, i) => {
     if (!line.trim()) return;
-    try { rows.push(JSON.parse(line)); }
+    try {
+      const row = JSON.parse(line);
+      if (seedId && row.seed_id !== seedId) {
+        parseErrors.push(`execution-ledger.jsonl line ${i + 1}: seed_id '${row.seed_id}' does not match '${seedId}'`);
+      }
+      rows.push(row);
+    }
     catch { parseErrors.push(`execution-ledger.jsonl line ${i + 1}: not valid JSON`); }
   });
   return { rows, parseErrors };
@@ -113,13 +221,34 @@ export function readLedger(runDir) {
 // The only absolute /home/ark/... value a manifest may contain is its own
 // default_child_game_root, which must equal /home/ark/tgf-games/{seed-id}. This keeps
 // a run from pointing writes at source repos or anywhere outside its declared sandbox.
-export function manifestPathPolicyErrors(manifest, seedId) {
+export function manifestPathPolicyErrors(manifest, seedId, cwd = process.cwd()) {
   const errors = [];
   const childGameRoot = childGameRootFor(seedId);
   const absPaths = JSON.stringify(manifest).match(/\/home\/ark\/[A-Za-z0-9._/-]+/g) || [];
   for (const p of absPaths) if (p !== childGameRoot) errors.push(`illegal absolute source path in manifest: ${p}`);
   if (manifest.default_child_game_root !== childGameRoot) {
     errors.push(`default_child_game_root must be ${childGameRoot}`);
+  }
+  const runPathFields = [
+    ["seed_path", manifest.seed_path],
+    ["game_thesis_path", manifest.game_thesis_path],
+    ["engine_decision_path", manifest.engine_decision_path],
+    ["execution_ledger_path", manifest.execution_ledger_path],
+    ["resume_point.artifact_path", manifest.resume_point?.artifact_path],
+    ...((manifest.playtest_report_paths || []).map((p, i) => [`playtest_report_paths[${i}]`, p])),
+    ...((manifest.review_report_paths || []).map((p, i) => [`review_report_paths[${i}]`, p])),
+    ...((manifest.handoff_paths || []).map((p, i) => [`handoff_paths[${i}]`, p]))
+  ];
+  for (const [label, value] of runPathFields) {
+    if (value == null || typeof value !== "string") continue;
+    try { resolveRunPath(cwd, seedId, value, label); }
+    catch (e) { errors.push(e.message); }
+  }
+  if (manifest.child_game_path) {
+    const childPath = path.resolve(manifest.child_game_path);
+    if (!pathIsInside(childGameRoot, childPath)) {
+      errors.push(`child_game_path must resolve inside ${childGameRoot}: ${manifest.child_game_path}`);
+    }
   }
   return errors;
 }

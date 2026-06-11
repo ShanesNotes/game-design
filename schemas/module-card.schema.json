@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tiny Game Factory Module Card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "status",
+    "summary",
+    "source",
+    "engine_fits",
+    "interfaces",
+    "verification_hooks",
+    "adoption_guard",
+    "slice_acceptance"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+    "name": { "type": "string" },
+    "status": { "enum": ["candidate", "scout-only", "adapter-added", "dependency-added", "rejected"] },
+    "summary": { "type": "string" },
+    "problem_solved": { "type": "string" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference", "inspected_on", "license"],
+      "properties": {
+        "kind": { "enum": ["local-repo", "external-repo", "docs", "scratch"] },
+        "reference": { "type": "string" },
+        "inspected_on": { "type": "string" },
+        "license": { "type": "string" },
+        "copied_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "engine_fits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["engine", "fit", "reason"],
+        "properties": {
+          "engine": { "type": "string" },
+          "fit": { "enum": ["earned", "possible", "blocked"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "interfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "events": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "verification_hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deterministic_test", "bot_hook", "smoke_command"],
+      "properties": {
+        "deterministic_test": { "type": "string" },
+        "bot_hook": { "type": "string" },
+        "smoke_command": { "type": "string" }
+      }
+    },
+    "adoption_guard": { "type": "string" },
+    "slice_acceptance": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "explicit_non_adoption": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } }
+  }
+}
