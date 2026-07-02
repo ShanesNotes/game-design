@@ -773,7 +773,10 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
       assert.ok(fs.existsSync(path.join(target, f)), `pack must contain ${f}`);
     }
     // the pack's guards know their design register (ADR 0007); absent in the thesis -> mechanics-first
-    assert.equal(JSON.parse(fs.readFileSync(path.join(target, "guards", "guard-config.json"), "utf8")).design_register, "mechanics-first");
+    const guardConfig = JSON.parse(fs.readFileSync(path.join(target, "guards", "guard-config.json"), "utf8"));
+    assert.equal(guardConfig.design_register, "mechanics-first");
+    // no design canon declared -> the key is absent, not null/empty (ADR 0009)
+    assert.ok(!("design_canon" in guardConfig), "guard-config must omit design_canon when the thesis declares none");
     // the teaching-workspace mission is seeded from the thesis, not left templated
     assert.doesNotMatch(fs.readFileSync(path.join(target, "MISSION.md"), "utf8"), /\{\{/, "MISSION.md must have all placeholders substituted");
     // the pack carries zero factory state

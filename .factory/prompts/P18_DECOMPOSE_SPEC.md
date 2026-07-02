@@ -27,6 +27,12 @@ SLICING RULES:
 - **Evidence requirements.** Every slice/feature names the playtest evidence it must
   produce (checker enforces at least one entry) (see PLAYTEST_PLAN falsifiers — the Two-Bot test deferred at
   design-review lands here as a slice obligation).
+- **Feel is sliced first-class** (docs/feel-doctrine.md). The tracer slice's
+  acceptance includes the golden moment's full feedback chain (anticipation →
+  action → impact → aftermath, readable in one play), and every thesis
+  `feel_target` lands in some slice as acceptance or evidence. A slice that
+  adds a verb without its feedback chain is incomplete. Feel is never a
+  late-order "juice pass" slice.
 - **Seams are honest stubs.** Type `seam` = a growth system's data model and
   persistence surface, schema'd but not built: acceptance must include (a) the
   data shape exists and round-trips through save/load, and (b) at least one

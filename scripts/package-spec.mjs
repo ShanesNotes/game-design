@@ -104,9 +104,14 @@ try {
   }
   copyTree(path.join(tplDir, "guards"), "guards");
   // Guards read the pack's declared design register (ADR 0007) so register-aware
-  // doctrine (the narrative-first content allowance) travels with the pack.
+  // doctrine (the narrative-first content allowance) travels with the pack. The
+  // design canon (ADR 0009) rides along when the thesis names one, so the co-dev
+  // repo inherits its design system instead of inventing a look.
   put(path.join("guards", "guard-config.json"),
-    JSON.stringify({ design_register: thesis.design_register ?? "mechanics-first" }, null, 2) + "\n");
+    JSON.stringify({
+      design_register: thesis.design_register ?? "mechanics-first",
+      ...(thesis.design_canon ? { design_canon: thesis.design_canon } : {})
+    }, null, 2) + "\n");
   put("GAME_SEED.md", fs.readFileSync(path.join(runDir, "GAME_SEED.md"), "utf8"));
   put("GAME_THESIS.md", fs.readFileSync(thesisPath, "utf8"));
   put("SPEC.md", fs.readFileSync(specPath, "utf8"));

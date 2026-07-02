@@ -15,16 +15,25 @@ Generate, do not ask:
 - thesis
 - player fantasy
 - design register (`design_register`: mechanics-first | narrative-first | hybrid | world-first)
+- golden moment (`golden_moment`: the repeatable 20–40s core experience as
+  sensation + decision, no proper nouns — docs/feel-doctrine.md)
+- feel targets (`feel_targets`: 3–6 falsifiable commitments — budgets,
+  animation commitments, four-beat feedback chains; at least one audio
+  commitment; adjectives are wishes, not targets)
 - genre priors
 - 2–4 core-loop candidates
 - replayability hypothesis
-- depth mechanisms
+- depth mechanisms (if the design has failure, one names the failure-feedback
+  loop — what a failing player sees that teaches)
 - risk register
 - engine/profile candidates
 - first playable slice
 - bot success criteria
 - kill criteria
 - content-pack strategy
+- design canon (`design_canon`, optional: a clone-able repo URL for an existing
+  design system the build must inherit — only when the seed or BRIEF.md names
+  one; never a local path)
 
 RULES:
 - No architecture questions.

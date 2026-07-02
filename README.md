@@ -92,6 +92,7 @@ examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
 - `docs/adr/` — accepted architectural decisions (0006 is the spec-pack pivot).
 - `docs/agents/` — domain, issue-tracker, triage-labels, skill-wrapper-doctrine.
 - `docs/anti-boring-gate.md` — paper falsifiers and the depth vector.
+- `docs/feel-doctrine.md` — golden moment, feel targets, blamable death: feel as falsifiable design input (ADR 0009).
 - `docs/borrowed-patterns.md` — borrowed patterns from other projects.
 - `docs/doctrine.md` — non-negotiable doctrine and phase model.
 - `docs/engine-matrix.md` — engine candidates and the no-default-engine policy.

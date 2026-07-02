@@ -71,6 +71,18 @@ ATTACK:
   is art direction wearing a mechanic — withheld explanation must be backed by
   real hidden state or topology, not mood.
 
+FEEL (docs/feel-doctrine.md — findings, not depth points):
+- **Adjective Test** — a feel target that is an adjective ("responsive",
+  "weighty") is a wish; each must be falsifiable by play or instrumentation.
+- Find the core verb missing a feedback beat (anticipation / action / impact /
+  aftermath) — an incomplete verb is a finding.
+- **Blamable-Death Test** — if the design has failure, find the death the
+  player will blame on the game (unreadable danger, off-screen cause,
+  undisclosed input commitment). If the thesis never names its
+  failure-feedback loop, that is the finding.
+- A golden moment that is plot or a feature list ("confront the giant") is a
+  finding — it must be sensation plus decision, no proper nouns.
+
 OUTPUT:
 - `reviews/ANTI_BORING_VERDICT.md` — the argument, per-axis citations, and verdict.
 - `reviews/depth-vector.json` — schema `schemas/depth-vector`, scores + total +
