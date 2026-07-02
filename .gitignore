@@ -1,13 +1,39 @@
+# Dependencies
 node_modules/
+
+# Env and local
 .env
 .env.*
+!.env.example
 .factory/local_tool_probe.json
 *.local
 *.local.json
+
+# Agent harness (local only)
 .claude/
+.omx/
+.sandcastle/
+
+# OS junk
 .DS_Store
+
 # Per-run state and research runtime (durable on disk, not factory source).
 # A completed run's evidence lives in .tgf/seeds/<id>/, the child game repo's
 # own git, and a committed handoff report — not the meta-factory's history.
 .tgf/
-.omx/
+
+# Python / build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+dist/
+build/
+
+# Obsidian graph junk
+.obsidian/graph.json
+.obsidian/workspace.json
+
+# Godot export artifacts (downstream games)
+.godot/
+export/
+*.pck

@@ -76,10 +76,7 @@ pack, picks an engine, or writes `GAME_THESIS.md`.
 Project-local TGF skills live in `.codex/skills/`. Each wraps one prompt/contract
 (or declares itself a router) and owns its paths, gates, and leakage rules:
 
-`tgf-harness` · `tgf-office-hours-grill` · `tgf-verify-toolchain` ·
-`tgf-seed-compile` · `tgf-depth-redteam` · `tgf-engine-profile` ·
-`tgf-decompose` · `tgf-handoff` · `tgf-existing-project-rescue` ·
-`tgf-repo-scout`.
+`tgf-decompose` · `tgf-depth-redteam` · `tgf-engine-profile` · `tgf-existing-project-rescue` · `tgf-handoff` · `tgf-harness` · `tgf-office-hours-grill` · `tgf-repo-scout` · `tgf-seed-compile` · `tgf-verify-toolchain`.
 
 Borrowed Matt Pocock skills are wrapped/referenced, never vendored. Generic
 issue/PRD/triage skills route through `docs/agents/` and local artifacts; they must

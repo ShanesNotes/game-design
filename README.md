@@ -74,27 +74,34 @@ obligations the slices carry downstream. See `CONTEXT.md`.
 
 ```
 AGENTS.md CONTEXT.md DESIGN.md README.md factory.config.toml package.json
-docs/            doctrine, engine matrix, anti-boring gate, ledgers; adr/; agents/
+docs/            adr/; agents/; anti-boring gate, doctrine, engine matrix, ledgers
 .factory/prompts active task contracts (P00–P02, P07, P13–P14, P16–P19); retired build prompts in attic/
 .codex/skills/   10 project-local TGF skill wrappers
 schemas/         9 JSON schemas (manifest, thesis, depth, spec-decomposition, ...)
 hooks/           3 factory guards (8 build-time guards ship in templates/spec-pack/guards/)
-scripts/         verify-local-tools · init-game-run · walk-game-idea · advance-run · emit-local-issues · package-spec · validate-artifacts · run-gates · summarize-run
+scripts/         advance-run · emit-local-issues · init-game-run · lint · package-spec · run-gates · summarize-run · validate-artifacts · verify-local-tools · walk-game-idea
 templates/       run/ (seed-run state) · spec-pack/ (the exported pack skeleton)
 examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
 ```
 
 ## Documentation
 
+- `AGENTS.md` — agent rules and governance.
 - `CONTEXT.md` — domain dictionary (start here).
 - `DESIGN.md` — how the factory is built (runtime vs orchestration).
+- `docs/adr/` — accepted architectural decisions (0006 is the spec-pack pivot).
+- `docs/agents/` — domain, issue-tracker, triage-labels, skill-wrapper-doctrine.
+- `docs/anti-boring-gate.md` — paper falsifiers and the depth vector.
+- `docs/borrowed-patterns.md` — borrowed patterns from other projects.
 - `docs/doctrine.md` — non-negotiable doctrine and phase model.
 - `docs/engine-matrix.md` — engine candidates and the no-default-engine policy.
-- `docs/anti-boring-gate.md` — paper falsifiers and the depth vector.
-- `docs/adr/` — accepted architectural decisions (0006 is the spec-pack pivot).
-- `docs/agents/` — domain, issue-tracker, and triage-label context for borrowed skills.
 - `docs/game-dev-bridge.md` — the spec-pack handoff into a co-dev workspace.
 - `docs/handoffs/` — completed factory passes (e2e validation, architecture deepening).
+- `docs/hooks-and-guards.md` — factory guards and hooks.
+- `docs/initialization-handoff.md` — initialization and handoff.
+- `docs/repo-radar.md` — repo radar / source discovery.
+- `docs/source-ledger.md` — source ledger.
+- `docs/toolchain-verification-ledger.md` — toolchain verification ledger.
 
 ## Status
 

@@ -75,9 +75,7 @@ as the one accepted dev dependency is the documented escape hatch.
 
 ## Schemas (`schemas/`)
 
-`seed-manifest` · `game-thesis` · `engine-profile-decision` · `spec-decomposition` ·
-`playtest-report` · `depth-vector` · `execution-ledger-row` · `asset-provenance` ·
-`module-card`.
+`asset-provenance` · `depth-vector` · `engine-profile-decision` · `execution-ledger-row` · `game-thesis` · `module-card` · `playtest-report` · `seed-manifest` · `spec-decomposition`.
 Each declares `$schema`/`title`/`type`. Core schemas have fixtures in
 `examples/fixtures/`; thesis, engine-profile, and spec use embedded-json checks on
 real runs. `playtest-report`, `asset-provenance`, and `depth-vector` also ship
