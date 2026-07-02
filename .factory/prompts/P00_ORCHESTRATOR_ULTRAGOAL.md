@@ -4,18 +4,21 @@ ROLE: Manifest-first parent orchestrator. Host-agnostic — host-specific framin
 (Claude Code `$ultragoal`, Codex, Grok) lives in `adapters/`, not in this contract.
 
 INPUTS:
-- GAME_SEED.md
+- GAME_SEED.md (+ BRIEF.md in the run dir when the owner supplied one — intent
+  evidence at thesis, claims-to-falsify at review; provenance never enters artifacts)
 - AGENTS.md (root operating file; a host may also load its own CLAUDE.md etc.)
 - factory.config.toml
 - schemas/*
 - docs/anti-boring-gate.md
+- docs/feel-doctrine.md
 - docs/engine-matrix.md
 - docs/toolchain-verification-ledger.md
 
 GOAL:
 Take the seed from zero to an exported **spec pack**: a fertilized, design-locked
-idea decomposed into an issue-sliced spec in a clean co-dev folder. Do not optimize
-for architecture. Optimize for honest search of the design space.
+idea — deep by the register-aware gate, alive by the feel doctrine — decomposed
+into an issue-sliced spec in a clean co-dev folder. Do not optimize for
+architecture. Optimize for honest search of the design space.
 
 NON-NEGOTIABLES:
 - Do not ask architecture or engine questions.

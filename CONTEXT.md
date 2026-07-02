@@ -143,12 +143,16 @@ into the pack's guard-config; see `docs/feel-doctrine.md` (ADR 0009).
 `SPEC.md` is the decompose-phase artifact: markdown carrying a canonical fenced
 `json` block that validates against `schemas/spec-decomposition`. It declares a
 `chosen_loop_id` (from the thesis), an `out_of_scope` list, and ordered **slices**
-— each with `id`, `title`, `type` (`slice` | `feature` | `chore`), `order`,
-`goal`, `acceptance`, `evidence_requirements`, `depends_on`, and
-`loop_verbs_covered`. The consistency policy lives in
-`scripts/lib/spec-decomposition.mjs`: the **tracer bullet comes first** (order 1
-must be type `slice`), orders are contiguous, dependencies must point earlier, and
-every chosen-loop verb must be covered across the slices.
+— each with `id`, `title`, `type` (`slice` | `feature` | `chore` | `seam`),
+`order`, `goal`, `acceptance`, `evidence_requirements`, `depends_on`, and
+`loop_verbs_covered`. A **seam** (ADR 0008) is an honest stub: a growth system's
+data model + persistence surface, schema'd but deliberately not built —
+acceptance proves a save/load round-trip and one live reader. The consistency
+policy lives in `scripts/lib/spec-decomposition.mjs`: the **tracer bullet comes
+first** (order 1 must be type `slice`, and P18 requires its acceptance to play
+the thesis's golden moment with a full feedback chain), orders are contiguous,
+dependencies must point earlier, and every chosen-loop verb must be covered
+across the slices.
 `scripts/emit-local-issues.mjs` is the **only renderer** of
 `.tgf/seeds/{seed-id}/issues/*.md` — one issue per slice, with pack-relative
 evidence links (dry-run by default; `--write`/`--force`).

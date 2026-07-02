@@ -110,11 +110,11 @@ function nextAction(phase) {
   const table = {
     intake: "Run tgf-office-hours-grill, then initialize toolchain once the seed direction is stable.",
     toolchain: "Run tgf-verify-toolchain, then compile GAME_THESIS.md from the seed.",
-    thesis: "Run tgf-seed-compile until GAME_THESIS.md is schema-valid and anchored in the anti-boring gate.",
-    "design-review": "Run the design red-team (tgf-depth-redteam) against the thesis: depth vector + verdict ADVANCE/DEEPEN/KILL.",
-    deepen: "Apply exactly one named transform to the thesis, increment deepen attempts, then re-run the design review.",
+    thesis: "Run tgf-seed-compile until GAME_THESIS.md is schema-valid and anchored in the anti-boring gate: declared register, golden moment + feel targets (feel-doctrine), and BRIEF.md honored as intent evidence if present.",
+    "design-review": "Run the design red-team (tgf-depth-redteam) against the thesis: register-aware depth vector + feel findings (adjectives, unblamable deaths) + verdict ADVANCE/DEEPEN/KILL.",
+    deepen: "Apply exactly one named transform to the thesis (register-specific kits in docs/anti-boring-gate.md), increment deepen attempts, then re-run the design review.",
     "engine-profile": "Score engine/profile candidates against the design-locked thesis and write decisions/0001-engine-profile.md.",
-    decompose: "Author SPEC.md (tgf-decompose): ordered tracer-bullet slices with falsifiable acceptance, then emit local issues.",
+    decompose: "Author SPEC.md (tgf-decompose): tracer bullet carries the golden moment's feedback chain; seam slices pin later systems' data models; then emit local issues.",
     handoff: "Package the spec pack (package-spec.mjs) into the clean co-dev folder and record the export.",
     blocked: "Read the ledger blocker, resolve it with evidence, then resume the appropriate non-terminal phase.",
     failed: "Distill failure evidence into a new seed or explicit restart decision.",
@@ -165,11 +165,11 @@ lines.push(`- ledger rows: ${rows.length}${parseErrors.length ? ` (${parseErrors
 lines.push("");
 lines.push("## Architectural decision ladder");
 lines.push("");
-lines.push("1. **Premise / fantasy** — compile the seed into a falsifiable GAME_THESIS.md before any decomposition.");
-lines.push("2. **Core loop candidates** — name the repeated verbs and why the naked mechanics might stay replayable.");
-lines.push("3. **Design depth gate** — red-team the thesis on paper: depth vector >=16/24, required axes nonzero (design-lock).");
+lines.push("1. **Premise / fantasy** — compile the seed into a falsifiable GAME_THESIS.md before any decomposition (BRIEF.md, if present, is intent evidence).");
+lines.push("2. **Core loop + feel** — name the repeated verbs, the register where depth lives, the golden moment, and falsifiable feel targets.");
+lines.push("3. **Design depth gate** — red-team the thesis on paper: register-aware depth vector >=16/24 + feel findings (design-lock).");
 lines.push("4. **Engine/profile decision** — recommend the cheapest reversible surface only after the design-locked thesis.");
-lines.push("5. **Spec decomposition** — slice the design into ordered tracer-bullet issues with falsifiable acceptance.");
+lines.push("5. **Spec decomposition** — tracer bullet first (it plays the golden moment); seam slices pin future systems; falsifiable acceptance throughout.");
 lines.push("6. **Spec pack handoff** — export a clean co-dev folder; the anti-boring falsifiers travel with it as obligations.");
 lines.push("7. **Proof happens downstream** — the co-dev repo builds the slices and produces the bot playtest evidence.");
 lines.push("");

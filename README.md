@@ -64,11 +64,16 @@ decompose → handoff → complete`, with `design-review --DEEPEN--> deepen → 
 (≤2 attempts, then killed).
 
 State is recorded in `.tgf/seeds/{seed-id}/manifest.json` (the manifest beats
-memory). The thesis only advances if it passes the **anti-boring gate on paper**
-(analytical falsifiers + a 16/24 depth vector); the `ADVANCE` verdict is
+memory). The thesis declares where its depth lives (`design_register`:
+mechanics-first | narrative-first | hybrid | world-first) and how it must feel
+(`golden_moment`, `feel_targets` — `docs/feel-doctrine.md`), and only advances
+if it passes the **anti-boring gate on paper** (register-aware falsifiers + a
+16/24 depth vector; feel claims attacked as findings); the `ADVANCE` verdict is
 **design-lock**, which opens engine-profile → decompose. The Two-Bot test cannot
 run on paper, so it is deferred into the spec as `bot_success_criteria`
-obligations the slices carry downstream. See `CONTEXT.md`.
+obligations the slices carry downstream. An owner-supplied `BRIEF.md` in the run
+dir feeds the thesis as intent evidence and the red-team as claims-to-falsify.
+See `CONTEXT.md`.
 
 ## Layout
 

@@ -59,12 +59,47 @@ argued analytically — Naked Mechanics, Dominant-Move (>70% action share),
 Second-Session — and the Two-Bot test, which cannot run on paper, is deferred into
 the spec as `bot_success_criteria` obligations carried by the slices. Plus a
 12-axis depth vector. **Design-lock requires total ≥ 16/24 with the register's
-six mandatory axes nonzero** (ADR 0007): the thesis's `design_register` routes
-the mandatory set and the falsifier readings — mechanics-first/hybrid require
-Choice, Tradeoff, Pressure, Uncertainty, Mastery, Replayable Variation;
-narrative-first swaps Replayable Variation for Progression. Verdicts:
-`ADVANCE` | `DEEPEN` (one transform) | `KILL`. Fun-lock remains downstream
-doctrine inside the spec pack.
+six mandatory axes nonzero** (ADR 0007/0008): the thesis's `design_register`
+routes the mandatory set and the falsifier readings — mechanics-first/hybrid
+require Choice, Tradeoff, Pressure, Uncertainty, Mastery, Replayable Variation;
+narrative-first swaps Replayable Variation for Progression; world-first requires
+Progression and Expansion Headroom instead of Mastery and Replayable Variation.
+Verdicts: `ADVANCE` | `DEEPEN` (one transform, register-specific kits) | `KILL`.
+If the owner supplied a `BRIEF.md` in the run dir, its qualities are intent
+evidence at thesis time and claims-to-falsify at review time (ADR 0008).
+Fun-lock remains downstream doctrine inside the spec pack.
+
+## The feel doctrine (`docs/feel-doctrine.md`)
+
+Depth proves a design is worth playing; feel decides whether playing it is worth
+feeling. The thesis carries a **golden moment** (the repeatable 20–40s core
+experience as sensation + decision) and 3–6 **feel targets** that pass the
+Adjective Test — budgets, animation commitments, four-beat feedback chains
+(anticipation → action → impact → aftermath), at least one audio commitment.
+Failure must teach (**Blamable-Death Test**). P07 attacks these as findings —
+never as depth points; the depth floor and feel findings fail independently.
+P18 slices feel first-class: the tracer plays the golden moment's full feedback
+chain, and feel is never a late-order "juice pass". Proof lives downstream in
+the pack's human feel session (`PLAYTEST_PLAN.md`). A thesis may also name a
+`design_canon` (clone-able design-system repo URL); the pack stamps it into
+`guards/guard-config.json` so the co-dev repo inherits a look instead of
+inventing one (ADR 0009).
+
+## Taste
+
+Depth and feel are gates; taste is the tiebreaker no rubric holds. House taste:
+
+- **Three sentences.** A thesis you cannot pitch to a stranger in three
+  sentences is not yet an idea; sharpen before scoring.
+- **Fewer, deeper.** When two decompositions tie, take the one with fewer
+  slices and a sharper tracer.
+- **The cut list is design.** `out_of_scope` entries should read like decisions
+  ("no inventory: relics are worn, never stored"), not leftovers.
+- **Kill adjectives everywhere.** Any artifact claim should be checkable by
+  someone who was not in the room — this is the Adjective Test generalized.
+- **Believe the golden moment.** When the depth argument and the golden moment
+  disagree about where the joy is, the golden moment is usually right;
+  re-argue depth around it.
 
 ## Engine doctrine (`docs/engine-matrix.md`)
 

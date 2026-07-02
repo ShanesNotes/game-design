@@ -9,11 +9,14 @@ the domain dictionary. This file is the operating procedure.
 ## Read path (in order)
 
 1. `CONTEXT.md` — what the factory is and its vocabulary.
-2. `docs/doctrine.md` — the non-negotiable doctrine.
+2. `docs/doctrine.md` — the non-negotiable doctrine; its gate and feel sections
+   point into `docs/anti-boring-gate.md` and `docs/feel-doctrine.md`.
 3. `docs/adr/` — decisions: **accepted** 0001 (root), 0002 (evidence-first), 0003
    (separation), 0004 (layout — owner-confirmed 2026-06-06; register D013 resolved),
    0005 (gate policy in checkers, not schemas), 0006 (spec pack is the terminal
-   artifact — the pivot), 0007 (register-aware design-lock).
+   artifact — the pivot), 0007 (register-aware design-lock), 0008 (world-first
+   register, seam slices, BRIEF.md input seam), 0009 (feel doctrine, design-canon
+   pointer).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 
