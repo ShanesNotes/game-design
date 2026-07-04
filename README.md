@@ -16,7 +16,10 @@ schemas, hooks, and validators. Spec packs are exported elsewhere
 ## Quickstart
 
 ```bash
-# Probe the local toolchain (writes a generated block into the ledger):
+# Probe the local toolchain without writing files:
+npm run verify:tools
+
+# Refresh the generated ledger block when doing P17/toolchain verification:
 node scripts/verify-local-tools.mjs --write docs/toolchain-verification-ledger.md
 
 # Initialize durable run state for a seed (creates ONLY .tgf/seeds/{seed-id}):
@@ -31,6 +34,9 @@ node scripts/walk-game-idea.mjs --seed-id tiny-asteroid-gardening \
 
 # Verify the whole factory:
 npm run verify     # lint + artifact validation + guard dry-run + tests
+
+# Validate one seed run:
+npm run verify:run -- --seed-id tiny-asteroid-gardening
 ```
 
 No spec pack, engine, or gameplay code is created by initialization. The next
@@ -102,7 +108,7 @@ examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
 - `docs/doctrine.md` — non-negotiable doctrine and phase model.
 - `docs/engine-matrix.md` — engine candidates and the no-default-engine policy.
 - `docs/game-dev-bridge.md` — the spec-pack handoff into a co-dev workspace.
-- `docs/handoffs/` — completed factory passes (e2e validation, architecture deepening).
+- `docs/handoffs/` — completed, historical, or held factory handoff records.
 - `docs/hooks-and-guards.md` — factory guards and hooks.
 - `docs/initialization-handoff.md` — initialization and handoff.
 - `docs/repo-radar.md` — repo radar / source discovery.

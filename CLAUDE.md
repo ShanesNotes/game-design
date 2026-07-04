@@ -6,6 +6,7 @@ Claude Code bootstrap path; it adds no separate doctrine.
 
 ```bash
 npm run verify   # lint + validate-artifacts + run-gates + tests
+npm run verify:run -- --seed-id <kebab-id>
 ```
 
 To start or resume a seed run:

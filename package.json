@@ -1,11 +1,12 @@
 {
   "name": "tiny-game-factory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Tiny Game Factory — a local-first, evidence-first agentic game-design meta-factory. Fertilizes a one-line game seed through a depth-gated thesis and decomposes it into an issue-sliced spec pack for co-development in a clean folder.",
   "scripts": {
     "verify:tools": "node scripts/verify-local-tools.mjs",
+    "verify:run": "node scripts/validate-artifacts.mjs --check run",
     "init:run": "node scripts/init-game-run.mjs",
     "idea:walk": "node scripts/walk-game-idea.mjs",
     "emit:issues": "node scripts/emit-local-issues.mjs",

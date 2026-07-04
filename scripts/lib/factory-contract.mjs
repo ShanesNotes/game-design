@@ -7,6 +7,8 @@
 // the phase machine in run-state.mjs so the phase spine has exactly one source.
 export { ALL_PHASES as PHASES } from "./run-state.mjs";
 
+export const FACTORY_VERSION = "0.2.0";
+
 export const SKILLS = [
   "tgf-harness", "tgf-office-hours-grill", "tgf-verify-toolchain", "tgf-seed-compile",
   "tgf-depth-redteam", "tgf-engine-profile", "tgf-decompose", "tgf-handoff",

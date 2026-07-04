@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 // P17 toolchain probe. Verifies tool availability via real commands — never from memory.
-// Writes .factory/local_tool_probe.json always; with `--write <ledger.md>` it refreshes a
-// generated block inside the curated toolchain ledger without clobbering hand-written rows.
+// By default this is read-only and prints JSON. With `--write <ledger.md>` it also
+// records .factory/local_tool_probe.json and refreshes the generated block inside
+// the curated toolchain ledger without clobbering hand-written rows.
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+
+const writeIdx = process.argv.indexOf("--write");
+const ledgerPath = writeIdx >= 0 ? process.argv[writeIdx + 1] : null;
+if (writeIdx >= 0 && (!ledgerPath || ledgerPath.startsWith("--"))) {
+  console.error("[verify-local-tools] --write requires <ledger.md>");
+  process.exit(2);
+}
 
 // Self-describing probe definitions: each carries its category so the generated
 // ledger renders grouped (base toolchain / builders / engines / harness) and a
@@ -18,7 +26,7 @@ const checks = [
   { cmd: "codex", args: ["--version"], category: "builder" },
   { cmd: "omx", args: ["--version"], category: "builder" },
   { cmd: "grok-build", args: ["--version"], category: "builder" },
-  { cmd: "npx", args: ["playwright", "--version"], category: "harness" },
+  { cmd: "playwright", args: ["--version"], category: "harness" },
   { cmd: "godot", args: ["--version"], category: "engine" },
   { cmd: "godot4", args: ["--version"], category: "engine" },
   { cmd: "cargo", args: ["--version"], category: "engine" }
@@ -38,12 +46,11 @@ for (const { cmd, args, category } of checks) {
 
 const iso = new Date().toISOString();
 console.log(JSON.stringify({ date: iso, results }, null, 2));
-fs.mkdirSync(".factory", { recursive: true });
-fs.writeFileSync(".factory/local_tool_probe.json", JSON.stringify({ date: iso, results }, null, 2));
 
-const writeIdx = process.argv.indexOf("--write");
-if (writeIdx >= 0 && process.argv[writeIdx + 1]) {
-  const ledgerPath = process.argv[writeIdx + 1];
+if (ledgerPath) {
+  fs.mkdirSync(".factory", { recursive: true });
+  fs.writeFileSync(".factory/local_tool_probe.json", JSON.stringify({ date: iso, results }, null, 2));
+
   const START = "<!-- TGF:PROBE:START -->";
   const END = "<!-- TGF:PROBE:END -->";
   let block = `${START}\n\n## Local probe results (generated)\n\n`;

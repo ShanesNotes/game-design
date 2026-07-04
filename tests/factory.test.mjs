@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "../scripts/lib/validate-json-schema.mjs";
-import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, THRESHOLDS } from "../scripts/lib/factory-contract.mjs";
+import { FACTORY_VERSION, SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, THRESHOLDS } from "../scripts/lib/factory-contract.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -86,6 +86,63 @@ test("init-game-run --dry-run writes nothing and emits contract JSON", () => {
     assert.equal(out.ok, true);
     assert.equal(out.mode, "dry-run");
     assert.ok(!fs.existsSync(path.join(dir, ".tgf")), "dry-run must not create .tgf");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("verify-local-tools prints probes without writing by default", () => {
+  const dir = tmp();
+  try {
+    const r = node("verify-local-tools.mjs", [], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    const out = JSON.parse(r.stdout);
+    assert.ok(Array.isArray(out.results));
+    assert.ok(!fs.existsSync(path.join(dir, ".factory", "local_tool_probe.json")), "default probe must be read-only");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("verify-local-tools default probe does not install npm packages", () => {
+  const dir = tmp();
+  try {
+    const npmCache = path.join(dir, "npm-cache");
+    const r = node("verify-local-tools.mjs", [], {
+      cwd: dir,
+      env: {
+        ...process.env,
+        HOME: path.join(dir, "home"),
+        XDG_CACHE_HOME: path.join(dir, "xdg-cache"),
+        npm_config_cache: npmCache
+      }
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const out = JSON.parse(r.stdout);
+    assert.ok(!out.results.some((probe) => probe.command.startsWith("npx ")), "read-only probes must not invoke npx");
+    assert.ok(!fs.existsSync(path.join(npmCache, "_npx")), "read-only probes must not populate npx's install cache");
+    assert.ok(!JSON.stringify(out).includes("will be installed"), "read-only probes must not trigger npm install warnings");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("verify-local-tools --write requires a ledger path", () => {
+  const dir = tmp();
+  try {
+    const r = node("verify-local-tools.mjs", ["--write"], { cwd: dir });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr, /--write requires <ledger\.md>/);
+    assert.ok(!fs.existsSync(path.join(dir, ".factory", "local_tool_probe.json")), "failed --write must not record a probe");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("verify-local-tools --write records local probe and refreshes ledger block", () => {
+  const dir = tmp();
+  try {
+    const ledger = path.join(dir, "docs", "toolchain-verification-ledger.md");
+    fs.mkdirSync(path.dirname(ledger), { recursive: true });
+    fs.writeFileSync(ledger, "# Ledger\n\n<!-- TGF:PROBE:START -->\nold\n<!-- TGF:PROBE:END -->\n");
+    const r = node("verify-local-tools.mjs", ["--write", ledger], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    assert.ok(fs.existsSync(path.join(dir, ".factory", "local_tool_probe.json")), "--write must record the local probe");
+    const md = fs.readFileSync(ledger, "utf8");
+    assert.match(md, /Local probe results \(generated\)/);
+    assert.match(md, /`node --version`/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -1047,6 +1104,15 @@ test("factory-contract registry matches the filesystem", () => {
     fs.readFileSync(rel("hooks/lib/guard.mjs"), "utf8"),
     "guard.mjs copies must stay byte-identical"
   );
+});
+
+test("factory version is stamped consistently into manifests and package metadata", () => {
+  const pkg = JSON.parse(fs.readFileSync(rel("package.json"), "utf8"));
+  const manifestTemplate = JSON.parse(fs.readFileSync(rel("templates/run/manifest.json"), "utf8"));
+  const fixture = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-seed-manifest.json"), "utf8"));
+  assert.equal(pkg.version, FACTORY_VERSION);
+  assert.equal(manifestTemplate.factory_version, FACTORY_VERSION);
+  assert.equal(fixture.factory_version, FACTORY_VERSION);
 });
 
 test("schemas reject undeclared properties (additionalProperties:false)", () => {

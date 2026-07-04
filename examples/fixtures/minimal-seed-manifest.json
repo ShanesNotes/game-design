@@ -1,6 +1,6 @@
 {
   "seed_id": "tiny-asteroid-gardening",
-  "factory_version": "0.1.0",
+  "factory_version": "0.2.0",
   "current_phase": "toolchain",
   "seed_path": ".tgf/seeds/tiny-asteroid-gardening/GAME_SEED.md",
   "game_thesis_path": null,

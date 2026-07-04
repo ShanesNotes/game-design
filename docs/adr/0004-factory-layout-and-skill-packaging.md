@@ -4,7 +4,10 @@
   clean-init spec §4 tree layout (while preserving D012's "project-local skills first"
   principle). Originally recorded as Proposed because an agent may not self-accept a
   reversal of a ratified decision; the owner (Shane) confirmed it on 2026-06-06.
-  Decision register **D013** is resolved.
+  Decision register **D013** is resolved. Current reading after ADR 0006: this ADR
+  still owns the `.factory/prompts/` + `.codex/skills/` layout, while the live
+  prompt/skill set is the spec-pack-pivot set registered in
+  `scripts/lib/factory-contract.mjs`.
 - Date: 2026-06-06 (proposed); 2026-06-06 (accepted)
 
 ## Context
@@ -26,14 +29,16 @@ resolved before authoring.
 
 Adopt the **later, authoritative layout**:
 
-- Prompts live under `.factory/prompts/` (`P00`–`P17`), normalized
-  (`P07_DEPTH_RED_TEAM.md`), with internal references pointing at the canonical
-  lowercase-hyphenated `docs/*.md` and `schemas/*.schema.json`.
-- The twelve project-local TGF skill wrappers live under `.codex/skills/`:
+- Prompts live under `.factory/prompts/`, with internal references pointing at the
+  canonical lowercase-hyphenated `docs/*.md` and `schemas/*.schema.json`. After
+  ADR 0006 the active prompt set is P00, P01, P02, P07, P13, P14, P16, P17, P18,
+  and P19; retired build prompts live in `.factory/prompts/attic/`.
+- The active project-local TGF skill wrappers live under `.codex/skills/`:
   `tgf-harness`, `tgf-office-hours-grill`, `tgf-verify-toolchain`,
-  `tgf-seed-compile`, `tgf-engine-profile`, `tgf-prototype-dispatch`,
-  `tgf-first-slice`, `tgf-depth-redteam`, `tgf-branch-bakeoff`,
-  `tgf-existing-project-rescue`, `tgf-repo-scout`, `tgf-handoff`.
+  `tgf-seed-compile`, `tgf-depth-redteam`, `tgf-engine-profile`,
+  `tgf-decompose`, `tgf-handoff`, `tgf-existing-project-rescue`, and
+  `tgf-repo-scout`. ADR 0006 deleted the build-phase wrappers
+  (`tgf-prototype-dispatch`, `tgf-first-slice`, `tgf-branch-bakeoff`).
 - `docs/agents/{domain,issue-tracker,triage-labels}.md` ground the borrowed Matt
   Pocock skills; those skills are **wrapped/referenced, never vendored**, and
   generic issue/PRD/triage skills route through local artifacts (no remote publish
@@ -41,11 +46,10 @@ Adopt the **later, authoritative layout**:
 - `adapters/{codex,claude-code,grok-build,mcp}/` are thin per-builder mirrors
   (currently READMEs and Claude-Code role briefs; the mirroring is not
   validator-enforced); the `.codex/skills/` definitions are the source of truth.
-- This ADR supersedes only §4's prompt path (`prompts/` → `.factory/prompts/`), skill
-  location and count (`skills/` with 6 → `.codex/skills/` with 12), and the P07
-  filename. Everything else follows §4 verbatim: eight hyphenated `schemas/`, seven
-  `hooks/`, five `scripts/`, `templates/run/` + `templates/game-repo/`, `examples/`,
-  and `docs/` with `adr/`.
+- This ADR supersedes only §4's prompt path (`prompts/` → `.factory/prompts/`) and
+  skill location (`skills/` → `.codex/skills/`). The current counts and active
+  files are not repeated here; `scripts/lib/factory-contract.mjs` is the live
+  registry and `npm run verify` proves it matches the filesystem.
 
 Each wrapper references at least one existing prompt/contract or declares itself a
 router; `validate-artifacts.mjs --check skill-refs` enforces this.
@@ -55,11 +59,10 @@ router; `validate-artifacts.mjs --check skill-refs` enforces this.
 - *Keep the flat `prompts/` + six top-level `skills/` layout* as clean-init §4
   dictated.
 - *Adopt the handoff layout* (chosen). It wins on substance, not recency: the v0.3
-  init pack already ships prompts under `.factory/prompts/`; the twelve wrappers map
-  1:1 to the P00–P17 phases (six were missing under the old six-skill set); and
-  `docs/agents/` is required to ground the borrowed Matt Pocock skills. The cost —
-  `.codex` coupling and a second skill-location stratum — is accepted for that
-  phase coverage.
+  init pack already ships prompts under `.factory/prompts/`; the project-local
+  wrappers cover the active prompt contracts; and `docs/agents/` is required to
+  ground the borrowed Matt Pocock skills. The cost — `.codex` coupling and a
+  second skill-location stratum — is accepted for that phase coverage.
 
 ## Consequences
 
@@ -69,8 +72,9 @@ router; `validate-artifacts.mjs --check skill-refs` enforces this.
   directory named), §3.2 parses `schemas/*.json`, and the §4 acceptance matrix names
   no `prompts/`/`skills/`/`.codex`/`.factory` path or P07 filename — and the validator
   asserts the actual tree.
-- Post-fun-lock prompts (`P05`, `P06`, `P09`–`P12`, `P14`) ship as contracts; their
-  wrappers are deferred until gameplay proof exists.
+- ADR 0006 later retired the build-phase prompts into the attic and deleted their
+  wrappers. Do not re-register a build phase or wrapper without superseding ADR
+  0006.
 
 ## Provenance
 

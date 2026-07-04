@@ -18,8 +18,9 @@ node_modules/
 .DS_Store
 
 # Per-run state and research runtime (durable on disk, not factory source).
-# A completed run's evidence lives in .tgf/seeds/<id>/, the child game repo's
-# own git, and a committed handoff report — not the meta-factory's history.
+# A completed run's evidence lives in .tgf/seeds/<id>/, the exported spec pack /
+# downstream co-dev repo's own git, and committed handoff docs — not the
+# meta-factory's history.
 .tgf/
 
 # Python / build artifacts

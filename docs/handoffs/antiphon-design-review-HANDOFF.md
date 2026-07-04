@@ -1,5 +1,12 @@
 # Handoff — ANTIPHON seed run, held at the design-review checkpoint
 
+> **Historical / superseded by downstream David work (2026-07-04):** this handoff
+> records why the factory paused the Antiphon seed at design-review on
+> 2026-06-13. Shane later translated that material into the active downstream
+> game `david`, so future agents should not treat this file as the next live
+> factory action. Resume only if Shane explicitly asks to reopen the Antiphon
+> factory run.
+
 **Date:** 2026-06-13
 **Run:** seed-id `antiphon` · phase `design-review` (NOT advanced)
 **Why this exists:** the anti-boring gate passed mechanically (19/24) but surfaced one
@@ -96,7 +103,7 @@ offline red-team (DEEPEN → fixes D1–D5); this session ran the **real, indepe
 
 ---
 
-## Remaining directions (after the verdict is settled)
+## Historical remaining directions (do not resume unless explicitly reopened)
 
 1. **Resolve the verdict** (ADVANCE or DEEPEN) per owner + second opinion.
    - If DEEPEN: `advance-run --to deepen` (auto-increments `deepen_attempt_count`), re-author
@@ -128,13 +135,13 @@ offline red-team (DEEPEN → fixes D1–D5); this session ran the **real, indepe
 - **No game code in the factory.** Completion is verifier evidence, not prose.
 - Advance phases only via `scripts/advance-run.mjs` (never hand-edit manifest + ledger).
 
-## Suggested skills for the continuing agent
+## Suggested skills if this historical run is explicitly reopened
 
 - **`tgf-depth-redteam`** — if re-running the gate after a DEEPEN transform.
 - **`tgf-engine-profile`** — for P02 (score engines vs the deterministic-sim constraint).
 - **`tgf-decompose`** — for P18 (SPEC.md tracer-bullet slicing).
 - **`tgf-handoff`** — for P19 (the spec-pack export, the owner's objective).
-- Read order on boot: factory `AGENTS.md` → `CONTEXT.md` → `.tgf/seeds/antiphon/manifest.json`.
+- Reopen read order: factory `AGENTS.md` → `CONTEXT.md` → `.tgf/seeds/antiphon/manifest.json`.
 
 ## Key paths
 
