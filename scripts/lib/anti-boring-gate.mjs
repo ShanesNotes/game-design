@@ -12,7 +12,12 @@
 //     brought back and validated here.
 // Keeping gate POLICY here (not in the JSON schema) keeps the artifact stratum and
 // the orchestration stratum uncoupled, per docs/doctrine.md and ADR 0005.
+// feel-target-required-for-ADVANCE (SPEC §3.3 / ADR 0005): schema allows zero
+// feel_targets; ADVANCE does not.
 import { THRESHOLDS, DESIGN_REGISTERS, REQUIRED_NONZERO_AXES_BY_REGISTER } from "./factory-contract.mjs";
+
+/** Stable rule id for the ADVANCE feel-target policy (tests + diagnostics). */
+export const FEEL_TARGET_REQUIRED_FOR_ADVANCE = "feel-target-required-for-ADVANCE";
 
 export function depthVectorConsistencyErrors(dv) {
   if (!dv || typeof dv !== "object" || !dv.scores) return ["depth vector missing scores"];
@@ -33,6 +38,19 @@ export function depthVectorConsistencyErrors(dv) {
     }
   }
   return errors;
+}
+
+// ADVANCE design-lock requires ≥1 structured feel_target on the thesis.
+// Policy lives here (checker), not in game-thesis.schema (ADR 0005 / SPEC §3.3).
+export function feelTargetRequiredForAdvanceErrors(thesis, verdict) {
+  if (verdict !== "ADVANCE") return [];
+  const targets = thesis && Array.isArray(thesis.feel_targets) ? thesis.feel_targets : [];
+  if (targets.length < 1) {
+    return [
+      `${FEEL_TARGET_REQUIRED_FOR_ADVANCE}: ADVANCE requires ≥1 feel_target on the thesis (policy in checker, not schema; re-run thesis phase if missing)`
+    ];
+  }
+  return [];
 }
 
 export function playtestConsistencyErrors(pt) {

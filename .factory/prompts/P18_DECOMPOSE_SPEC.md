@@ -21,9 +21,21 @@ SLICING RULES:
   fit together before anything is elaborated (checker enforces full coverage).
 - **Vertical, not horizontal.** Every slice yields something playable or testable;
   no "set up the architecture" slices.
-- **Falsifiable acceptance.** Each acceptance criterion is checkable by running
-  the game or a bot — not "feels good". Carry the thesis bot_success_criteria
-  into the slices that earn them.
+- **Falsifiable acceptance.** Each acceptance criterion is a structured object
+  `{kind, statement, check}` (all required). `kind` is exactly one of
+  `mechanical | visual | feel_budget | animation_cycle | performance`.
+  `statement` is the human-checkable claim; `check` is a machine-invocable
+  command or harness hook id. Not "feels good". Carry the thesis
+  bot_success_criteria into the slices that earn them. Worked example:
+  ```json
+  {
+    "kind": "feel_budget",
+    "statement": "Asteroid rotation settles within the rotate-snap budget (120ms)",
+    "check": "feel:rotate-snap"
+  }
+  ```
+  Pre-refresh free-string `acceptance` arrays fail validation; re-run this
+  phase, do not migrate (SPEC §3.3).
 - **Evidence requirements.** Every slice/feature names the playtest evidence it must
   produce (checker enforces at least one entry) (see PLAYTEST_PLAN falsifiers — the Two-Bot test deferred at
   design-review lands here as a slice obligation).

@@ -88,14 +88,14 @@ tracked they fail the check.
 | `schemas/depth-vector.schema.json` | reaffirmed | Design-lock depth vector schema still the ADVANCE gate input. |
 | `schemas/engine-profile-decision.schema.json` | reaffirmed | Engine decision artifact still required pre-decompose (DESIGN-RECORD §3). |
 | `schemas/execution-ledger-row.schema.json` | reaffirmed | Evidence-backed phase transitions remain run resumption truth. |
-| `schemas/game-thesis.schema.json` | rewritten | (deferred to T05) Structured feel_targets metric fields; content unchanged this ticket (SPEC §3.3 / T05). |
+| `schemas/game-thesis.schema.json` | rewritten | Structured feel_targets `{id, statement, metric, budget, unit}` (SPEC §3.3 / T05); ADVANCE ≥1 via checker `feel-target-required-for-ADVANCE`. |
 | `schemas/module-card.schema.json` | reaffirmed | Scout module-card still validates harvested primitives before adoption. |
 | `schemas/playtest-report.schema.json` | reaffirmed | Shipped-pack playtest evidence schema still carries bot/human proof obligations. |
 | `schemas/seed-manifest.schema.json` | reaffirmed | Per-seed run manifest still resumption source of truth. |
-| `schemas/spec-decomposition.schema.json` | rewritten | (deferred to T05) Structured acceptance kinds; content unchanged this ticket (SPEC §3.3 / T05). |
+| `schemas/spec-decomposition.schema.json` | rewritten | Structured acceptance `{kind ∈ five kinds, statement, check}` (SPEC §3.3 / T05). |
 | `templates/run/decisions/0001-engine-profile.md` | reaffirmed | Engine decision template still required after design-lock. |
 | `templates/run/GAME_SEED.md` | reaffirmed | Run-dir seed template still the intake capture surface. |
-| `templates/run/GAME_THESIS.template.md` | reaffirmed | Thesis template still the compile output skeleton (T05 may deepen fields). |
+| `templates/run/GAME_THESIS.template.md` | reaffirmed | Thesis template still the compile output skeleton; T05 added structured feel_targets worked example. |
 | `templates/run/manifest.json` | reaffirmed | Seed manifest template still initializes run state. |
 | `templates/run/README_AGENT_BOOT.md` | reaffirmed | Per-run agent boot still routes by manifest.current_phase. |
 | `templates/run/README_NEXT_ACTIONS.md` | reaffirmed | Next-actions stub still orients cold agents on a run. |

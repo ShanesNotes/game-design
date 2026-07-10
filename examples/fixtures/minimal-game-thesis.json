@@ -3,6 +3,17 @@
   "pitch": "Cultivate fragile gardens across drifting asteroids before they tumble out of sunlight.",
   "thesis": "A timing-and-placement loop where light, drift, and scarce water force constant re-prioritisation.",
   "player_fantasy": "A patient gardener coaxing life from hostile rock.",
+  "design_register": "mechanics-first",
+  "golden_moment": "You plant under a moving sun-band, water once, and rotate the rock so the last seedling catches light — anticipation, commit, impact, read the wilt timer.",
+  "feel_targets": [
+    {
+      "id": "rotate-snap",
+      "statement": "Asteroid rotation settles with a readable snap within one input frame of release",
+      "metric": "input_to_settle_ms",
+      "budget": 120,
+      "unit": "ms"
+    }
+  ],
   "genre_hypotheses": [
     { "hypothesis": "tile-placement puzzle", "confidence": 0.6 }
   ],

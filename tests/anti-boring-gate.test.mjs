@@ -6,7 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  depthVectorConsistencyErrors, playtestConsistencyErrors
+  depthVectorConsistencyErrors, playtestConsistencyErrors,
+  feelTargetRequiredForAdvanceErrors, FEEL_TARGET_REQUIRED_FOR_ADVANCE
 } from "../scripts/lib/anti-boring-gate.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -128,4 +129,15 @@ test("validate-artifacts --check gate --file flags a corrupt artifact", () => {
     assert.equal(r.status, 1, r.stdout);
     assert.match(r.stdout, /!= sum/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// SPEC §3.3 / ADR 0005: ADVANCE requires ≥1 feel_target (checker, not schema).
+test("feel-target-required-for-ADVANCE: empty thesis cannot ADVANCE", () => {
+  const errs = feelTargetRequiredForAdvanceErrors({ feel_targets: [] }, "ADVANCE");
+  assert.ok(errs.some((e) => e.includes(FEEL_TARGET_REQUIRED_FOR_ADVANCE)));
+  assert.deepEqual(feelTargetRequiredForAdvanceErrors({ feel_targets: [] }, "DEEPEN"), []);
+  assert.deepEqual(feelTargetRequiredForAdvanceErrors({
+    feel_targets: [{ id: "x", statement: "s", metric: "m", budget: 1, unit: "ms" }]
+  }, "ADVANCE"), []);
+  assert.ok(feelTargetRequiredForAdvanceErrors(null, "ADVANCE").some((e) => e.includes(FEEL_TARGET_REQUIRED_FOR_ADVANCE)));
 });

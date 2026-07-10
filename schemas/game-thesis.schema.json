@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Tiny Game Factory Game Thesis",
+  "title": "Game Design Game Thesis",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,7 +21,21 @@
     "player_fantasy": { "type": "string" },
     "design_register": { "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first"] },
     "golden_moment": { "type": "string" },
-    "feel_targets": { "type": "array", "items": { "type": "string" } },
+    "feel_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "metric", "budget", "unit"],
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "metric": { "type": "string" },
+          "budget": { "type": "number" },
+          "unit": { "type": "string" }
+        }
+      }
+    },
     "design_canon": { "type": "string" },
     "genre_hypotheses": { "type": "array", "items": { "type": "object" } },
     "core_loop_candidates": { "type": "array", "minItems": 1, "items": { "type": "object" } },

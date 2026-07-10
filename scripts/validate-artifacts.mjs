@@ -258,7 +258,16 @@ function checkRun(seedId) {
         const thesisRegister = thesisObj?.design_register ?? "mechanics-first";
         if (dvRegister !== thesisRegister) {
           errors.push(`reviews depth vector register '${dvRegister}' contradicts thesis design_register '${thesisRegister}': ${path.relative(process.cwd(), f)}`);
-        } else passing = true;
+        } else {
+          // feel-target-required-for-ADVANCE (SPEC §3.3 / ADR 0005): schema
+          // permits empty feel_targets; ADVANCE does not.
+          const feelErrs = gate.feelTargetRequiredForAdvanceErrors(thesisObj, dv.verdict);
+          if (feelErrs.length) {
+            feelErrs.forEach((e) => errors.push(`${e}: ${path.relative(process.cwd(), f)}`));
+          } else {
+            passing = true;
+          }
+        }
       }
     }
     if (!passing) {

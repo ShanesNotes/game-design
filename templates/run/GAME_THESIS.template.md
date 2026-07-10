@@ -14,6 +14,17 @@ sections beneath it are the human view; keep the two in sync.
   "pitch": "TODO one-sentence hook",
   "thesis": "TODO why the bare loop stays interesting under pressure",
   "player_fantasy": "TODO the fantasy the player gets to live",
+  "design_register": "mechanics-first",
+  "golden_moment": "TODO sensation + decision in 20–40s, no proper nouns",
+  "feel_targets": [
+    {
+      "id": "rotate-snap",
+      "statement": "Asteroid rotation settles with a readable snap within one input frame of release",
+      "metric": "input_to_settle_ms",
+      "budget": 120,
+      "unit": "ms"
+    }
+  ],
   "genre_hypotheses": [{ "hypothesis": "TODO", "confidence": 0.5 }],
   "core_loop_candidates": [
     { "id": "loop-a", "verbs": "TODO, TODO", "stakes": "TODO", "cycle_length_s": 60 }

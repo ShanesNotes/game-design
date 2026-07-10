@@ -17,9 +17,22 @@ Generate, do not ask:
 - design register (`design_register`: mechanics-first | narrative-first | hybrid | world-first)
 - golden moment (`golden_moment`: the repeatable 20–40s core experience as
   sensation + decision, no proper nouns — docs/feel-doctrine.md)
-- feel targets (`feel_targets`: 3–6 falsifiable commitments — budgets,
+- feel targets (`feel_targets`: 3–6 structured objects, each
+  `{id, statement, metric, budget (number), unit}` all required — budgets,
   animation commitments, four-beat feedback chains; at least one audio
-  commitment; adjectives are wishes, not targets)
+  commitment; adjectives are wishes, not targets). Worked example:
+  ```json
+  {
+    "id": "rotate-snap",
+    "statement": "Asteroid rotation settles with a readable snap within one input frame of release",
+    "metric": "input_to_settle_ms",
+    "budget": 120,
+    "unit": "ms"
+  }
+  ```
+  Schema permits an empty array; ADVANCE does not (checker rule
+  `feel-target-required-for-ADVANCE` — ADR 0005). Pre-refresh free-string
+  `feel_targets` fail validation; re-run this phase, do not migrate.
 - genre priors
 - 2–4 core-loop candidates
 - replayability hypothesis

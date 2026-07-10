@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Tiny Game Factory Spec Decomposition",
+  "title": "Game Design Spec Decomposition",
   "type": "object",
   "additionalProperties": false,
   "required": ["seed_id", "chosen_loop_id", "summary", "slices"],
@@ -22,7 +22,22 @@
           "type": { "enum": ["slice", "feature", "chore", "seam"] },
           "order": { "type": "integer", "minimum": 1 },
           "goal": { "type": "string" },
-          "acceptance": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "acceptance": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "statement", "check"],
+              "properties": {
+                "kind": {
+                  "enum": ["mechanical", "visual", "feel_budget", "animation_cycle", "performance"]
+                },
+                "statement": { "type": "string" },
+                "check": { "type": "string" }
+              }
+            }
+          },
           "evidence_requirements": { "type": "array", "items": { "type": "string" } },
           "depends_on": { "type": "array", "items": { "type": "string" } },
           "loop_verbs_covered": { "type": "array", "items": { "type": "string" } }

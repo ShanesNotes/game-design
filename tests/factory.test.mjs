@@ -700,7 +700,10 @@ test("emit-local-issues normalizes multiline front-matter source strings before 
   const id = "selftest-emit-yaml-safe";
   try {
     const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
-    spec.slices[0].acceptance = ["bot survives line one\n---\nline two", "player's route remains testable"];
+    spec.slices[0].acceptance = [
+      { kind: "mechanical", statement: "bot survives line one\n---\nline two", check: "bot_survive" },
+      { kind: "mechanical", statement: "player's route remains testable", check: "route_testable" }
+    ];
     const runDir = decomposeReadyRun(dir, id, { specOverrides: { slices: spec.slices } });
     const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -708,8 +711,25 @@ test("emit-local-issues normalizes multiline front-matter source strings before 
     assert.equal((issue.match(/^---$/gm) || []).length, 2, "issue must contain exactly one front-matter block");
     assert.match(issue, /bot survives line one --- line two/);
     assert.match(issue, /player''s route remains testable/);
+    assert.match(issue, /\[mechanical\].*check: bot_survive/);
     const chk = node("validate-artifacts.mjs", ["--check", "issues"], { cwd: dir });
     assert.equal(chk.status, 0, chk.stdout);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("emit-local-issues renders structured acceptance kind + statement + check", () => {
+  const dir = tmp();
+  const id = "selftest-emit-structured-ac";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    const r = node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stderr);
+    const issue = fs.readFileSync(path.join(runDir, "issues", "tracer-loop.md"), "utf8");
+    assert.match(issue, /\[mechanical\].*check: bot_session_plant_water_rotate/);
+    assert.match(issue, /\[feel_budget\].*check: feel:rotate-snap/);
+    assert.match(issue, /kind: mechanical/);
+    assert.match(issue, /statement: A 60s session exercises plant/);
+    assert.match(issue, /check: bot_session_plant_water_rotate/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

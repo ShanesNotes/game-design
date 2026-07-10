@@ -11,8 +11,16 @@
       "order": 1,
       "goal": "Prove the three core verbs fit together in the thinnest playable loop.",
       "acceptance": [
-        "A 60s session exercises plant, water, and rotate-asteroid at least once",
-        "A scripted bot completes the loop with no stuck state"
+        {
+          "kind": "mechanical",
+          "statement": "A 60s session exercises plant, water, and rotate-asteroid at least once",
+          "check": "bot_session_plant_water_rotate"
+        },
+        {
+          "kind": "feel_budget",
+          "statement": "Asteroid rotation settles within the rotate-snap budget (120ms)",
+          "check": "feel:rotate-snap"
+        }
       ],
       "evidence_requirements": ["playtests/**/playtest_report.json from a bot session >= 60s"],
       "depends_on": [],
@@ -25,8 +33,16 @@
       "order": 2,
       "goal": "Add the drifting sunlight band so placement order starts to matter.",
       "acceptance": [
-        "Plants outside the sunlight band wither on a visible timer",
-        "Random vs heuristic bot scores diverge measurably across 5 runs"
+        {
+          "kind": "visual",
+          "statement": "Plants outside the sunlight band wither on a visible timer",
+          "check": "screenshot:wither-timer"
+        },
+        {
+          "kind": "mechanical",
+          "statement": "Random vs heuristic bot scores diverge measurably across 5 runs",
+          "check": "two_bot_score_spread"
+        }
       ],
       "evidence_requirements": ["two playtest reports with distinct bot_type values"],
       "depends_on": ["tracer-loop"],

@@ -185,12 +185,37 @@ export function extractFencedJson(text) {
 // one pass. Returns { obj, errors }: obj is the parsed block when it validates,
 // null otherwise. Callers that need both the verdict and the object use this so
 // the file is read once, not validated and then re-read.
+// Pre-refresh free-string feel_targets / acceptance are not migratable (SPEC §3.3).
+// Detect the old shape and point operators at re-running the authoring phases.
+function preRefreshShapeHints(schemaName, obj) {
+  if (!obj || typeof obj !== "object") return [];
+  if (schemaName === "game-thesis" && Array.isArray(obj.feel_targets)
+      && obj.feel_targets.some((t) => typeof t === "string")) {
+    return [
+      "game-thesis: feel_targets uses pre-refresh free-string shape; re-run the thesis phase (P01) — no migration shim (SPEC §3.3 / T05)"
+    ];
+  }
+  if (schemaName === "spec-decomposition" && Array.isArray(obj.slices)) {
+    for (const s of obj.slices) {
+      if (Array.isArray(s.acceptance) && s.acceptance.some((a) => typeof a === "string")) {
+        return [
+          "spec-decomposition: acceptance uses pre-refresh free-string shape; re-run the decompose phase (P18) — no migration shim (SPEC §3.3 / T05)"
+        ];
+      }
+    }
+  }
+  return [];
+}
+
 export function readEmbeddedArtifact(filePath, schemaName) {
   if (!fs.existsSync(filePath)) return { obj: null, errors: [`file missing: ${filePath}`] };
   const { obj, error } = extractFencedJson(fs.readFileSync(filePath, "utf8"));
   if (error) return { obj: null, errors: [error] };
   const errors = validate(loadSchema(schemaName), obj);
-  return { obj: errors.length ? null : obj, errors };
+  if (errors.length) {
+    return { obj: null, errors: [...errors, ...preRefreshShapeHints(schemaName, obj)] };
+  }
+  return { obj, errors: [] };
 }
 
 // Validate the JSON block embedded in a markdown artifact against a named schema.

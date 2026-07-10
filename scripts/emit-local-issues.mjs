@@ -71,6 +71,19 @@ function frontMatterScalar(value) {
 const quoted = (s) => `'${frontMatterScalar(s).replaceAll("'", "''")}'`;
 const yamlList = (items) => items.length ? items.map((item) => `  - ${quoted(item)}`).join("\n") : "";
 
+// Structured acceptance (SPEC §3.3): kind + statement + check must all be
+// visible per criterion. Front-matter stays the single-line list subset
+// (docs/agents/issue-tracker.md); body restates structured rows for scanners.
+function formatAcceptanceLine(item) {
+  if (item && typeof item === "object" && !Array.isArray(item)) {
+    const kind = frontMatterScalar(item.kind);
+    const statement = frontMatterScalar(item.statement);
+    const check = frontMatterScalar(item.check);
+    return `[${kind}] ${statement} (check: ${check})`;
+  }
+  return frontMatterScalar(item);
+}
+
 // Evidence links are pack-relative (resolvable from the run dir AND from an
 // exported spec pack), never .tgf paths — those would be leakage in the pack.
 const EVIDENCE = ["SPEC.md", "GAME_THESIS.md", "decisions/0001-engine-profile.md"];
@@ -79,6 +92,7 @@ function issueMarkdown(slice) {
   const blocked = (slice.depends_on || []).length > 0;
   const state = blocked ? "needs-info" : "ready-for-agent";
   const afk = blocked ? "needs-human" : "ready-for-agent";
+  const acceptanceLines = (slice.acceptance || []).map(formatAcceptanceLine);
   const front = [
     "---",
     `id: ${slice.id}`,
@@ -90,11 +104,25 @@ function issueMarkdown(slice) {
     "depends_on:",
     yamlList(slice.depends_on || []),
     "acceptance:",
-    yamlList(slice.acceptance),
+    yamlList(acceptanceLines),
     "evidence:",
     yamlList(EVIDENCE),
     "---"
   ].filter((line) => line !== "").join("\n");
+  const acceptanceBody = (slice.acceptance || []).length
+    ? [
+        "",
+        "Acceptance criteria (structured):",
+        ...(slice.acceptance || []).map((a) => {
+          if (a && typeof a === "object" && !Array.isArray(a)) {
+            // Collapse newlines so a criterion cannot inject a YAML --- delimiter
+            // into the issue body (generatedIssueErrors rejects extra ---).
+            return `- kind: ${frontMatterScalar(a.kind)}\n  statement: ${frontMatterScalar(a.statement)}\n  check: ${frontMatterScalar(a.check)}`;
+          }
+          return `- ${formatAcceptanceLine(a)}`;
+        })
+      ].join("\n")
+    : null;
   const body = [
     `Goal: ${slice.goal}`,
     "",
@@ -102,6 +130,7 @@ function issueMarkdown(slice) {
     (slice.loop_verbs_covered || []).length
       ? `Core loop verbs exercised: ${slice.loop_verbs_covered.join(", ")}`
       : null,
+    acceptanceBody,
     (slice.evidence_requirements || []).length
       ? `\nEvidence this slice must produce:\n${slice.evidence_requirements.map((e) => `- ${e}`).join("\n")}`
       : null,
