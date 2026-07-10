@@ -15,9 +15,9 @@ a wrapper should only restate a rule when it genuinely narrows it for that phase
    from chat history. Update the manifest and append an `execution-ledger.jsonl` row
    for every phase transition the wrapper owns.
 3. **Stay in the run dir.** Writes are confined to `.tgf/seeds/{seed-id}/`. Never
-   create `/home/ark/tgf-games/` by hand — only `scripts/package-spec.mjs` exports
-   the spec pack there, at handoff; never pick an engine before `GAME_THESIS.md`.
-4. **No leakage.** Never copy `.tgf`/`.omx`/ledgers/handoffs/skill docs/factory
+   create export destinations by hand — only `scripts/package-spec.mjs` exports
+   the spec pack, at handoff; never pick an engine before `GAME_THESIS.md`.
+4. **No leakage.** Never copy `.tgf`/`.omx`/ledgers/handoffs/skill docs/design
    vocabulary or absolute `/home/ark/...` paths into an exported spec pack (ADR 0003).
 5. **Borrowed, not vendored.** Matt Pocock-style behaviours are wrapped or referenced,
    never copied into the wrapper body (ADR 0004). Generic issue/PRD/triage skills route

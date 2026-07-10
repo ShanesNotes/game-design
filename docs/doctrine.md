@@ -1,7 +1,12 @@
 # Doctrine
 
-The non-negotiable rules of **game-design** (formerly tiny-game-factory). Prompts
-and skills cite this file. Changing a rule here requires an ADR.
+The non-negotiable rules of **game-design** — the design/spec discipline of
+game-studio (DESIGN-RECORD §2–§3). Spec-only: this repo produces depth-gated
+theses and issue-sliced **spec packs**; it builds no game. Downstream, forge
+consumes a machine-readable forge manifest (when the engine is Godot-gated) and
+co-dev / game repos implement. Prompts and skills cite this file. Changing a
+rule here requires an ADR. Provenance of every doctrine surface lives in
+`docs/doctrine-audit-ledger.md` (DESIGN-RECORD §8 quarantine).
 
 ## Five principles
 
@@ -9,11 +14,12 @@ and skills cite this file. Changing a rule here requires an ADR.
 2. **Fun over polish.** A shallow premise, however precisely specified, is still a failure.
 3. **Evidence over sunk cost.** Paper falsifiers and the depth vector decide, not effort already spent.
 4. **Code-native over opaque.** Diffable, reviewable artifacts beat opaque assets and editor state.
-5. **Played by a bot or human over merely compiled.** In the factory this is a *carried obligation*: every spec ships `bot_success_criteria` per slice, the PLAYTEST_PLAN falsifiers, and the guards that enforce them — the co-dev repo must prove play, not assert it.
+5. **Played by a bot or human over merely compiled.** In design this is a *carried obligation*: every spec ships `bot_success_criteria` per slice, the PLAYTEST_PLAN falsifiers, and the guards that enforce them — the co-dev / forge path must prove play, not assert it.
 
 ## Non-negotiables
 
-- No game code in the factory — ever (`no_game_code_in_factory`, `scope_brake`).
+- No game code in this repo — ever (`no_game_code_in_factory`, `scope_brake`;
+  DESIGN-RECORD §3: design produces packs, forge builds).
 - No decomposition before `GAME_THESIS.md` exists
   (`no_decomposition_before_game_thesis`).
 - No slicing before design-lock (`no_slicing_before_design_lock`): a gate-passing
@@ -25,14 +31,14 @@ and skills cite this file. Changing a rule here requires an ADR.
   a constraint.
 - Engine migration requires a new per-seed engine decision file
   (`decisions/NNNN-engine-*.md`), enforced by the `engine_migration_requires_adr`
-  hook. This is a seed-scoped, ADR-style record — distinct from the factory-level
+  hook. This is a seed-scoped, ADR-style record — distinct from the design-repo
   ADRs in `docs/adr/`.
-- The spec pack is the terminal artifact (`spec_pack_is_terminal_artifact`,
+- The spec pack is the terminal design artifact (`spec_pack_is_terminal_artifact`,
   ADR 0006): produced only by `scripts/package-spec.mjs`, gated by run validation
-  and the leakage scan.
+  and the leakage scan. (Forge-manifest emission is T06.)
 - Completion is verifier evidence, not agent prose.
-- Factory state (`.tgf/`, ledgers, hooks, skill docs, factory vocabulary) must never
-  leak into an exported spec pack.
+- Design harness state (`.tgf/`, ledgers, hooks, skill docs, internal vocabulary)
+  must never leak into an exported spec pack.
 
 ## Phase model
 
@@ -79,11 +85,12 @@ Adjective Test — budgets, animation commitments, four-beat feedback chains
 Failure must teach (**Blamable-Death Test**). P07 attacks these as findings —
 never as depth points; the depth floor and feel findings fail independently.
 P18 slices feel first-class: the tracer plays the golden moment's full feedback
-chain, and feel is never a late-order "juice pass". Proof lives downstream in
-the pack's human feel session (`PLAYTEST_PLAN.md`). A thesis may also name a
-`design_canon` (clone-able design-system repo URL); the pack stamps it into
+chain, and feel is never a late-order polish pass. Proof lives downstream in
+the pack's human feel session (`PLAYTEST_PLAN.md`) and, for Godot packs, forge
+verify gates (DESIGN-RECORD §5). A thesis may also name a `design_canon`
+(clone-able design-system repo URL); the pack stamps it into
 `guards/guard-config.json` so the co-dev repo inherits a look instead of
-inventing one (ADR 0009).
+inventing one (ADR 0010).
 
 ## Taste
 

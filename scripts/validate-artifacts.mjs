@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Factory artifact validator. Proves the repo matches its own contracts without needing a
 // runtime game. Checks: required-tree | schemas | generated-leakage | no-default-engine |
-// skill-refs | gate | issues | thesis | engine | spec | run | all.
+// skill-refs | gate | issues | audit | thesis | engine | spec | run | all.
 // `all` runs every repo-wide check; thesis/engine/spec/run are on-demand (require --seed-id).
 // Usage: node scripts/validate-artifacts.mjs --check <mode> [--seed-id <id>]
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { validate } from "./lib/validate-json-schema.mjs";
 import * as runState from "./lib/run-state.mjs";
@@ -15,6 +16,7 @@ import { leakageErrors } from "./lib/leakage.mjs";
 import { frontMatterAccessors } from "./lib/issue-format.mjs";
 import { arg } from "./lib/argv.mjs";
 import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, ARTIFACT_KINDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
+import { auditErrors, parseAuditLedger, AUDIT_UNIVERSE_PATHS } from "./lib/doctrine-audit.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -31,6 +33,7 @@ function checkRequiredTree() {
     "AGENTS.md", "README.md", "CONTEXT.md", "DESIGN.md", "factory.config.toml", "package.json",
     "docs/doctrine.md", "docs/engine-matrix.md", "docs/anti-boring-gate.md", "docs/hooks-and-guards.md",
     "docs/toolchain-verification-ledger.md", "docs/borrowed-patterns.md", "docs/repo-radar.md", "docs/source-ledger.md",
+    "docs/doctrine-audit-ledger.md",
     "docs/adr/0001-meta-factory-root.md", "docs/adr/0002-evidence-first-prototype-search.md",
     "docs/adr/0003-factory-game-separation.md", "docs/adr/0004-factory-layout-and-skill-packaging.md",
     "docs/adr/0005-gate-policy-in-checkers-not-schemas.md",
@@ -394,6 +397,31 @@ function checkEmbeddedArtifact(kind) {
   return runState.validateEmbeddedJson(p, schemaName).map((e) => `${path.relative(process.cwd(), p)}: ${e}`);
 }
 
+// --- doctrine audit exhaustiveness (DESIGN-RECORD §8 / T04) ---
+// Every path currently tracked under the audit universe must have exactly one
+// ledger row. Culled rows that are still tracked fail. Pure helpers live in
+// scripts/lib/doctrine-audit.mjs so tests can prove missing-row failure without
+// mutating the real ledger.
+function listAuditUniverse() {
+  const r = spawnSync("git", ["ls-files", ...AUDIT_UNIVERSE_PATHS], {
+    cwd: REPO,
+    encoding: "utf8"
+  });
+  if (r.status !== 0) {
+    return { files: [], error: `git ls-files failed: ${(r.stderr || r.stdout || "").trim()}` };
+  }
+  return { files: r.stdout.split("\n").map((s) => s.trim()).filter(Boolean), error: null };
+}
+
+function checkAudit() {
+  const ledgerPath = rel("docs/doctrine-audit-ledger.md");
+  if (!fs.existsSync(ledgerPath)) return ["missing: docs/doctrine-audit-ledger.md"];
+  const text = fs.readFileSync(ledgerPath, "utf8");
+  const { files, error } = listAuditUniverse();
+  if (error) return [error];
+  return auditErrors(files, parseAuditLedger(text));
+}
+
 const CHECKS = {
   "required-tree": checkRequiredTree,
   schemas: checkSchemas,
@@ -402,6 +430,7 @@ const CHECKS = {
   "skill-refs": checkSkillRefs,
   gate: checkGate,
   issues: checkIssues,
+  audit: checkAudit,
   thesis: () => checkEmbeddedArtifact("thesis"),
   engine: () => checkEmbeddedArtifact("engine"),
   spec: () => checkEmbeddedArtifact("spec"),
@@ -410,7 +439,7 @@ const CHECKS = {
 
 const mode = arg("check") || "all";
 const toRun = mode === "all"
-  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs", "gate", "issues"]
+  ? ["required-tree", "schemas", "generated-leakage", "no-default-engine", "skill-refs", "gate", "issues", "audit"]
   : [mode];
 
 let totalErrors = 0;
