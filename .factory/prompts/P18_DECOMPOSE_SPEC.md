@@ -32,7 +32,7 @@ SLICING RULES:
   action → impact → aftermath, readable in one play), and every thesis
   `feel_target` lands in some slice as acceptance or evidence. A slice that
   adds a verb without its feedback chain is incomplete. Feel is never a
-  late-order "juice pass" slice.
+  late-order "game-feel pass" slice.
 - **Seams are honest stubs.** Type `seam` = a growth system's data model and
   persistence surface, schema'd but not built: acceptance must include (a) the
   data shape exists and round-trips through save/load, and (b) at least one

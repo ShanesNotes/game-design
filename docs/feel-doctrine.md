@@ -2,12 +2,17 @@
 
 The anti-boring gate proves a design is *deep*. This doctrine exists because deep
 is not enough: a thesis can pass every falsifier and still play like a spreadsheet.
-Feel — the moment-to-moment sensation of executing the core verbs — is a design
-input, not a polish pass, and the factory treats it as first-class from P01 on.
+**Game feel** — the moment-to-moment sensation of executing the core verbs — is a
+design input, not a polish pass (DESIGN-RECORD §5: design owns falsifiable
+targets; slang feel-jargon is forbidden). game-design treats it as first-class
+from P01 on (ADR 0010).
 
 Feel is specified on paper as **falsifiable commitments**, argued at P07, sliced
-at P18, and *proven only in the co-dev repo* (the factory builds no game — ADR
-0006). What ships in the spec pack is the contract the build must honor.
+at P18, and *proven only downstream* (this repo builds no game — ADR 0006; forge
+turns feel targets into verify gates). What ships in the spec pack is the
+contract the build must honor. Structured metric fields on feel targets are
+T05; until then targets remain free-string commitments that still pass the
+Adjective Test.
 
 ## The golden moment
 
@@ -26,7 +31,7 @@ have one yet. The tracer slice exists to make the golden moment playable first.
 The thesis carries 3–6 **feel targets**: commitments about how the core verbs
 feel, each one falsifiable by playing or instrumenting the build. The test is
 the **Adjective Test**: a feel target that is an adjective ("responsive",
-"weighty", "juicy") is a wish, not a target. Falsifiable forms:
+"weighty", "snappy") is a wish, not a target. Falsifiable forms:
 
 - **Budgets** — "input to first visible response under 100ms for every verb";
   "frame time never exceeds budget during the golden moment".
@@ -64,7 +69,7 @@ legible); it may never be arbitrary.
 
 ## What this doctrine refuses
 
-- Feel as a polish backlog item ("juice pass, order 9").
+- Feel as a late polish backlog item ("game-feel pass, order 9").
 - Screen-shake-as-feel: feedback beats are information first, spectacle second.
 - Targets that only a feelings-report can check. If neither play nor
   instrumentation can falsify it, rewrite it until one can.

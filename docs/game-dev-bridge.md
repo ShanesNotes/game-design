@@ -1,41 +1,40 @@
-# Game-dev bridge — idea factory to co-dev backlog
+# Game-dev bridge — design to co-dev / forge
 
 ## Context
 
-The bridge is no longer a future seam — **it is the factory's main pipeline**
-(ADR 0006). **game-design** teases a raw game seed into a falsifiable,
-design-locked premise, decomposes it into ordered tracer-bullet issues, and
-exports the result as a **spec pack** that a game-development workspace builds.
-The spec pack is the handoff unit and the design harness's terminal artifact.
+The bridge is the design discipline's main pipeline (ADR 0006; DESIGN-RECORD §3).
+**game-design** teases a raw game seed into a falsifiable, design-locked premise,
+decomposes it into ordered tracer-bullet issues, and exports the result as a
+**spec pack**. That pack is the handoff unit and this repo's terminal artifact.
+Downstream: plain co-dev for any decided engine, or **forge** intake when the
+accepted engine profile is godot-4 (DESIGN-RECORD §3 forge gate).
 
-Local evidence from `/home/ark/game-dev` on 2026-06-11: that workspace is a Godot
-4.6.2/GDScript learning repo. Its method is hands-on and lesson-driven: the AI
-teaches, the human builds. Treat it as vocabulary and craft evidence, not as a
-target to mutate from here.
+Local evidence from `/home/ark/game-dev` (learning notes) and sibling studio
+repos (`forge/`, `games/`, `assets/`, `lore/`, `generation/`) is craft evidence,
+not a target to mutate from here.
 
 ## Downstream agentic tooling
 
-The co-dev workspace that opens a spec pack is increasingly an AI coding agent
-with game-dev leverage of its own: engine runtime MCPs (headless scene ops,
-screenshots, input simulation), per-engine skill suites, and asset-generation
-services. The factory acknowledges this in three places and no more: P02 scores
-a *verified* agent-tooling surface as engine-fit evidence, the toolchain ledger
-tracks each surface's trust status, and the pack's RESOURCES.md hands the
-possibility to the co-dev agent with the guards that govern it. No spec may
-*require* such tooling — packs must remain buildable by an agent with nothing
-but the engine and a shell.
+The co-dev or forge workspace that opens a spec pack is increasingly an AI coding
+agent with game-dev leverage: engine runtime MCPs, per-engine skill suites, and
+asset-generation services. Design acknowledges this in three places and no more:
+P02 scores a *verified* agent-tooling surface as engine-fit evidence, the
+toolchain ledger tracks each surface's trust status, and the pack's RESOURCES.md
+hands the possibility to the build agent with the guards that govern it. No
+spec may *require* such tooling — packs must remain buildable by an agent with
+nothing but the engine and a shell.
 
 ## Boundary rules
 
 - game-design keeps owning seeds, theses, design reviews, engine decisions, spec
   decomposition, local issue emission, and pack export.
-- `/game-dev` stays a separate learning/build workspace unless a future explicit
-  integration task says otherwise.
-- No Godot default: a seed can target Godot only after `GAME_THESIS.md` exists and
-  an engine-profile decision earns that surface.
+- No Godot default before thesis: a seed can target Godot only after
+  `GAME_THESIS.md` exists and an engine-profile decision earns that surface.
+  **Manifest export** (T06) is Godot-gated for forge; other engines may still
+  export plain packs (DESIGN-RECORD §3).
 - No remote issue publishing by default. Backlog output lands as local markdown
-  under `.tgf/seeds/{seed-id}/issues/`; the pack export goes to
-  `/home/ark/tgf-games/{seed-id}` (or `--to`), never anywhere else by default.
+  under `.tgf/seeds/{seed-id}/issues/`; pack export is only via
+  `scripts/package-spec.mjs` (`--to` or the configured default), never by hand.
 - A reusable “lego brick” is a documented primitive with provenance and test
   hooks; it is not copied code unless a scout pass proves license, fit, and smoke.
 
@@ -57,16 +56,16 @@ but the engine and a shell.
    adoption guard, and slice acceptance.
 5. **Spec-pack handoff** — `npm run spec:package` exports the pack (thesis, spec,
    issues, PLAYTEST_PLAN, guards, evidence schemas) into a clean folder for
-   human+AI co-development — e.g. matching `/game-dev`’s one-win lesson cadence —
-   without leaking factory ledgers or agent vocabulary into the game project.
+   human+AI co-development without leaking design ledgers or agent vocabulary.
+   Forge-manifest emission is T06.
 
 ## Backlog vocabulary mapping
 
-| game-design artifact | Backlog meaning | Co-dev analogue |
+| game-design artifact | Backlog meaning | Co-dev / forge analogue |
 |---|---|---|
 | `GAME_THESIS.md` | Product premise and constraints | Mission/quest arc for one game idea |
 | Engine decision | Chosen build surface and reversibility triggers | Godot/version/tool constraint when earned |
-| `SPEC.md` | Ordered, falsifiable build plan | The backlog’s table of contents |
+| `SPEC.md` | Ordered, falsifiable build plan | The backlog’s table of contents; 1:1 with forge slices |
 | Tracer-bullet slice (order 1) | Thinnest end-to-end proof of the loop | One playable checkpoint |
 | Depth verdict (design-lock) | Fun/depth quality gate, on paper | “Is this worth building?” audit |
 | Module card | Reusable primitive candidate | Lesson-sized mechanic or reusable scene pattern |
