@@ -78,7 +78,7 @@ tracked they fail the check.
 | `.factory/prompts/P14_KILL_RESTART.md` | reaffirmed | Kill/restart after failed deepen is still the evidence-over-sunk-cost exit (DESIGN-RECORD quality stance). |
 | `.factory/prompts/P16_REPO_SCOUT.md` | reaffirmed | Scout harvest of primitives still serves design reuse without cargo-cult (discipline ownership test in DESIGN-RECORD §5). |
 | `.factory/prompts/P17_VERIFY_TOOLCHAIN.md` | reaffirmed | Probe-before-assume tool doctrine still binds (design needs verified agent surfaces). |
-| `.factory/prompts/P18_DECOMPOSE_SPEC.md` | rewritten | Feel first-class + forge-authoring sections asset_requests/lore_refs/capabilities/verify_plan (SPEC §3.4 / T06). |
+| `.factory/prompts/P18_DECOMPOSE_SPEC.md` | rewritten | Feel first-class + forge-authoring sections asset_requests/lore_refs/capabilities/verify_plan (SPEC §3.4 / T06); optional ext.disciplines tags with worked example (game-build SPEC §2 / GB01). |
 | `.factory/prompts/P19_PACKAGE_SPEC.md` | rewritten | Forge-manifest emission + Godot-gate + --require-manifest (SPEC §3.4–§3.5 / T06). |
 | `hooks/engine_migration_requires_adr.mjs` | reaffirmed | Still enforces seed-scoped engine decision files (DESIGN-RECORD engine phase remains). |
 | `hooks/lib/guard.mjs` | reaffirmed | Shared portable guard plumbing; required for design hooks and shipped pack guards. |
@@ -92,7 +92,7 @@ tracked they fail the check.
 | `schemas/module-card.schema.json` | reaffirmed | Scout module-card still validates harvested primitives before adoption. |
 | `schemas/playtest-report.schema.json` | reaffirmed | Shipped-pack playtest evidence schema still carries bot/human proof obligations. |
 | `schemas/seed-manifest.schema.json` | reaffirmed | Per-seed run manifest still resumption source of truth. |
-| `schemas/spec-decomposition.schema.json` | rewritten | Structured acceptance (T05) + asset_requests/lore_refs/capabilities/verify_plan (SPEC §3.4 / T06). |
+| `schemas/spec-decomposition.schema.json` | rewritten | Structured acceptance (T05) + asset_requests/lore_refs/capabilities/verify_plan (SPEC §3.4 / T06); optional permissive ext.disciplines (enum validated in mapper per ADR-0005 / GB01). |
 | `templates/run/decisions/0001-engine-profile.md` | rewritten | Godot version/renderer/language fields for forge-manifest mapping (SPEC §3.4 / T06). |
 | `templates/run/GAME_SEED.md` | reaffirmed | Run-dir seed template still the intake capture surface. |
 | `templates/run/GAME_THESIS.template.md` | rewritten | Structured feel_targets (T05) + out_of_scope for manifest mapping (T06). |

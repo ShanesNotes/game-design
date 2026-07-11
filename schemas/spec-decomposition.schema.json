@@ -122,6 +122,16 @@
           "loop_verbs_covered": { "type": "array", "items": { "type": "string" } }
         }
       }
+    },
+    "ext": {
+      "type": "object",
+      "description": "Optional export-time extensions. Discipline tags under ext.disciplines are validated by the forge-manifest mapper (ADR-0005), not this schema.",
+      "properties": {
+        "disciplines": {
+          "type": "object",
+          "description": "Acceptance-level discipline tags: { slice_id: { acceptance_key_or_check_id | _default: discipline } }. Enum enforced at map time."
+        }
+      }
     }
   }
 }

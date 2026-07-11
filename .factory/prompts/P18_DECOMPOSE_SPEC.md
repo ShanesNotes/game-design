@@ -72,6 +72,33 @@ SLICING RULES:
     modding | telemetry`.
   - `verify_plan` — `{golden_cameras[] {id, position, target}, frame_budget_ms,
     load_budget_s}`.
+- **Discipline tags (optional; game-build protocol).** When the game will be
+  built under the studio game-build protocol, author acceptance-level discipline
+  tags so each work-unit routes to the right packet. Shape on the SPEC.json
+  block (carried into forge-manifest `ext.disciplines` at export):
+  `ext.disciplines = { "<slice_id>": { "<acceptance index-or-check-id>":
+  "<discipline>", "_default": "<discipline>" } }`. Enum is exactly:
+  `engineering | level-content | ui-ux | game-feel | art-integration |
+  audio-sourcing | world-gen | qa`. Absent tags are fine (protocol defaults to
+  `engineering` at read time — do not invent defaults in the SPEC). Unknown
+  values fail export mapping. Mixed slices (e.g. tracer spanning ui-ux +
+  game-feel + art) use per-acceptance keys; `_default` covers untagged rows.
+  Worked example:
+  ```json
+  "ext": {
+    "disciplines": {
+      "tracer-loop": {
+        "_default": "engineering",
+        "0": "ui-ux",
+        "feel:rotate-snap": "game-feel"
+      },
+      "sunlight-pressure": {
+        "_default": "level-content",
+        "screenshot:wither-timer": "art-integration"
+      }
+    }
+  }
+  ```
 
 VERIFY (completion is evidence, not prose):
 1. `node scripts/validate-artifacts.mjs --check spec --seed-id <id>` passes.

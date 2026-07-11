@@ -12,7 +12,9 @@ import {
   forgeGateLine,
   mapForgeManifest,
   computePins,
-  FORGE_GATE_TOKEN
+  FORGE_GATE_TOKEN,
+  BUILD_DISCIPLINES,
+  validateSpecDisciplines
 } from "../scripts/lib/manifest-mapper.mjs";
 import {
   resolveAssetsRoot,
@@ -339,4 +341,201 @@ test("computePins uses git SHAs not paths", () => {
   assert.match(r.pins.lore_index, /^[0-9a-f]{40}$/i);
   assert.doesNotMatch(r.pins.assets_index, /\//);
   assert.doesNotMatch(r.pins.lore_index, /\//);
+});
+
+// --- GB01: acceptance-level discipline tags (game-build SPEC §2) ---
+
+function baseMapInputs(specOverrides = {}) {
+  const thesis = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8"));
+  const spec = {
+    ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8")),
+    ...specOverrides
+  };
+  const engine = {
+    seed_id: "x",
+    status: "accepted",
+    decision: "d",
+    profile: GODOT_PROFILE,
+    godot_min: "4.6.2",
+    godot_max: "4.7.0",
+    renderer: "gl_compatibility",
+    language: "gdscript",
+    rationale: "r",
+    rejected: [],
+    reversal_triggers: ["t"]
+  };
+  const pins = {
+    contracts_version: "1.0.0",
+    assets_index: "a".repeat(40),
+    lore_index: "b".repeat(40),
+    forge_template: null
+  };
+  const meta = {
+    game_id: "tiny-asteroid-gardening",
+    seed_id: "tiny-asteroid-gardening",
+    producer: { name: "game-design", version: "0.1.0" },
+    created: "2026-07-10T00:00:00.000Z",
+    pack_digest: "c".repeat(64)
+  };
+  return { thesis, spec, engine, pins, meta };
+}
+
+test("GB01: BUILD_DISCIPLINES enum is exactly the 8 SPEC §2 values", () => {
+  assert.deepEqual([...BUILD_DISCIPLINES].sort(), [
+    "art-integration",
+    "audio-sourcing",
+    "engineering",
+    "game-feel",
+    "level-content",
+    "qa",
+    "ui-ux",
+    "world-gen"
+  ]);
+});
+
+test("GB01: absent disciplines is fine; no default injection at map time", () => {
+  const { thesis, spec, engine, pins, meta } = baseMapInputs();
+  assert.equal(spec.ext, undefined);
+  const r = mapForgeManifest({ thesis, spec, engine, pins, meta });
+  assert.equal(r.ok, true, (r.missing || []).join(", "));
+  assert.deepEqual(r.manifest.ext, {});
+  assert.equal(r.manifest.ext.disciplines, undefined);
+
+  // empty ext object also fine
+  const r2 = mapForgeManifest({
+    thesis,
+    spec: { ...spec, ext: {} },
+    engine,
+    pins,
+    meta
+  });
+  assert.equal(r2.ok, true, (r2.missing || []).join(", "));
+  assert.equal(r2.manifest.ext.disciplines, undefined);
+});
+
+test("GB01: valid spec.ext.disciplines maps into manifest.ext.disciplines", () => {
+  const disciplines = {
+    "tracer-loop": {
+      _default: "engineering",
+      0: "ui-ux",
+      "feel:rotate-snap": "game-feel"
+    },
+    "sunlight-pressure": {
+      _default: "level-content",
+      "screenshot:wither-timer": "art-integration"
+    }
+  };
+  const { thesis, spec, engine, pins, meta } = baseMapInputs({
+    ext: { disciplines }
+  });
+  const r = mapForgeManifest({ thesis, spec, engine, pins, meta });
+  assert.equal(r.ok, true, (r.missing || []).join(", "));
+  assert.deepEqual(r.manifest.ext.disciplines, disciplines);
+  assert.deepEqual(validate(loadContractsSchema(), r.manifest), []);
+});
+
+test("GB01: unknown discipline or malformed shape fails listing valid values", () => {
+  const { thesis, engine, pins, meta } = baseMapInputs();
+  const baseSpec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+
+  const unknown = mapForgeManifest({
+    thesis,
+    spec: {
+      ...baseSpec,
+      ext: { disciplines: { "tracer-loop": { _default: "juice" } } }
+    },
+    engine,
+    pins,
+    meta
+  });
+  assert.equal(unknown.ok, false);
+  assert.ok(unknown.missing.some((m) => /unknown or invalid discipline/.test(m)), unknown.missing.join("\n"));
+  assert.ok(unknown.missing.some((m) => /game-feel/.test(m) && /engineering/.test(m)), "must list valid values");
+
+  const malformed = mapForgeManifest({
+    thesis,
+    spec: {
+      ...baseSpec,
+      ext: { disciplines: ["engineering"] }
+    },
+    engine,
+    pins,
+    meta
+  });
+  assert.equal(malformed.ok, false);
+  assert.ok(
+    malformed.missing.some((m) => /spec\.ext\.disciplines/.test(m) && /valid disciplines/.test(m)),
+    malformed.missing.join("\n")
+  );
+
+  const badRow = validateSpecDisciplines({
+    disciplines: { "tracer-loop": "engineering" }
+  });
+  assert.equal(badRow.ok, false);
+  assert.ok(badRow.errors.some((e) => /tracer-loop/.test(e) && /valid disciplines/.test(e)));
+});
+
+test("GB01: package-spec export round-trips ext.disciplines into forge-manifest", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-manifest-disciplines";
+  const disciplines = {
+    "tracer-loop": {
+      _default: "engineering",
+      0: "ui-ux",
+      "feel:rotate-snap": "game-feel"
+    },
+    "sunlight-pressure": {
+      _default: "level-content",
+      "screenshot:wither-timer": "art-integration"
+    }
+  };
+  try {
+    decomposeReadyRun(dir, id, {
+      profile: GODOT_PROFILE,
+      specOverrides: { ext: { disciplines } }
+    });
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    const mfPath = path.join(target, "forge-manifest.json");
+    assert.ok(fs.existsSync(mfPath), "pack must contain forge-manifest.json");
+    const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+    assert.deepEqual(mf.ext.disciplines, disciplines);
+    assert.deepEqual(validate(loadContractsSchema(), mf), []);
+
+    const chk = node("validate-artifacts.mjs", ["--check", "forge-manifest", "--file", mfPath], { cwd: dir });
+    assert.equal(chk.status, 0, chk.stdout + chk.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("GB01: unknown discipline aborts package-spec before staging", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-manifest-bad-disc";
+  try {
+    decomposeReadyRun(dir, id, {
+      profile: GODOT_PROFILE,
+      specOverrides: {
+        ext: { disciplines: { "tracer-loop": { _default: "not-a-discipline" } } }
+      }
+    });
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+
+    const before = fs.existsSync(target) ? fs.readdirSync(target) : [];
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /mapping failed|aborted before staging/i);
+    assert.match(r.stderr, /valid/);
+    assert.match(r.stderr, /engineering|game-feel/);
+    assert.equal(fs.readdirSync(target).length, before.length, "target must not be mutated on mapping abort");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
 });

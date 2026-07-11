@@ -15,15 +15,30 @@
 //   engine                        ← engine decision (status=accepted, profile/version fields)
 //   asset_requests, lore_refs,
 //   verify_plan, capabilities     ← spec authored sections (P18)
+//   ext.disciplines               ← spec.ext.disciplines (optional; validated enum)
 //   pins                          ← computed (caller)
 //   schema_version, game_id,
-//   producer, created, pack_digest, ext ← export metadata (caller)
+//   producer, created, pack_digest, ext ← export metadata (caller) + spec.ext overlay
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 
 export const GODOT_PROFILE = "godot-4";
 export const FORGE_MANIFEST_SCHEMA_VERSION = "1.0.0";
 export const FORGE_GATE_TOKEN = "FORGE-GATE:ENGINE";
+
+/** Build-phase discipline enum (SPEC game-build §2 / DISCIPLINES.md owners subset). */
+export const BUILD_DISCIPLINES = Object.freeze([
+  "engineering",
+  "level-content",
+  "ui-ux",
+  "game-feel",
+  "art-integration",
+  "audio-sourcing",
+  "world-gen",
+  "qa"
+]);
+
+const BUILD_DISCIPLINE_SET = new Set(BUILD_DISCIPLINES);
 
 /** Stable Godot-gate stdout token line: `FORGE-GATE:ENGINE <profile>`. */
 export function forgeGateLine(profile) {
@@ -40,6 +55,82 @@ function isPlainObject(v) {
 
 function isStringArray(v) {
   return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+
+/**
+ * Validate optional spec.ext.disciplines (game-build SPEC §2).
+ * Absent is fine (protocol defaults at read time; no injection at export).
+ * Unknown discipline or malformed shape → errors listing valid values.
+ *
+ * @returns {{ ok: boolean, disciplines: object|null, errors: string[] }}
+ */
+export function validateSpecDisciplines(specExt) {
+  const validList = BUILD_DISCIPLINES.join(", ");
+  const errors = [];
+
+  // No ext at all — ok
+  if (specExt === undefined || specExt === null) {
+    return { ok: true, disciplines: null, errors: [] };
+  }
+  if (!isPlainObject(specExt)) {
+    return {
+      ok: false,
+      disciplines: null,
+      errors: [`spec.ext: expected object (valid disciplines: ${validList})`]
+    };
+  }
+
+  // ext present but no disciplines key — ok (other ext keys ignored at map time)
+  if (!("disciplines" in specExt) || specExt.disciplines === undefined || specExt.disciplines === null) {
+    return { ok: true, disciplines: null, errors: [] };
+  }
+
+  const d = specExt.disciplines;
+  if (!isPlainObject(d) || Array.isArray(d)) {
+    return {
+      ok: false,
+      disciplines: null,
+      errors: [
+        `spec.ext.disciplines: expected object keyed by slice_id (valid disciplines: ${validList})`
+      ]
+    };
+  }
+
+  const out = {};
+  for (const [sliceId, tags] of Object.entries(d)) {
+    if (!isNonEmptyString(sliceId)) {
+      errors.push(
+        `spec.ext.disciplines: slice keys must be non-empty strings (valid disciplines: ${validList})`
+      );
+      continue;
+    }
+    if (!isPlainObject(tags) || Array.isArray(tags)) {
+      errors.push(
+        `spec.ext.disciplines.${sliceId}: expected object of acceptance-key → discipline (valid disciplines: ${validList})`
+      );
+      continue;
+    }
+    const row = {};
+    for (const [accKey, disc] of Object.entries(tags)) {
+      if (!isNonEmptyString(accKey)) {
+        errors.push(
+          `spec.ext.disciplines.${sliceId}: acceptance keys must be non-empty strings (valid disciplines: ${validList})`
+        );
+        continue;
+      }
+      if (typeof disc !== "string" || !BUILD_DISCIPLINE_SET.has(disc)) {
+        errors.push(
+          `spec.ext.disciplines.${sliceId}.${accKey}: unknown or invalid discipline ${JSON.stringify(disc)} (valid: ${validList})`
+        );
+        continue;
+      }
+      row[accKey] = disc;
+    }
+    out[sliceId] = row;
+  }
+
+  if (errors.length) return { ok: false, disciplines: null, errors };
+  return { ok: true, disciplines: out, errors: [] };
 }
 
 /**
@@ -66,6 +157,13 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
       manifest: null,
       errors
     };
+  }
+
+  // Optional acceptance-level discipline tags (GB01 / game-build SPEC §2).
+  // Validated here (ADR-0005: gate policy in checkers, not schemas).
+  const discResult = validateSpecDisciplines(spec.ext);
+  if (!discResult.ok) {
+    for (const e of discResult.errors) missing.push(e);
   }
 
   // Only emit godot-4 profile in the manifest body (schema enum). Caller must
@@ -294,7 +392,13 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
       lore_index: pins.lore_index,
       forge_template: pins.forge_template
     },
-    ext: isPlainObject(meta.ext) ? { ...meta.ext } : {}
+    // meta.ext (caller) + validated spec.ext.disciplines (no default injection)
+    ext: {
+      ...(isPlainObject(meta.ext) ? { ...meta.ext } : {}),
+      ...(discResult.disciplines
+        ? { disciplines: discResult.disciplines }
+        : {})
+    }
   };
 
   return { ok: true, missing: [], manifest, errors };
