@@ -1,27 +1,33 @@
 # game-design
 
-**game-design** is the spec-only discipline repo under game-studio: it produces
-depth-gated theses and issue-sliced spec packs, and builds no game (see
-[../DESIGN-RECORD.md](../DESIGN-RECORD.md) §2). Formerly tiny-game-factory.
+**game-design** is the spec-only discipline repo under **game-studio**: it
+produces depth-gated theses and issue-sliced spec packs, and builds no game
+(see [../DESIGN-RECORD.md](../DESIGN-RECORD.md) §2). Product name is
+**game-design** (formerly tiny-game-factory; old `tgf-*` skill ids kept for
+compatibility only).
+
+Studio boot (parent): `../README.md` + `../CLAUDE.md`. This repo's agent entry:
+`AGENTS.md` + `CONTEXT.md` + `CLAUDE.md`.
 
 A local-first, evidence-first agentic **spec harness** for games. It fertilizes a
 one-line game *seed* into a depth-gated `GAME_THESIS.md`, decomposes it into an
 issue-sliced `SPEC.md`, and exports the result as a **spec pack** — a clean folder
-opened elsewhere for human+AI co-development. **No game is built in this repo**
-(ADR 0006).
+handed to forge (or co-dev). **No game is built in this repo** (ADR 0006).
 
 > Search > codegen · Fun > polish · Evidence > sunk cost · Code-native > opaque ·
 > Falsifiable on paper > merely asserted.
 
 This repository is the **design harness**, not a game. It owns reusable doctrine,
-prompts, schemas, hooks, and validators. Spec packs are exported elsewhere
-(`/home/ark/tgf-games/{seed-id}` by default) and stay free of harness state.
+prompts, schemas, hooks, and validators. Spec packs are exported to a target
+directory (prefer `$STUDIO_ROOT/games/_export-<seed-id>/` via `--to`); default
+pack root may still resolve to a legacy path — **always pass `--to` for studio
+work** (see `.scratch/needs-triage.md` at studio root).
 
 ## Quickstart
 
 ```bash
-# Probe the local toolchain (writes a generated block into the ledger):
-node scripts/verify-local-tools.mjs --write docs/toolchain-verification-ledger.md
+# From this repo (design/)
+npm run verify     # lint + artifact validation + guard dry-run + tests
 
 # Initialize durable run state for a seed (creates ONLY .tgf/seeds/{seed-id}):
 node scripts/init-game-run.mjs --seed-id tiny-asteroid-gardening \
@@ -32,9 +38,6 @@ node scripts/init-game-run.mjs --seed-id tiny-asteroid-gardening \
 # Or start/resume the guided idea-factory walkthrough:
 node scripts/walk-game-idea.mjs --seed-id tiny-asteroid-gardening \
   --seed "tiny asteroid gardening"
-
-# Verify the whole factory:
-npm run verify     # lint + artifact validation + guard dry-run + tests
 ```
 
 No spec pack, engine, or gameplay code is created by initialization. The next
@@ -54,12 +57,20 @@ issue backlog and export the pack:
 node scripts/emit-local-issues.mjs --seed-id <seed-id>           # preview
 node scripts/emit-local-issues.mjs --seed-id <seed-id> --write   # write
 
-# Export the spec pack (dry-run by default; leakage-gated):
-npm run spec:package -- --seed-id <seed-id>                      # preview
-npm run spec:package -- --seed-id <seed-id> --write              # export
+# Export the spec pack (dry-run by default; leakage-gated).
+# Studio path — always use --to under games/:
+npm run spec:package -- --seed-id <seed-id> \
+  --to ../games/_export-<seed-id> --write --require-manifest
 ```
 
-No remote tracker is published by default.
+No remote tracker is published by default. Forge then:
+
+```bash
+# From STUDIO_ROOT
+node forge/bin/forge.mjs intake games/_export-<seed-id>
+```
+
+Worked studio proof: `../forge/docs/walking-skeleton.md` (`skeleton-001`).
 
 ## How it works
 
@@ -82,43 +93,34 @@ See `CONTEXT.md`.
 ## Layout
 
 ```
-AGENTS.md CONTEXT.md DESIGN.md README.md factory.config.toml package.json
+AGENTS.md CONTEXT.md DESIGN.md README.md CLAUDE.md factory.config.toml package.json
 docs/            adr/; agents/; anti-boring gate, doctrine, engine matrix, ledgers
 .factory/prompts active task contracts (P00–P02, P07, P13–P14, P16–P19); retired build prompts in attic/
 .codex/skills/   10 project-local skill wrappers (`tgf-*` ids kept for compatibility)
-schemas/         9 JSON schemas (manifest, thesis, depth, spec-decomposition, ...)
-hooks/           3 factory guards (8 build-time guards ship in templates/spec-pack/guards/)
-scripts/         advance-run · emit-local-issues · init-game-run · lint · package-spec · run-gates · summarize-run · validate-artifacts · verify-local-tools · walk-game-idea
+schemas/         JSON schemas (manifest, thesis, depth, spec-decomposition, ...)
+hooks/           factory guards (build-time guards ship in templates/spec-pack/guards/)
+scripts/         advance-run · emit-local-issues · init-game-run · lint · package-spec · …
 templates/       run/ (seed-run state) · spec-pack/ (the exported pack skeleton)
-examples/        fixtures/ (schema fixtures) · seeds/ (empty; see README there)
+examples/        fixtures/ (schema fixtures) · seeds/
 ```
 
 ## Documentation
 
 - `AGENTS.md` — agent rules and governance.
-- `CONTEXT.md` — domain dictionary (start here).
+- `CONTEXT.md` — domain dictionary (start here for vocabulary).
+- `CLAUDE.md` — Claude Code bootstrap (points at AGENTS + verify).
 - `DESIGN.md` — how the factory is built (runtime vs orchestration).
 - `docs/adr/` — accepted architectural decisions (0006 is the spec-pack pivot).
 - `docs/agents/` — domain, issue-tracker, triage-labels, skill-wrapper-doctrine.
 - `docs/anti-boring-gate.md` — paper falsifiers and the depth vector.
-- `docs/feel-doctrine.md` — golden moment, feel targets, blamable death: feel as falsifiable design input (ADR 0009).
-- `docs/borrowed-patterns.md` — borrowed patterns from other projects.
+- `docs/feel-doctrine.md` — golden moment, feel targets: feel as falsifiable design input.
 - `docs/doctrine.md` — non-negotiable doctrine and phase model.
 - `docs/engine-matrix.md` — engine candidates and the no-default-engine policy.
-- `docs/game-dev-bridge.md` — the spec-pack handoff into a co-dev workspace.
-- `docs/handoffs/` — completed factory passes (e2e validation, architecture deepening).
-- `docs/hooks-and-guards.md` — factory guards and hooks.
-- `docs/initialization-handoff.md` — initialization and handoff.
-- `docs/repo-radar.md` — repo radar / source discovery.
-- `docs/source-ledger.md` — source ledger.
-- `docs/toolchain-verification-ledger.md` — toolchain verification ledger.
+- `docs/game-dev-bridge.md` — the spec-pack handoff (into forge / co-dev).
 
 ## Status
 
 v0.2.0 — spec-pack pivot (ADR 0006). The factory stops at an exported,
 verifier-clean spec pack; building, playtesting, and fun-lock move downstream
-into the pack. Legacy v0.1.0 seed runs (which built first slices under factory
-orchestration) are archived under `.tgf/archive/` (untracked) and are not
-migrated. Per-seed run state is gitignored under `.tgf/seeds/{seed-id}/`. Run
-`npm run verify` before claiming done — do not trust hard-coded counts in
-archived handoff docs.
+into forge + the game repo. Per-seed run state is gitignored under
+`.tgf/seeds/{seed-id}/`. Run `npm run verify` before claiming done.
