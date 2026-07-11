@@ -25,6 +25,24 @@ test("isValidSeedId accepts kebab ids and rejects junk", () => {
   assert.ok(!rs.isValidSeedId("a"));
 });
 
+test("specPackRootFor defaults to $STUDIO_ROOT/games/{seed-id} (path-registry)", () => {
+  const id = "pack-root-probe";
+  const prev = process.env.STUDIO_ROOT;
+  try {
+    process.env.STUDIO_ROOT = "/tmp/fake-studio-root";
+    assert.equal(rs.specPackRootFor(id), path.join("/tmp/fake-studio-root", "games", id));
+    // Not the legacy tgf-games path
+    assert.notEqual(rs.specPackRootFor(id), `/home/ark/tgf-games/${id}`);
+  } finally {
+    if (prev === undefined) delete process.env.STUDIO_ROOT;
+    else process.env.STUDIO_ROOT = prev;
+  }
+  // Discovery from design repo cwd (no STUDIO_ROOT) lands under real studio/games
+  const discovered = rs.specPackRootFor(id, REPO);
+  assert.match(discovered, /[/\\]games[/\\]pack-root-probe$/);
+  assert.ok(!discovered.includes("tgf-games"));
+});
+
 test("ALL_PHASES matches the seed-manifest current_phase enum", () => {
   const schema = JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8"));
   const enumPhases = schema.properties.current_phase.enum;

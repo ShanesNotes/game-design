@@ -42,6 +42,8 @@ const readTpl = (name) =>
   renderTemplate(fs.readFileSync(path.join(tplDir, name), "utf8"), { SEED_ID: seedId, SEED: seed, ISO: iso });
 
 const manifest = JSON.parse(readTpl("manifest.json"));
+// Path-registry default: $STUDIO_ROOT/games/{seed-id} (not legacy ~/tgf-games).
+manifest.default_spec_pack_root = specPackRoot;
 const bootDoc = readTpl("README_AGENT_BOOT.md");
 const nextDoc = readTpl("README_NEXT_ACTIONS.md");
 const seedDoc = `# GAME_SEED.md\n\n${seed}\n`;

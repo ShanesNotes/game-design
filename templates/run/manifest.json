@@ -6,7 +6,7 @@
   "game_thesis_path": null,
   "engine_decision_path": null,
   "spec_path": null,
-  "default_spec_pack_root": "/home/ark/tgf-games/{{SEED_ID}}",
+  "default_spec_pack_root": "{{SPEC_PACK_ROOT}}",
   "spec_pack_path": null,
   "external_side_effects_allowed": false,
   "execution_ledger_path": ".tgf/seeds/{{SEED_ID}}/execution-ledger.jsonl",

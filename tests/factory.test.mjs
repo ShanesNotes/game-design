@@ -101,13 +101,19 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     }
     assert.ok(!fs.existsSync(path.join(runDir, "GAME_THESIS.md")), "must not create GAME_THESIS.md");
     assert.ok(!fs.existsSync(path.join(dir, "src")), "must not create src/");
-    assert.ok(!fs.existsSync(`/home/ark/tgf-games/${id}`), "must not create spec pack folder");
+    assert.ok(!fs.existsSync(`/home/ark/tgf-games/${id}`), "must not create legacy tgf-games pack");
+    assert.ok(
+      !fs.existsSync(path.join(path.resolve(REPO, ".."), "games", id)),
+      "init must not create default pack under games/",
+    );
 
     const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
     const schema = JSON.parse(fs.readFileSync(rel("schemas/seed-manifest.schema.json"), "utf8"));
     assert.deepEqual(validate(schema, manifest), []);
     assert.equal(manifest.external_side_effects_allowed, false);
     assert.equal(manifest.spec_pack_path, null);
+    assert.match(manifest.default_spec_pack_root, /[/\\]games[/\\]selftest-create$/);
+    assert.ok(!manifest.default_spec_pack_root.includes("tgf-games"));
 
     const firstRow = JSON.parse(fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n")[0]);
     const ledgerSchema = JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8"));

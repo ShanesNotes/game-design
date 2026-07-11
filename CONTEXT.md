@@ -30,12 +30,13 @@ pack. The harness is durable process memory.
 |---|---|---|---|
 | Design repo | `/home/ark/game-studio/design/` | reusable doctrine, prompts, schemas, hooks, scripts, skills | durable |
 | Per-seed run state | `.tgf/seeds/{seed-id}/` | one seed's manifest, ledger, thesis, decisions, SPEC, issues, reviews, handoffs | durable temporal truth |
-| Spec pack | `/home/ark/tgf-games/{seed-id}/` (default) | the exported spec + backlog, opened for co-dev | durable deliverable |
+| Spec pack | `$STUDIO_ROOT/games/{seed-id}/` (default; `--to` wins) | the exported spec + backlog, opened for co-dev | durable deliverable |
 
 The spec pack root is a **declared default, not a created path**
-(`manifest.default_spec_pack_root`). Nothing creates `/home/ark/tgf-games/` until
-the handoff phase exports the pack via `scripts/package-spec.mjs --write`; the
-export destination is recorded as `manifest.spec_pack_path`.
+(`manifest.default_spec_pack_root` → `$STUDIO_ROOT/games/{seed-id}`). Nothing
+creates that folder until the handoff phase exports the pack via
+`scripts/package-spec.mjs --write` (`--to` overrides the default); the export
+destination is recorded as `manifest.spec_pack_path`.
 
 **Separation is absolute:** factory state — `.tgf/`/`.omx/`/`.sandcastle/` paths,
 GStack/Pocock/OMX/Sandcastle markers, ledgers, handoffs, skill docs, source-product

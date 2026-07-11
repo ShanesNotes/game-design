@@ -9,11 +9,13 @@
 // policy that keeps a run pointed inside its sandbox, the symlink write-through guard,
 // and the phase state machine derived from docs/doctrine.md §"Phase model".
 //
-// Dependency-free (Node built-ins + the local JSON-schema validator) by design.
+// Dependency-free (Node built-ins + the local JSON-schema validator) by design —
+// except studio-paths for path-registry pack root discovery.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "./validate-json-schema.mjs";
+import { findStudioRoot } from "./studio-paths.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -31,11 +33,19 @@ export function runDirFor(cwd, seedId) {
 export function runRelFor(seedId) {
   return path.join(".tgf", "seeds", seedId);
 }
-// Default export destination for a finished spec pack: the clean co-development
-// folder the user opens with the next session. Declared, never created by the
-// factory until an explicit package-spec step.
-export function specPackRootFor(seedId) {
-  return `/home/ark/tgf-games/${seedId}`;
+// Default export destination for a finished spec pack: $STUDIO_ROOT/games/{seed-id}
+// (path-registry). Declared, never created until an explicit package-spec step.
+// package-spec --to still wins over this default.
+// Discovery: startDir → FACTORY_ROOT walk-up → STUDIO_ROOT env (via findStudioRoot).
+export function specPackRootFor(seedId, startDir = process.cwd()) {
+  const studio =
+    findStudioRoot(startDir) || findStudioRoot(FACTORY_ROOT);
+  if (!studio) {
+    throw new Error(
+      "cannot resolve STUDIO_ROOT for default pack root (set STUDIO_ROOT or run under a studio tree with DISCIPLINES.md)",
+    );
+  }
+  return path.join(studio, "games", seedId);
 }
 
 export function pathIsInside(parent, child) {
@@ -259,12 +269,12 @@ export function readLedger(runDir, seedId = null, cwd = process.cwd()) {
 
 // --- Path policy ---
 
-// The only absolute /home/ark/... value a manifest may contain is its own
-// default_spec_pack_root, which must equal /home/ark/tgf-games/{seed-id}. This keeps
-// a run from pointing writes at source repos or anywhere outside its declared sandbox.
+// The only absolute path a manifest may contain is its own default_spec_pack_root,
+// which must equal $STUDIO_ROOT/games/{seed-id} (path-registry). This keeps a run
+// from pointing writes at source repos or anywhere outside its declared sandbox.
 export function manifestPathPolicyErrors(manifest, seedId, cwd = process.cwd()) {
   const errors = [];
-  const specPackRoot = specPackRootFor(seedId);
+  const specPackRoot = specPackRootFor(seedId, cwd);
   const absPaths = JSON.stringify(manifest).match(/\/home\/ark\/[A-Za-z0-9._/-]+/g) || [];
   for (const p of absPaths) if (p !== specPackRoot) errors.push(`illegal absolute source path in manifest: ${p}`);
   if (manifest.default_spec_pack_root !== specPackRoot) {
