@@ -108,6 +108,16 @@ SLICING RULES:
   }
   ```
 
+REVISION AUTHORING (post-complete; export-surface only — not a new phase):
+When a completed seed needs a design change (Shane, or a mission whose prompt
+explicitly authorizes it — same governance class as verdict `done`), re-author
+only the SPEC surface: slices + forge-authoring sections (`asset_requests`,
+`lore_refs`, `capabilities`, `verify_plan`, optional `ext.disciplines`).
+Re-render issues. Do not reopen thesis/engine unless the change requires it.
+Revisions may retire never-dispatched slices; built slices stay immutable
+(forge intake enforces). Export via P19's revision path (`--revise-of`), not
+plain `package-spec` — `complete` stays absorbing for plain packs (SPEC §6-B).
+
 VERIFY (completion is evidence, not prose):
 1. `node scripts/validate-artifacts.mjs --check spec --seed-id <id>` passes.
 2. `node scripts/emit-local-issues.mjs --seed-id <id>` dry-runs cleanly.

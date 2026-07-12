@@ -33,6 +33,17 @@ TASK:
 4. Advance the run: `decompose -> handoff -> complete` with the export ledger row
    as evidence.
 
+REVISION EXPORT (phase `complete` only — not a phase transition):
+When packaging a post-complete design change against a live game, pass
+`--revise-of <game-dir>` (`npm run spec:revise -- --seed-id <id> --revise-of
+<game-dir> --write`). The run stays at `complete`. Emits a full immutable
+forge-manifest **v1.1.0** with `parent_digest` = sha256 of the raw bytes of
+`<game-dir>/forge-manifest.json` and **freshly computed pins** (pin-refresh
+path). Plain export without `--revise-of` still refuses at `complete`.
+Godot-gate still applies (non-godot → no manifest + `FORGE-GATE:ENGINE`
+token). Same mapper + validation as plain export — no delta language
+(SPEC §6-B).
+
 THE PACK MUST STAND ALONE:
 - Its AGENTS.md explains the co-dev loop without referencing this factory.
 - Its issues reference only pack-relative paths (SPEC.md, GAME_THESIS.md,

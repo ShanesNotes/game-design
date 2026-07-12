@@ -12,9 +12,11 @@
 //
 // Usage: node scripts/package-spec.mjs --seed-id <id> [--to <dir>] [--write]
 //          [--force] [--require-manifest]
+//          [--revise-of <game-dir>]   # post-complete revision (SPEC §6-B); parent_digest
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
@@ -40,6 +42,9 @@ import {
   forgeManifestSchemaPath
 } from "./lib/studio-paths.mjs";
 
+/** forge-manifest schema_version for revision exports (parent_digest requires 1.1.0). */
+const REVISION_SCHEMA_VERSION = "1.1.0";
+
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PKG = JSON.parse(fs.readFileSync(path.join(FACTORY_ROOT, "package.json"), "utf8"));
 
@@ -49,8 +54,12 @@ const seedId = arg("seed-id");
 const write = hasFlag("write");
 const force = hasFlag("force");
 const requireManifest = hasFlag("require-manifest");
+const reviseOf = arg("revise-of");
+const isRevision = Boolean(reviseOf);
 
-if (!seedId) fail("usage: --seed-id <id> [--to <dir>] [--write] [--force] [--require-manifest]");
+if (!seedId) {
+  fail("usage: --seed-id <id> [--to <dir>] [--write] [--force] [--require-manifest] [--revise-of <game-dir>]");
+}
 if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
 const target = path.resolve(arg("to", specPackRootFor(seedId)));
 
@@ -69,10 +78,24 @@ const runCheck = spawnSync(process.execPath,
   { cwd: process.cwd(), encoding: "utf8" });
 if (runCheck.status !== 0) fail(`run validation failed:\n${runCheck.stdout || runCheck.stderr}`);
 
-if (!["decompose", "handoff"].includes(manifest.current_phase)) {
+// Plain export: decompose|handoff only. Revision export (--revise-of): complete only.
+// complete stays absorbing for plain packs (SPEC §6-B / F05b).
+if (isRevision) {
+  if (manifest.current_phase !== "complete") {
+    fail(`revision export (--revise-of) requires current_phase complete, got '${manifest.current_phase}'`);
+  }
+} else if (!["decompose", "handoff"].includes(manifest.current_phase)) {
   fail(`spec pack export requires current_phase decompose or handoff, got '${manifest.current_phase}'`);
 }
 if (!manifest.spec_path) fail("refusing to package before SPEC.md exists (decompose phase)");
+
+let gameDir = null;
+if (isRevision) {
+  gameDir = path.resolve(reviseOf);
+  if (!fs.existsSync(gameDir) || !fs.statSync(gameDir).isDirectory()) {
+    fail(`--revise-of must be an existing game directory: ${gameDir}`);
+  }
+}
 
 const issuesDir = path.join(runDir, "issues");
 const issueFiles = fs.existsSync(issuesDir)
@@ -122,6 +145,15 @@ try {
 const engineProfile = String(engine.profile || "");
 const isGodot = engineProfile === GODOT_PROFILE;
 let pendingManifest = null; // filled for godot-4 after mapping; digest set after content stage
+let parentDigest = null; // revision only: sha256 of game forge-manifest.json raw bytes
+
+if (isRevision && isGodot) {
+  const parentMfPath = path.join(gameDir, "forge-manifest.json");
+  if (!fs.existsSync(parentMfPath) || !fs.statSync(parentMfPath).isFile()) {
+    fail(`revision export requires ${parentMfPath} (parent_digest = sha256 of its raw bytes)`);
+  }
+  parentDigest = crypto.createHash("sha256").update(fs.readFileSync(parentMfPath)).digest("hex");
+}
 
 if (!isGodot) {
   const line = forgeGateLine(engineProfile || "(missing)");
@@ -130,6 +162,7 @@ if (!isGodot) {
     fail(`--require-manifest set but engine profile is not ${GODOT_PROFILE} (${line})`);
   }
 } else {
+  // Pins recomputed at every export (plain + revision) — pin-refresh path (F05b).
   const pinsResult = computePins({
     assetsRoot: resolveAssetsRoot(FACTORY_ROOT),
     loreRoot: resolveLoreRoot(FACTORY_ROOT),
@@ -165,6 +198,11 @@ if (!isGodot) {
     );
   }
   pendingManifest = mapResult.manifest;
+  // Full-manifest revision (SPEC §6-B): v1.1.0 + parent_digest; no delta language.
+  if (isRevision) {
+    pendingManifest.schema_version = REVISION_SCHEMA_VERSION;
+    pendingManifest.parent_digest = parentDigest;
+  }
 }
 
 // The pack doubles as a teaching workspace: MISSION.md and RESOURCES.md (the files
@@ -270,14 +308,20 @@ try {
   // target is the declared default root (the path policy forbids anything else).
   const iso = new Date().toISOString();
   const insideDefaultRoot = pathIsInside(specPackRootFor(seedId), target);
+  const exportCmd = isRevision
+    ? `node scripts/package-spec.mjs --seed-id ${seedId} --revise-of ${gameDir} --write`
+    : `node scripts/package-spec.mjs --seed-id ${seedId} --write`;
   const row = {
     ts: iso, seed_id: seedId, phase: manifest.current_phase,
-    event: "spec-pack-exported", status: "passed", actor: "package-spec.mjs",
+    event: isRevision ? "spec-pack-revision-exported" : "spec-pack-exported",
+    status: "passed", actor: "package-spec.mjs",
     changed_paths: [`${runRel}/manifest.json`, `${runRel}/execution-ledger.jsonl`],
     verification: {
-      commands: [`node scripts/package-spec.mjs --seed-id ${seedId} --write`],
+      commands: [exportCmd],
       status: "passed",
-      evidence: `spec pack exported (${packFiles.length} files) after run validation and leakage gate; target recorded in this row's notes`
+      evidence: isRevision
+        ? `revision pack exported (${packFiles.length} files); parent_digest set; pins recomputed; target recorded in this row's notes`
+        : `spec pack exported (${packFiles.length} files) after run validation and leakage gate; target recorded in this row's notes`
     },
     blockers: []
   };
@@ -297,6 +341,9 @@ try {
   console.log(`[package-spec] exported ${packFiles.length} files to ${target}`);
   if (pendingManifest) {
     console.log(`[package-spec] forge-manifest.json emitted (engine ${GODOT_PROFILE})`);
+    if (isRevision) {
+      console.log(`[package-spec] revision: schema_version ${REVISION_SCHEMA_VERSION} parent_digest ${parentDigest}`);
+    }
   }
   console.log(`[package-spec] next: open ${target} in a fresh session and follow its AGENTS.md`);
 } finally {

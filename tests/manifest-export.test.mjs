@@ -1,7 +1,9 @@
 // T06 — forge-manifest export with Godot-gate (SPEC §3.4–§3.5).
+// F05b — post-complete revision export (--revise-of, parent_digest, pin refresh).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -533,4 +535,161 @@ test("GB01: unknown discipline aborts package-spec before staging", () => {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
   }
+});
+
+// --- F05b: post-complete revision export (SPEC §6-B) ---
+
+/** Completed run: all decompose artifacts + ledger/phase at complete. */
+function completeReadyRun(dir, id, opts = {}) {
+  const runDir = decomposeReadyRun(dir, id, opts);
+  assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+  advanceRun(dir, id, {
+    phase: "complete",
+    thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
+    enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+    specPath: `.tgf/seeds/${id}/SPEC.md`,
+    ledgerPhases: ["handoff", "complete"]
+  });
+  return runDir;
+}
+
+/** Fixture game dir with a parent forge-manifest.json (raw-byte parent_digest source). */
+function fixtureGameDir(parentBytes) {
+  const gameDir = tmp();
+  const body = parentBytes !== undefined
+    ? parentBytes
+    : fs.readFileSync(path.join(STUDIO_ROOT, "contracts", "fixtures", "manifest-revision", "base.json"));
+  const parentPath = path.join(gameDir, "forge-manifest.json");
+  fs.writeFileSync(parentPath, body);
+  return {
+    gameDir,
+    parentPath,
+    parentDigest: crypto.createHash("sha256").update(body).digest("hex")
+  };
+}
+
+test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh pins", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-revision-export";
+  const { gameDir, parentDigest } = fixtureGameDir();
+  try {
+    completeReadyRun(dir, id, { profile: GODOT_PROFILE });
+
+    const r = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--to", target, "--write", "--revise-of", gameDir],
+      { cwd: dir }
+    );
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    const mfPath = path.join(target, "forge-manifest.json");
+    assert.ok(fs.existsSync(mfPath), "revision pack must contain forge-manifest.json");
+    const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+
+    assert.equal(mf.schema_version, "1.1.0");
+    assert.equal(mf.parent_digest, parentDigest);
+    assert.deepEqual(validate(loadContractsSchema(), mf), [], "schema-valid v1.1.0");
+
+    const chk = node("validate-artifacts.mjs", ["--check", "forge-manifest", "--file", mfPath], { cwd: dir });
+    assert.equal(chk.status, 0, chk.stdout + chk.stderr);
+
+    // Fresh pins at export (same computePins path as plain export)
+    const pins = computePins({
+      assetsRoot: resolveAssetsRoot(REPO),
+      loreRoot: resolveLoreRoot(REPO),
+      contractsVersion: contractsVersion(REPO),
+      forgeTemplate: null
+    });
+    assert.equal(pins.ok, true, (pins.missing || []).join(", "));
+    assert.equal(mf.pins.assets_index, pins.pins.assets_index);
+    assert.equal(mf.pins.lore_index, pins.pins.lore_index);
+    assert.equal(mf.pins.contracts_version, pins.pins.contracts_version);
+    assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
+
+    assert.match(r.stdout, /revision: schema_version 1\.1\.0 parent_digest/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test("F05b AC2: plain re-export at complete still refused", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-complete-plain-refuse";
+  try {
+    completeReadyRun(dir, id, { profile: GODOT_PROFILE });
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /decompose or handoff.*complete/i);
+    assert.equal(fs.readdirSync(target).length, 0, "refused plain export must not write pack");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("F05b AC3: Godot-gate holds on revision (non-godot → no manifest + stable token)", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-revision-nongodot";
+  const gameDir = tmp(); // non-godot parent may lack forge-manifest
+  try {
+    completeReadyRun(dir, id, { profile: "raw Canvas + TS" });
+    const r = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--to", target, "--write", "--revise-of", gameDir],
+      { cwd: dir }
+    );
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, new RegExp(`${FORGE_GATE_TOKEN} raw Canvas \\+ TS`));
+    assert.ok(!fs.existsSync(path.join(target, "forge-manifest.json")), "no manifest for non-godot revision");
+    assert.ok(fs.existsSync(path.join(target, "SPEC.md")), "pack still exports");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test("F05b AC4: revision mapping failure aborts with full missing-field list", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-revision-map-fail";
+  const { gameDir } = fixtureGameDir();
+  try {
+    const runDir = completeReadyRun(dir, id, { profile: GODOT_PROFILE });
+    const thesisPath = path.join(runDir, "GAME_THESIS.md");
+    const thesis = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8"));
+    delete thesis.golden_moment;
+    fs.writeFileSync(thesisPath, "# GAME_THESIS.md\n\n```json\n" + JSON.stringify(thesis, null, 2) + "\n```\n");
+
+    const before = fs.existsSync(target) ? fs.readdirSync(target) : [];
+    const r = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--to", target, "--write", "--revise-of", gameDir],
+      { cwd: dir }
+    );
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /mapping failed|aborted before staging/i);
+    assert.match(r.stderr, /thesis\.golden_moment/);
+    assert.equal(fs.readdirSync(target).length, before.length, "target must not be mutated on mapping abort");
+    assert.ok(!fs.existsSync(path.join(target, "forge-manifest.json")));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test("F05b: P18/P19 name the revision path", () => {
+  const p18 = fs.readFileSync(rel(".factory/prompts/P18_DECOMPOSE_SPEC.md"), "utf8");
+  const p19 = fs.readFileSync(rel(".factory/prompts/P19_PACKAGE_SPEC.md"), "utf8");
+  assert.match(p18, /REVISION AUTHORING/i);
+  assert.match(p18, /--revise-of|revise-of/);
+  assert.match(p19, /REVISION EXPORT/i);
+  assert.match(p19, /--revise-of|revise-of/);
+  assert.match(p19, /parent_digest/);
 });

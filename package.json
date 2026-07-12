@@ -11,6 +11,7 @@
     "emit:issues": "node scripts/emit-local-issues.mjs",
     "spec:probe": "node scripts/probe-spec-availability.mjs",
     "spec:package": "node scripts/package-spec.mjs",
+    "spec:revise": "node scripts/package-spec.mjs",
     "gates": "node scripts/run-gates.mjs --dry-run",
     "validate": "node scripts/validate-artifacts.mjs --check all",
     "test": "node --test \"tests/**/*.test.mjs\"",
