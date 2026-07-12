@@ -5,7 +5,7 @@ description: Export the finished spec pack to its clean co-dev folder (the facto
 
 # tgf-handoff
 
-Use when: `manifest.current_phase` is `decompose` or `handoff` and the run validates — the spec is ready to leave the factory. Also use for a blocked/AFK continuation note (the repo-local handoff file).
+Use when: `manifest.current_phase` is `decompose` or `handoff` and the run validates — the spec is ready to leave the factory. For a blocked/AFK continuation, record a `resume_point` blocker in the manifest and an evidence-backed ledger row (no separate handoff file).
 
 Read first: `AGENTS.md`, `CONTEXT.md`, `docs/doctrine.md`, `.factory/prompts/P19_PACKAGE_SPEC.md`, and the seed manifest `.tgf/seeds/{seed-id}/manifest.json` when present.
 
