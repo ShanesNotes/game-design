@@ -40,6 +40,12 @@ rule here requires an ADR. Provenance of every doctrine surface lives in
 - Completion is verifier evidence, not agent prose.
 - Design harness state (`.tgf/`, ledgers, hooks, skill docs, internal vocabulary)
   must never leak into an exported spec pack.
+- **Portfolio at the front door** (ADR 0011): every new run enters at `intake`
+  (schema-gated office-hours grill grounded in the portfolio digest); every
+  thesis carries checker-enforced portfolio distinctness; depth vectors carry
+  per-axis evidence paths and review provenance. Reviewer independence at P07
+  is process doctrine — the repo records provenance; it cannot enforce
+  independence.
 
 ## Phase model
 
@@ -50,14 +56,19 @@ intake → toolchain → thesis → design-review → engine-profile → decompo
 terminal: blocked · failed · killed · complete
 ```
 
-A run is initialized at `toolchain`; `intake` is the entry phase only when a raw/
-vague seed or an inherited repo needs office-hours grilling before the thesis. Each
-phase is gated by an artifact, not a claim. On a `DEEPEN` verdict the thesis
-re-enters `thesis` with **exactly one** transform applied, then re-reviews at
-`design-review`; after two failed deepen attempts, kill the run and distill
-learnings into a new seed brief. An `ADVANCE` at `design-review` is **design-lock**
-and opens `engine-profile → decompose`. Terminal states require an evidence-backed
-ledger row before any resume.
+A run is **initialized at `intake`** — the default entry for every new seed.
+The office-hours grill is grounded in the portfolio digest and advances only to
+`toolchain` (never to thesis). Each phase is gated by an artifact, not a claim.
+On a `DEEPEN` verdict the thesis re-enters `thesis` with **exactly one**
+transform applied, then re-reviews at `design-review`; after two failed deepen
+attempts, kill the run and distill learnings into a new seed brief. An
+`ADVANCE` at `design-review` is **design-lock** and opens
+`engine-profile → decompose`. Terminal states require an evidence-backed ledger
+row before any resume. **Post-complete pack revision** is a separate side-path
+(`spec:revise` → forge `intake --revise`), not a phase edge on this graph —
+`complete` remains absorbing for plain packs; revision does not reopen the
+paper spine.
+
 
 ## The anti-boring gate (`docs/anti-boring-gate.md`)
 
@@ -129,7 +140,10 @@ current-doc harvest. Grok Build and mutation-capable MCP servers stay optional.
 This rule applies downstream, in the co-dev repo; the pack carries the guards that
 enforce it. Programmer/code-native art only before fun-lock. Opaque or
 high-fidelity assets require fun-lock + art-direction lock + a provenance recipe
-(`schemas/asset-provenance`) + asset review.
+(`schemas/asset-provenance`) + asset review. The studio also owns a purchased
+asset library reached from design via forge-manifest `asset_requests` and the
+P18 availability probe (`npm run spec:probe`); that seam does not relax the
+code-native-before-fun-lock pack rule.
 
 ## Human taste gates
 

@@ -121,9 +121,16 @@ plain `package-spec` — `complete` stays absorbing for plain packs (SPEC §6-B)
 VERIFY (completion is evidence, not prose):
 1. `node scripts/validate-artifacts.mjs --check spec --seed-id <id>` passes.
 2. `node scripts/emit-local-issues.mjs --seed-id <id>` dry-runs cleanly.
-3. Then render: `node scripts/emit-local-issues.mjs --seed-id <id> --write` and
-   advance the run with the changed paths in the ledger row.
+3. Then render: `node scripts/emit-local-issues.mjs --seed-id <id> --write`.
+4. **Fail-fast package dry-run (after issues render):**  
+   `npm run spec:package -- --seed-id <id> --require-manifest`  
+   (dry-run is the default — no `--write`). Surfaces
+   `mapForgeManifest` / manifest-mapping failures at decompose, not at P19
+   export. Keep `npm run spec:probe` as the advisory availability step above;
+   do not invent a second lint script.
+5. Advance the run with the changed paths in the ledger row.
 
 OUTPUT:
 - `SPEC.md` (manifest.spec_path)
 - `issues/*.md` (one per slice, rendered, validator-clean)
+

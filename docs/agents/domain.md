@@ -31,7 +31,7 @@
 - **Verdict** — A gate decision by the depth red-team: `ADVANCE` | `DEEPEN` (name one transform) | `KILL`.
 - **Manifest** — `.tgf/seeds/{seed-id}/manifest.json`; its `current_phase` is the resumption source of truth. Manifest beats memory — agents coordinate through artifacts, never chat.
 - **Execution ledger** — The append-only record of evidence-backed phase transitions for a seed; resuming from a terminal phase requires a ledger transition, not prose.
-- **Run state** — Per-seed durable temporal truth under `.tgf/seeds/{seed-id}/` (manifest, ledger, thesis, decisions, SPEC, issues, reviews, handoffs).
+- **Run state** — Per-seed durable temporal truth under `.tgf/seeds/{seed-id}/` (manifest, ledger, thesis, decisions, SPEC, issues, reviews, intake).
 - **Spec pack root** — Where the pack is exported: only by `package-spec.mjs --write` (path via `--to` or configured default); separate from design (ADR 0003). Studio product games live under `game-studio/games/`.
 - **Engine profile / ADR** — The scored, reversible engine decision recorded after the thesis as `decisions/0001-engine-profile.md`; there is no default engine before `GAME_THESIS.md` (ADR 0002). Godot-4 packs may enter forge; others co-dev only.
 - **Module card** — A schema-valid reusable primitive candidate with provenance, engine-fit notes, interfaces, deterministic/bot hooks, adoption guard, and slice acceptance; it is evidence, not copied code.

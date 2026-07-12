@@ -29,7 +29,7 @@ pack. The harness is durable process memory.
 | Stratum | Path | Holds | Lifecycle |
 |---|---|---|---|
 | Design repo | `/home/ark/game-studio/design/` | reusable doctrine, prompts, schemas, hooks, scripts, skills | durable |
-| Per-seed run state | `.tgf/seeds/{seed-id}/` | one seed's manifest, ledger, thesis, decisions, SPEC, issues, reviews, handoffs | durable temporal truth |
+| Per-seed run state | `.tgf/seeds/{seed-id}/` | one seed's manifest, ledger, thesis, decisions, SPEC, issues, reviews, intake | durable temporal truth |
 | Spec pack | `$STUDIO_ROOT/games/{seed-id}/` (default; `--to` wins) | the exported spec + backlog, opened for co-dev | durable deliverable |
 
 The spec pack root is a **declared default, not a created path**
@@ -64,12 +64,12 @@ handoff · blocked · failed · killed · complete
 
 `blocked`, `failed`, `killed`, and `complete` are terminal: resuming from them
 requires an evidence-backed ledger transition. A run is **initialized at
-`toolchain`** (the standard sentence-seed entry); **`intake`** is the entry phase
-only when a raw/vague seed or an inherited repo needs office-hours grilling before
-the thesis. `deepen` is driven by a `DEEPEN` depth verdict at `design-review`: the
-thesis re-enters `thesis` with **exactly one** named transform applied, then
-re-reviews (≤2 attempts, tracked by `manifest.deepen_attempt_count` and enforced
-by `validate-artifacts --check run`; after two failed attempts the run is killed).
+`intake`** (default entry for every new seed — ADR 0011): office-hours grill
+grounded in the portfolio digest, then advance to `toolchain` (never to thesis).
+`deepen` is driven by a `DEEPEN` depth verdict at `design-review`: the thesis
+re-enters `thesis` with **exactly one** named transform applied, then re-reviews
+(≤2 attempts, tracked by `manifest.deepen_attempt_count` and enforced by
+`validate-artifacts --check run`; after two failed attempts the run is killed).
 **Design-lock** is not a phase: it is the `ADVANCE` verdict from the design
 red-team at `design-review` (depth vector total ≥16/24 with the thesis's
 register-mandated six axes nonzero — ADR 0007; mechanics-first default: Choice,
@@ -90,7 +90,8 @@ human-friendly view.
 
 | Phase | Prompt | Skill (id) | Output |
 |---|---|---|---|
-| intake | (P00/P01 prelude) | `tgf-office-hours-grill` | `intake/office-hours.md`, ≤1 question |
+| intake | (P00 router; default entry) | `tgf-office-hours-grill` | `intake/office-hours.md` + `intake/portfolio-digest.json`, ≤1 question; exit → `toolchain` |
+| deepen | (P00/P07 path) | — (one named transform, then re-enter thesis) | deepened thesis; ≤2 attempts |
 | toolchain | `P17_VERIFY_TOOLCHAIN` | `tgf-verify-toolchain` | toolchain ledger from real probes |
 | thesis | `P01_SEED_COMPILE` | `tgf-seed-compile` | `GAME_THESIS.md` |
 | design-review | `P07_DEPTH_RED_TEAM` | `tgf-depth-redteam` | `reviews/ANTI_BORING_VERDICT.md` + `reviews/depth-vector.json` |

@@ -128,9 +128,11 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     const r = node("init-game-run.mjs", ["--seed-id", id, "--seed", "a tiny test seed"], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     const runDir = path.join(dir, ".tgf", "seeds", id);
-    for (const f of ["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl", "decisions/.gitkeep", "reviews/.gitkeep", "handoffs/.gitkeep", "issues/.gitkeep"]) {
+    for (const f of ["manifest.json", "GAME_SEED.md", "README_AGENT_BOOT.md", "README_NEXT_ACTIONS.md", "execution-ledger.jsonl", "decisions/.gitkeep", "reviews/.gitkeep", "issues/.gitkeep"]) {
       assert.ok(fs.existsSync(path.join(runDir, f)), `expected ${f}`);
     }
+    assert.ok(!fs.existsSync(path.join(runDir, "handoffs")), "handoffs/ run dir culled (ledger + manifest.spec_pack_path carry handoff truth)");
+
     assert.ok(!fs.existsSync(path.join(runDir, "GAME_THESIS.md")), "must not create GAME_THESIS.md");
     assert.ok(!fs.existsSync(path.join(dir, "src")), "must not create src/");
     assert.ok(!fs.existsSync(`/home/ark/tgf-games/${id}`), "must not create legacy tgf-games pack");

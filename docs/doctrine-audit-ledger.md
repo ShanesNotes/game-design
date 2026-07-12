@@ -40,13 +40,13 @@ tracked they fail the check.
 | `docs/adr/0007-design-registers.md` | reaffirmed | Registers still route depth mandatory axes; design-lock quality model unchanged. |
 | `docs/adr/0008-world-first-register-and-seam-slices.md` | reaffirmed | World-first register + seams still valid for place-payload seeds; no DESIGN-RECORD conflict. |
 | `docs/adr/0009-feel-doctrine-and-design-canon.md` | culled | Superseded by docs/adr/0010-feel-doctrine-studio-terms.md; not edited in place; banned feel-slang + quarantine (DESIGN-RECORD §5/§8). |
-| `docs/agents/domain.md` | rewritten | Studio vocabulary: game feel, forge manifest, pack root; dropped tgf-games default path (DESIGN-RECORD §2–§5). |
+| `docs/agents/domain.md` | rewritten | Studio vocabulary + run-state lists intake (not culled handoffs/ run dir); design/feel/forge terms (DESIGN-RECORD §2–§5; grill-refresh B). |
 | `docs/agents/issue-tracker.md` | reaffirmed | Local markdown tracker still the borrowed-skill route; production tracking stays local (DESIGN-RECORD §5). |
 | `docs/agents/skill-wrapper-doctrine.md` | rewritten | Removed hard-coded tgf-games path; export-only-via-package-spec (DESIGN-RECORD §3 separation). |
 | `docs/agents/triage-labels.md` | reaffirmed | Canonical local label set still required for triage skills; no DESIGN-RECORD conflict. |
 | `docs/anti-boring-gate.md` | reaffirmed | Paper ADVANCE design-lock remains design's depth gate (SPEC §1 ADVANCE; DESIGN-RECORD quality). |
 | `docs/borrowed-patterns.md` | reaffirmed | Operational harvest ledger for scout; empty template still needed. |
-| `docs/doctrine.md` | rewritten | Re-derived as studio design discipline; forge-manifest emission + Godot-gate (SPEC §3.4–§3.5 / T06); game feel vocabulary. |
+| `docs/doctrine.md` | rewritten | Studio design discipline + forge gate (SPEC §3.4–§3.5); intake default entry; revision side-path; asset-library seam; portfolio-at-front-door NN (ADR 0011 / grill-refresh B). |
 | `docs/engine-matrix.md` | rewritten | non-Godot engine decisions remain valid, but only godot-4 packs proceed into forge (SPEC §3.5 / T06 AC6); game feel vocabulary. |
 | `docs/feel-doctrine.md` | rewritten | Studio term game feel; feel-slang scrubbed; forge verify pointer (DESIGN-RECORD §5). |
 | `docs/game-dev-bridge.md` | rewritten | Bridge retargeted to co-dev/forge + games/ lifecycle; dropped tgf-games default (DESIGN-RECORD §2–§3). |
@@ -70,7 +70,7 @@ tracked they fail the check.
 | `.factory/prompts/attic/P12_IP_ORIGINALITY_AUDIT.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
 | `.factory/prompts/attic/P15_RELEASE_CANDIDATE.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
 | `.factory/prompts/attic/README.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
-| `.factory/prompts/P00_ORCHESTRATOR_ULTRAGOAL.md` | reaffirmed | Still the solo ultragoal router for the design phase spine; aligns with DESIGN-RECORD §3 design-only pipeline. |
+| `.factory/prompts/P00_ORCHESTRATOR_ULTRAGOAL.md` | rewritten | Routes `intake` (default entry) + `deepen`; aligns router with run-state graph (ADR 0011 / grill-refresh B). |
 | `.factory/prompts/P01_SEED_COMPILE.md` | reaffirmed | Thesis compile remains the design entry gate before engine (DESIGN-RECORD §3; no default engine). |
 | `.factory/prompts/P02_ENGINE_PROFILE.md` | reaffirmed | Engine decision phase remains; forge gate is export-time not decision-time (DESIGN-RECORD §3). |
 | `.factory/prompts/P07_DEPTH_RED_TEAM.md` | reaffirmed | Paper anti-boring / ADVANCE design-lock is still design's quality gate (DESIGN-RECORD §5 game-feel companion; SPEC ADVANCE). |
@@ -78,7 +78,7 @@ tracked they fail the check.
 | `.factory/prompts/P14_KILL_RESTART.md` | reaffirmed | Kill/restart after failed deepen is still the evidence-over-sunk-cost exit (DESIGN-RECORD quality stance). |
 | `.factory/prompts/P16_REPO_SCOUT.md` | reaffirmed | Scout harvest of primitives still serves design reuse without cargo-cult (discipline ownership test in DESIGN-RECORD §5). |
 | `.factory/prompts/P17_VERIFY_TOOLCHAIN.md` | reaffirmed | Probe-before-assume tool doctrine still binds (design needs verified agent surfaces). |
-| `.factory/prompts/P18_DECOMPOSE_SPEC.md` | rewritten | Feel first-class + forge-authoring sections asset_requests/lore_refs/capabilities/verify_plan (SPEC §3.4 / T06); optional ext.disciplines tags with worked example (game-build SPEC §2 / GB01). |
+| `.factory/prompts/P18_DECOMPOSE_SPEC.md` | rewritten | Feel first-class + forge-authoring (SPEC §3.4 / T06); optional ext.disciplines (GB01); post-issue fail-fast `spec:package --require-manifest` dry-run (grill-refresh B / ADR 0011). |
 | `.factory/prompts/P19_PACKAGE_SPEC.md` | rewritten | Forge-manifest emission + Godot-gate + --require-manifest (SPEC §3.4–§3.5 / T06). |
 | `hooks/engine_migration_requires_adr.mjs` | reaffirmed | Still enforces seed-scoped engine decision files (DESIGN-RECORD engine phase remains). |
 | `hooks/lib/guard.mjs` | reaffirmed | Shared portable guard plumbing; required for design hooks and shipped pack guards. |
@@ -123,13 +123,18 @@ in the regenerated universe list.
 | path | disposition | rationale |
 | --- | --- | --- |
 | `docs/adr/0010-feel-doctrine-studio-terms.md` | rewritten | Re-derived feel + design_canon under studio terms; supersedes culled 0009 (DESIGN-RECORD §5). |
-| `docs/doctrine-audit-ledger.md` | rewritten | New exhaustive provenance ledger required by DESIGN-RECORD §8 / SPEC §3.2 / T04. |
+| `docs/doctrine-audit-ledger.md` | rewritten | Exhaustive provenance ledger (DESIGN-RECORD §8 / T04); Slice B rows for ADR 0011 + in-universe rewrites (grill-refresh 2026-07-12). |
 
-## Counts (start universe only)
+## Grill-refresh Slice B (2026-07-12) — front-end wiring truth
 
-- reaffirmed: 57
-- rewritten: 9
-- culled: 17
-- total rows (start universe): 83
-- post-audit additions: 2
+Portfolio-at-front-door doctrine + P00/skill/P18 prompt repairs + handoffs cull.
+Consult-reviewed; Slice A owns schemas/init/validate-artifacts in parallel.
+In-universe rows above already rewritten for P00/P18/doctrine/domain; this
+section adds only **new** universe paths. Out-of-universe surfaces also touched:
+`.codex/skills/tgf-office-hours-grill/SKILL.md`, `CONTEXT.md`, `AGENTS.md`,
+`README.md`, `scripts/lib/run-state.mjs` (RUN_DIRS cull), `tests/factory.test.mjs`.
+
+| path | disposition | rationale |
+| --- | --- | --- |
+| `docs/adr/0011-portfolio-at-front-door.md` | rewritten | New ADR: intake default entry, portfolio distinctness, depth evidence/provenance, both consult positions on default-entry (grill-refresh B). |
 

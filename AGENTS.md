@@ -16,17 +16,19 @@ operating procedure.
    (separation), 0004 (layout — owner-confirmed 2026-06-06; register D013 resolved),
    0005 (gate policy in checkers, not schemas), 0006 (spec pack is the terminal
    artifact — the pivot), 0007 (register-aware design-lock), 0008 (world-first
-   register, seam slices, BRIEF.md input seam), 0009 (feel doctrine, design-canon
-   pointer).
+   register, seam slices, BRIEF.md input seam), 0010 (feel doctrine under studio
+   terms; supersedes culled 0009), 0011 (portfolio at the front door — intake
+   default entry, distinctness, depth evidence/provenance).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 
 ## What the factory does
 
-Seed → toolchain check → thesis → paper design review (anti-boring gate →
-design-lock) → engine decision → decompose into `SPEC.md` + `issues/` → handoff
-(export the spec pack) → complete. On a `DEEPEN` verdict the thesis re-enters
-`thesis` with one transform (≤2 attempts, then killed). No game is built here;
+Seed → **intake** (office-hours grill + portfolio digest; default entry) →
+toolchain check → thesis → paper design review (anti-boring gate → design-lock)
+→ engine decision → decompose into `SPEC.md` + `issues/` → handoff (export the
+spec pack) → complete. On a `DEEPEN` verdict the thesis re-enters `thesis` with
+one transform via `deepen` (≤2 attempts, then killed). No game is built here;
 building, playtesting, and fun-lock happen downstream inside the exported pack.
 State lives in `.tgf/seeds/{seed-id}/manifest.json`. See the phase/prompt/skill
 table in `CONTEXT.md`.

@@ -74,7 +74,7 @@ Worked studio proof: `../forge/docs/walking-skeleton.md` (`skeleton-001`).
 
 ## How it works
 
-`seed → intake (when vague) → toolchain → thesis → design-review → engine-profile →
+`seed → intake (default entry) → toolchain → thesis → design-review → engine-profile →
 decompose → handoff → complete`, with `design-review --DEEPEN--> deepen → thesis`
 (≤2 attempts, then killed).
 

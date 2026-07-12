@@ -28,18 +28,28 @@ NON-NEGOTIABLES:
 - A spec is not done until its issues render and the pack passes the leakage gate.
 
 PHASES (route by `manifest.current_phase`):
-1. `toolchain` — verify local tools (P17) and update docs/toolchain-verification-ledger.md.
-2. `thesis` — compile the seed into GAME_THESIS.md using P01.
-3. `design-review` — red-team the thesis on paper using P07. ADVANCE = design-lock;
-   DEEPEN re-enters thesis with exactly one named transform (≤2 attempts); KILL ends the run.
-4. `engine-profile` — score engine candidates against the locked design using P02.
-5. `decompose` — author SPEC.md using P18, then render issues
+1. `intake` — **DEFAULT entry for every new run.** Office-hours grill
+   (`tgf-office-hours-grill`), grounded in the portfolio digest
+   (`npm run portfolio:digest -- --seed-id <id>` → `intake/portfolio-digest.json`).
+   Exit advances to `toolchain` (never to thesis — illegal vs the run-state graph).
+   Artifact: `intake/office-hours.md` (canonical fenced json per
+   `schemas/intake-grill.schema.json`).
+2. `toolchain` — verify local tools (P17) and update docs/toolchain-verification-ledger.md.
+3. `thesis` — compile the seed into GAME_THESIS.md using P01 (consumes the intake
+   grill + portfolio distinctness).
+4. `design-review` — red-team the thesis on paper using P07. ADVANCE = design-lock;
+   DEEPEN opens `deepen`; KILL ends the run.
+5. `deepen` — DEEPEN verdict path: apply **exactly one** named transform, then
+   re-enter `thesis` for re-review (≤2 attempts; after two failures, kill).
+6. `engine-profile` — score engine candidates against the locked design using P02.
+7. `decompose` — author SPEC.md using P18, then render issues
    (`node scripts/emit-local-issues.mjs --seed-id <id> --write`).
-6. `handoff` — export the spec pack using P19
+8. `handoff` — export the spec pack using P19
    (`node scripts/package-spec.mjs --seed-id <id> --write`).
-7. Stop. Do not silently expand into building the game here.
+9. Stop. Do not silently expand into building the game here.
 
 OUTPUT:
+- intake/office-hours.md (+ intake/portfolio-digest.json)
 - GAME_THESIS.md
 - reviews/ANTI_BORING_VERDICT.md + reviews/depth-vector.json
 - decisions/0001-engine-profile.md
