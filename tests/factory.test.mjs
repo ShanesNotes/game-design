@@ -17,6 +17,38 @@ function node(script, args, opts = {}) {
 function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-test-"));
 }
+function availabilityRoots() {
+  const root = tmp();
+  const assets = path.join(root, "assets");
+  const lore = path.join(root, "lore");
+  fs.mkdirSync(path.join(assets, "_tools"), { recursive: true });
+  fs.mkdirSync(path.join(assets, "_indexes"), { recursive: true });
+  fs.mkdirSync(path.join(lore, "_indexes"), { recursive: true });
+  for (const name of [
+    "packs", "tags", "atlases", "models", "normalized", "retarget",
+    "animations", "audio", "ui", "icons"
+  ]) {
+    fs.writeFileSync(path.join(assets, "_indexes", `${name}.jsonl`), "");
+  }
+  fs.writeFileSync(path.join(assets, "_tools", "find_assets.py"), `#!/usr/bin/env python3
+import json, sys
+required = {"--packs", "--tags", "--atlases", "--models", "--normalized", "--retarget", "--animations", "--audio", "--ui", "--icons", "--source-root", "--limit"}
+if not required.issubset(set(sys.argv)):
+    raise SystemExit(2)
+query = sys.argv[2]
+if query == "known tree model":
+    print(json.dumps({"pack_id": "nature", "model_matches": [{"name": "Tree", "path": "tree.glb"}]}))
+    raise SystemExit(0)
+if query == "finder-error":
+    print("finder unavailable", file=sys.stderr)
+    raise SystemExit(2)
+print(json.dumps({"no_match": True, "query": query, "nearest": []}))
+raise SystemExit(1)
+`);
+  fs.writeFileSync(path.join(lore, "_indexes", "motifs.jsonl"),
+    JSON.stringify({ motif_id: "known-motif", names: ["Known"], page: "_pages/known-motif.md" }) + "\n");
+  return { root, assets, lore };
+}
 // A GAME_THESIS.md whose embedded ```json block is schema-valid (reuses the fixture).
 function thesisMd() {
   const obj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
@@ -826,6 +858,83 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("availability probe reports one known asset hit and exactly two zero-hit rows", () => {
+  const dir = tmp();
+  const roots = availabilityRoots();
+  const id = "selftest-availability";
+  try {
+    const runDir = decomposeReadyRun(dir, id, {
+      specOverrides: {
+        asset_requests: [
+          { request_id: "known-tree", role: "world", kind: "model", query: "known tree model", constraints: {}, substitution_policy: "allow" },
+          { request_id: "nonsense-asset", role: "world", kind: "model", query: "xyzzynonsense", constraints: {}, substitution_policy: "allow" },
+          { request_id: "finder-error", role: "world", kind: "model", query: "finder-error", constraints: {}, substitution_policy: "allow" }
+        ],
+        lore_refs: [
+          { motif_id: "unknown-motif", affordance_claim: "A deliberately absent motif.", required: false }
+        ]
+      }
+    });
+    const r = node("probe-spec-availability.mjs", ["--seed-id", id], {
+      cwd: dir,
+      env: { GAME_ASSETS_ROOT: roots.assets, GAME_LORE_ROOT: roots.lore }
+    });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    const report = JSON.parse(fs.readFileSync(path.join(runDir, "reviews", "availability-report.json"), "utf8"));
+    assert.equal(report.asset_requests["known-tree"].hits, 1);
+    assert.equal(report.asset_requests["known-tree"].top3[0].name, "Tree");
+    const rows = [...Object.values(report.asset_requests), ...Object.values(report.lore_refs)];
+    assert.equal(rows.filter((row) => row.hits === 0).length, 2);
+    assert.deepEqual(report.asset_requests["nonsense-asset"], { hits: 0, top3: [] });
+    assert.ok(!("finder-error" in report.asset_requests), "finder failures are skipped, not false zero hits");
+    assert.deepEqual(report.lore_refs["unknown-motif"], { hits: 0, top3: [] });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(roots.root, { recursive: true, force: true });
+  }
+});
+
+test("availability probe skips an absent index and package-spec warns once per zero-hit row", () => {
+  const dir = tmp();
+  const target = tmp();
+  const roots = availabilityRoots();
+  const id = "selftest-availability-warn";
+  try {
+    const runDir = decomposeReadyRun(dir, id, {
+      specOverrides: {
+        lore_refs: [
+          { motif_id: "unknown-motif", affordance_claim: "A deliberately absent motif.", required: false }
+        ]
+      }
+    });
+    fs.rmSync(path.join(roots.lore, "_indexes", "motifs.jsonl"));
+    let r = node("probe-spec-availability.mjs", ["--seed-id", id], {
+      cwd: dir,
+      env: { GAME_ASSETS_ROOT: roots.assets, GAME_LORE_ROOT: roots.lore }
+    });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stderr + r.stdout, new RegExp(`WARN probe skipped: ${path.join(roots.lore, "_indexes", "motifs.jsonl")}`));
+
+    fs.writeFileSync(path.join(runDir, "reviews", "availability-report.json"), JSON.stringify({
+      asset_requests: { "nonsense-asset": { hits: 0, top3: [] }, "known-tree": { hits: 1, top3: [{ name: "Tree" }] } },
+      lore_refs: { "unknown-motif": { hits: 0, top3: [] } }
+    }, null, 2) + "\n");
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    r = node("package-spec.mjs", ["--seed-id", id, "--to", target], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const warnings = (r.stdout + r.stderr).split("\n").filter((line) => line.includes("AVAILABILITY-ZERO:"));
+    assert.deepEqual(warnings, [
+      "[package-spec] WARN AVAILABILITY-ZERO:asset:nonsense-asset",
+      "[package-spec] WARN AVAILABILITY-ZERO:lore:unknown-motif"
+    ]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(roots.root, { recursive: true, force: true });
   }
 });
 
