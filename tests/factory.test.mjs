@@ -17,6 +17,25 @@ function node(script, args, opts = {}) {
 function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-test-"));
 }
+function markRunLegacy(dir, id) {
+  const runDir = path.join(dir, ".tgf", "seeds", id);
+  const manifestFile = path.join(runDir, "manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  manifest.factory_version = "0.1.0";
+  manifest.current_phase = "toolchain";
+  manifest.resume_point.phase = "toolchain";
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+  const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
+  const rows = fs.readFileSync(ledgerFile, "utf8").trim().split("\n").map(JSON.parse);
+  rows[0].phase = "toolchain";
+  rows[0].resume_point.phase = "toolchain";
+  fs.writeFileSync(ledgerFile, rows.map(JSON.stringify).join("\n") + "\n");
+}
+function initLegacyRun(dir, id, seed = "x") {
+  const result = node("init-game-run.mjs", ["--seed-id", id, "--seed", seed], { cwd: dir });
+  if (result.status === 0) markRunLegacy(dir, id);
+  return result;
+}
 function availabilityRoots() {
   const root = tmp();
   const assets = path.join(root, "assets");
@@ -146,10 +165,12 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     assert.equal(manifest.spec_pack_path, null);
     assert.match(manifest.default_spec_pack_root, /[/\\]games[/\\]selftest-create$/);
     assert.ok(!manifest.default_spec_pack_root.includes("tgf-games"));
+    assert.equal(manifest.current_phase, "intake");
 
     const firstRow = JSON.parse(fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n")[0]);
     const ledgerSchema = JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8"));
     assert.deepEqual(validate(ledgerSchema, firstRow), []);
+    assert.equal(firstRow.phase, "intake");
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -213,6 +234,7 @@ test("validate-artifacts --check run passes for a created run", () => {
 // append a ledger row per phase hop. Lets the run-check be tested on in-progress runs.
 function advanceRun(dir, id, { phase, thesisPath, enginePath, specPath, ledgerPhases = [] }) {
   const runDir = path.join(dir, ".tgf", "seeds", id);
+  markRunLegacy(dir, id);
   const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
   manifest.current_phase = phase;
   if (thesisPath !== undefined) manifest.game_thesis_path = thesisPath;
@@ -252,7 +274,7 @@ test("validate-artifacts --check run passes for an in-progress run past toolchai
   const dir = tmp();
   const id = "selftest-inprogress";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
     advanceRun(dir, id, { phase: "design-review", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "design-review"] });
@@ -265,7 +287,7 @@ test("validate-artifacts --check run flags manifest/ledger phase disagreement", 
   const dir = tmp();
   const id = "selftest-mismatch";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
     advanceRun(dir, id, { phase: "thesis", thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`, ledgerPhases: ["thesis", "design-review"] });
@@ -289,7 +311,7 @@ test("validate-artifacts --check run rejects symlinked run root, manifest, and l
   const outside = tmp();
   const id = "selftest-run-read-symlink";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
 
     const targetManifest = path.join(outside, "manifest.json");
@@ -320,7 +342,7 @@ test("validate-artifacts --check run rejects manifest and ledger seed-id mismatc
   const dir = tmp();
   const id = "selftest-run-id-mismatch";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     const manifestPath = path.join(runDir, "manifest.json");
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -349,7 +371,7 @@ test("validate-artifacts --check run flags a missing required thesis path downst
   const dir = tmp();
   const id = "selftest-noartifact";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     advanceRun(dir, id, { phase: "design-review", thesisPath: null, ledgerPhases: ["thesis", "design-review"] });
     const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 1, r.stdout);
@@ -366,7 +388,7 @@ test("advance-run performs a legal phase transition and keeps the run valid", ()
   const dir = tmp();
   const id = "selftest-advance";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const r = node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "thesis-compiled",
       "--status", "passed", "--set", `game_thesis_path=.tgf/seeds/${id}/GAME_THESIS.md`], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
@@ -383,7 +405,7 @@ test("advance-run refuses an illegal phase transition", () => {
   const dir = tmp();
   const id = "selftest-illegal";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const r = node("advance-run.mjs", ["--seed-id", id, "--to", "decompose", "--event", "skip"], { cwd: dir });
     assert.equal(r.status, 1);
     assert.match(r.stderr, /illegal transition toolchain -> decompose/);
@@ -405,7 +427,7 @@ test("advance-run refuses to write manifest or ledger through symlinks", () => {
   const outside = tmp();
   const id = "selftest-advance-symlink";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     const targetManifest = path.join(outside, "manifest.json");
     const originalManifest = fs.readFileSync(path.join(runDir, "manifest.json"), "utf8");
@@ -438,7 +460,7 @@ test("advance-run refuses a transition that would invalidate the manifest", () =
   const dir = tmp();
   const id = "selftest-invalidates";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     assert.equal(node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t"], { cwd: dir }).status, 0);
     const r = node("advance-run.mjs", ["--seed-id", id, "--to", "design-review", "--event", "e"], { cwd: dir });
     assert.equal(r.status, 1);
@@ -450,7 +472,7 @@ test("advance-run refuses manifest artifact paths outside the seed run", () => {
   const dir = tmp();
   const id = "selftest-path-policy";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const r = node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t",
       "--set", "game_thesis_path=/tmp/outside-thesis.md"], { cwd: dir });
     assert.equal(r.status, 1);
@@ -462,7 +484,7 @@ test("advance-run refuses to append when the existing ledger is invalid", () => 
   const dir = tmp();
   const id = "selftest-advance-bad-ledger";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const ledgerPath = path.join(dir, ".tgf", "seeds", id, "execution-ledger.jsonl");
     const before = fs.readFileSync(ledgerPath, "utf8");
     const first = JSON.parse(before.trim().split("\n")[0]);
@@ -479,7 +501,7 @@ test("validate-artifacts --check thesis validates a run's embedded thesis, and r
   const dir = tmp();
   const id = "selftest-thesis";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     const thesisObj = fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8");
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), "# GAME_THESIS.md\n\n```json\n" + thesisObj + "\n```\n");
@@ -530,7 +552,7 @@ test("validate-artifacts --check thesis --file is confined by seed-id", () => {
   const outside = tmp();
   const id = "selftest-thesis-file-policy";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
     let r = node("validate-artifacts.mjs", ["--check", "thesis", "--file", `.tgf/seeds/${id}/GAME_THESIS.md`], { cwd: dir });
@@ -599,7 +621,7 @@ test("advance-run --dry-run writes nothing", () => {
   const dir = tmp();
   const id = "selftest-advdry";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const ledgerPath = path.join(dir, ".tgf", "seeds", id, "execution-ledger.jsonl");
     const before = fs.readFileSync(ledgerPath, "utf8");
     const r = node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t", "--dry-run"], { cwd: dir });
@@ -615,7 +637,7 @@ test("emit-local-issues refuses before an engine decision exists", () => {
   const dir = tmp();
   const id = "selftest-emit-blocked";
   try {
-    assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    assert.equal(initLegacyRun(dir, id).status, 0);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
     assert.equal(node("advance-run.mjs", ["--seed-id", id, "--to", "thesis", "--event", "t",

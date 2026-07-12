@@ -14,7 +14,7 @@ export const SKILLS = [
 ];
 
 export const SCHEMAS = [
-  "seed-manifest", "game-thesis", "engine-profile-decision", "spec-decomposition",
+  "seed-manifest", "intake-grill", "portfolio-digest", "game-thesis", "engine-profile-decision", "spec-decomposition",
   "depth-vector", "playtest-report", "execution-ledger-row", "asset-provenance",
   "module-card"
 ];

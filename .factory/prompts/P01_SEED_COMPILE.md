@@ -2,7 +2,12 @@
 
 ROLE: Seed compiler.
 
-INPUT: GAME_SEED.md, no architecture assumptions. If a `BRIEF.md` exists in the
+INPUT (all required):
+- GAME_SEED.md, no architecture assumptions
+- `intake/office-hours.md` (canonical fenced JSON; schema `schemas/intake-grill.schema.json`)
+- `intake/portfolio-digest.json` (schema `schemas/portfolio-digest.schema.json`)
+
+If a `BRIEF.md` exists in the
 run dir it is owner intent evidence — qualities the thesis must serve. It
 constrains *what the game must feel like*, never dictates genre, register, or
 mechanics; any provenance/comparables it names stay out of every artifact.
@@ -10,6 +15,16 @@ mechanics; any provenance/comparables it names stay out of every artifact.
 TASK:
 Emit GAME_THESIS.md carrying a fenced ```json block that validates against
 schemas/game-thesis.schema.json (verify: `validate-artifacts --check thesis --seed-id <id>`).
+For portfolio-enabled runs, emit `schema_version: "2.0.0"` and the required
+`portfolio_distinctness` block:
+- `nearest_prior_seed`: one seed id present in the digest, or `"none"` only when
+  `prior_theses` is empty
+- `falsifying_difference`: one concrete, checkable rule, resource-topology, or
+  state-transition difference from that nearest prior design
+- `digest_generated_at`: exactly the digest's `generated_at`
+
+Use the digest to make the disposition. Generate it; do not ask the user to
+compare the portfolio.
 
 Generate, do not ask:
 - thesis
@@ -71,5 +86,8 @@ RULES:
   must include random-walker vs curious-walker divergence over the
   discovered-content set. The first slice must contain one real descent-and-
   return, however small.
+- A thematic reskin, renamed verbs, or an unsupported adjective is not a
+  falsifying difference. Name the rule or state transition that would let a
+  reviewer prove the new premise is materially distinct.
 
 OUTPUT: GAME_THESIS.md only.

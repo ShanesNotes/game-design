@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Design Portfolio Digest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "seed_id", "generated_at", "sources", "prior_theses", "games", "skipped"],
+  "properties": {
+    "schema_version": { "enum": ["1.0.0"] },
+    "seed_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+    "generated_at": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "status"],
+        "properties": {
+          "source": { "enum": ["design-runs", "games-index"] },
+          "status": { "enum": ["read", "skipped"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "prior_theses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seed_id", "pitch", "chosen_loop", "design_register", "golden_moment", "depth_vector"],
+        "properties": {
+          "seed_id": { "type": "string" },
+          "pitch": { "type": "string" },
+          "chosen_loop": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "verbs"],
+            "properties": {
+              "id": { "type": "string" },
+              "verbs": { "type": ["string", "array"], "items": { "type": "string" } },
+              "description": { "type": "string" }
+            }
+          },
+          "design_register": { "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first", "UNKNOWN"] },
+          "golden_moment": { "type": "string" },
+          "depth_vector": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verdict", "scores"],
+            "properties": {
+              "verdict": { "enum": ["ADVANCE", "DEEPEN", "KILL", "UNKNOWN"] },
+              "scores": {
+                "type": ["object", "null"],
+                "additionalProperties": false,
+                "required": ["meaningful_choice", "tradeoff", "pressure", "uncertainty", "progression", "mastery", "combinatorial", "emergence", "replayable_variation", "failure_recovery", "expression", "expansion_headroom"],
+                "properties": {
+                  "meaningful_choice": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "tradeoff": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "pressure": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "uncertainty": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "progression": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "mastery": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "combinatorial": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "emergence": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "replayable_variation": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "failure_recovery": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "expression": { "type": "integer", "minimum": 0, "maximum": 2 },
+                  "expansion_headroom": { "type": "integer", "minimum": 0, "maximum": 2 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "games": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["game_id", "lifecycle", "human_verdict"],
+        "properties": {
+          "game_id": { "type": "string" },
+          "lifecycle": { "enum": ["skeleton", "active", "candidate", "done", "archived"] },
+          "human_verdict": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verdict"],
+            "properties": {
+              "verdict": { "enum": ["done", "notes", "hold", "UNKNOWN"] },
+              "ts": { "type": "string" },
+              "by": { "type": "string" },
+              "notes_rel": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "skipped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "reason"],
+        "properties": {
+          "source": { "type": "string" },
+          "id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

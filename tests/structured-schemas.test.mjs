@@ -20,6 +20,21 @@ function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-t05-"));
 }
 
+function markRunLegacy(dir, id) {
+  const runDir = path.join(dir, ".tgf", "seeds", id);
+  const manifestFile = path.join(runDir, "manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  manifest.factory_version = "0.1.0";
+  manifest.current_phase = "toolchain";
+  manifest.resume_point.phase = "toolchain";
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+  const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
+  const rows = fs.readFileSync(ledgerFile, "utf8").trim().split("\n").map(JSON.parse);
+  rows[0].phase = "toolchain";
+  rows[0].resume_point.phase = "toolchain";
+  fs.writeFileSync(ledgerFile, rows.map(JSON.stringify).join("\n") + "\n");
+}
+
 const thesisSchema = () => JSON.parse(fs.readFileSync(rel("schemas/game-thesis.schema.json"), "utf8"));
 const specSchema = () => JSON.parse(fs.readFileSync(rel("schemas/spec-decomposition.schema.json"), "utf8"));
 const minimalThesis = () => JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8"));
@@ -66,6 +81,7 @@ test("AC2: design-lock ADVANCE fails without feel_targets and names the rule", (
   const id = "selftest-no-feel-advance";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    markRunLegacy(dir, id);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     const thesis = structuredClone(minimalThesis());
     thesis.feel_targets = [];
@@ -153,6 +169,7 @@ test("AC6: fixture-scale run validates structured thesis + decomposition end-to-
   const id = "selftest-t05-e2e";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "tiny asteroid gardening"], { cwd: dir }).status, 0);
+    markRunLegacy(dir, id);
     const runDir = path.join(dir, ".tgf", "seeds", id);
     const thesis = structuredClone(minimalThesis());
     const spec = structuredClone(minimalSpec());

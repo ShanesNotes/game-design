@@ -29,6 +29,17 @@ export function resolveLoreRoot(startDir = process.cwd()) {
   return studio ? path.join(studio, "lore") : null;
 }
 
+export function resolveDesignRoot(startDir = process.cwd()) {
+  if (process.env.GAME_DESIGN_ROOT) return path.resolve(process.env.GAME_DESIGN_ROOT);
+  const studio = findStudioRoot(startDir);
+  return studio ? path.join(studio, "design") : null;
+}
+
+export function resolveGamesRoot(startDir = process.cwd()) {
+  const studio = findStudioRoot(startDir);
+  return studio ? path.join(studio, "games") : null;
+}
+
 export function resolveContractsRoot(startDir = process.cwd()) {
   if (process.env.GAME_CONTRACTS_ROOT) return path.resolve(process.env.GAME_CONTRACTS_ROOT);
   const studio = findStudioRoot(startDir);

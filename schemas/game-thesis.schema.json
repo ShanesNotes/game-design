@@ -15,6 +15,7 @@
     "kill_conditions"
   ],
   "properties": {
+    "schema_version": { "enum": ["2.0.0"] },
     "seed": { "type": "string" },
     "pitch": { "type": "string" },
     "thesis": { "type": "string" },
@@ -37,6 +38,16 @@
       }
     },
     "design_canon": { "type": "string" },
+    "portfolio_distinctness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nearest_prior_seed", "falsifying_difference", "digest_generated_at"],
+      "properties": {
+        "nearest_prior_seed": { "type": "string" },
+        "falsifying_difference": { "type": "string" },
+        "digest_generated_at": { "type": "string" }
+      }
+    },
     "genre_hypotheses": { "type": "array", "items": { "type": "object" } },
     "core_loop_candidates": { "type": "array", "minItems": 1, "items": { "type": "object" } },
     "replayability_hypothesis": { "type": "string" },

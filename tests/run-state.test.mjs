@@ -184,7 +184,7 @@ test("summarize-run prints an evidence-first summary for a created run", () => {
     const r = node("summarize-run.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /# Seed run: rs-summary/);
-    assert.match(r.stdout, /phase:\s+toolchain/);
+    assert.match(r.stdout, /phase:\s+intake/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

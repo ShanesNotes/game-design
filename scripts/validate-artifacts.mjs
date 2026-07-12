@@ -18,6 +18,9 @@ import { frontMatterAccessors } from "./lib/issue-format.mjs";
 import { arg } from "./lib/argv.mjs";
 import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, ARTIFACT_KINDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
 import { auditErrors, parseAuditLedger, AUDIT_UNIVERSE_PATHS } from "./lib/doctrine-audit.mjs";
+import {
+  depthVectorPortfolioErrors, isPortfolioRun, readIntakeEvidence, thesisDistinctnessErrors
+} from "./lib/portfolio-memory.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -214,6 +217,16 @@ function checkRun(seedId) {
     }
   }
 
+  let portfolioDigest = null;
+  if (isPortfolioRun(manifest) && rows.some((row) => row.phase === "toolchain")) {
+    const intake = readIntakeEvidence(runDir, seedId);
+    intake.errors.forEach((error) => errors.push(error));
+    portfolioDigest = intake.digest;
+    if (thesisObj && intake.digest) {
+      thesisDistinctnessErrors(thesisObj, intake.digest).forEach((error) => errors.push(error));
+    }
+  }
+
   // Init-only invariants: a run that has not produced a thesis yet must not already
   // contain downstream products. The spec pack folder may exist only once thesis,
   // engine decision, and spec all exist (README_AGENT_BOOT boot sequence).
@@ -230,7 +243,8 @@ function checkRun(seedId) {
   // run cannot be past design-review without a gate-passing depth vector in its
   // reviews/ — verdict ADVANCE that actually clears the gate (>=16/24, required axes
   // nonzero). Gate POLICY lives here (the checker), not in the schema (ADR 0005).
-  if (runState.DESIGN_LOCKED_PHASES.includes(manifest.current_phase)) {
+  const requiresPassingVector = runState.DESIGN_LOCKED_PHASES.includes(manifest.current_phase);
+  if (requiresPassingVector || isPortfolioRun(manifest)) {
     const dvFiles = [];
     (function walk(d) {
       if (!fs.existsSync(d)) return;
@@ -252,7 +266,16 @@ function checkRun(seedId) {
       let dv;
       try { dv = JSON.parse(fs.readFileSync(f, "utf8")); }
       catch { errors.push(`reviews depth vector not parseable JSON: ${path.relative(process.cwd(), f)}`); continue; }
-      if (dv.verdict === "ADVANCE" && gate.depthVectorConsistencyErrors(dv).length === 0) {
+      const vectorSchema = JSON.parse(fs.readFileSync(rel("schemas/depth-vector.schema.json"), "utf8"));
+      const vectorErrors = validate(vectorSchema, dv);
+      vectorErrors.forEach((error) => errors.push(`reviews depth vector ${error}: ${path.relative(process.cwd(), f)}`));
+      if (isPortfolioRun(manifest)) {
+        const verdictPath = path.join(runDir, "reviews", "ANTI_BORING_VERDICT.md");
+        const verdictText = fs.existsSync(verdictPath) ? fs.readFileSync(verdictPath, "utf8") : "";
+        depthVectorPortfolioErrors(dv, thesisObj, portfolioDigest, verdictText)
+          .forEach((error) => { vectorErrors.push(error); errors.push(`${error}: ${path.relative(process.cwd(), f)}`); });
+      }
+      if (dv.verdict === "ADVANCE" && vectorErrors.length === 0 && gate.depthVectorConsistencyErrors(dv).length === 0) {
         // Register-aware design-lock (ADR 0007): a gate-passing vector must be
         // judged in the register the thesis declared, not one it picked itself.
         const dvRegister = dv.register ?? "mechanics-first";
@@ -271,7 +294,7 @@ function checkRun(seedId) {
         }
       }
     }
-    if (!passing) {
+    if (requiresPassingVector && !passing) {
       errors.push(`current_phase '${manifest.current_phase}' is past design-review but reviews/ has no gate-passing depth vector (design-lock: verdict ADVANCE, total >=16, required axes nonzero)`);
     }
   }
@@ -404,7 +427,19 @@ function checkEmbeddedArtifact(kind) {
     try { p = runState.resolveRunPath(process.cwd(), seedId, m[manifestKey], manifestKey); }
     catch (e) { return [e.message]; }
   }
-  return runState.validateEmbeddedJson(p, schemaName).map((e) => `${path.relative(process.cwd(), p)}: ${e}`);
+  const { obj, errors } = runState.readEmbeddedArtifact(p, schemaName);
+  const out = errors.map((e) => `${path.relative(process.cwd(), p)}: ${e}`);
+  if (kind === "thesis" && obj) {
+    let manifest;
+    try { manifest = runState.readManifest(runState.runDirFor(process.cwd(), seedId), seedId, process.cwd()); }
+    catch (e) { return [...out, `manifest rejected: ${e.message}`]; }
+    if (isPortfolioRun(manifest)) {
+      const intake = readIntakeEvidence(runState.runDirFor(process.cwd(), seedId), seedId);
+      intake.errors.forEach((error) => out.push(error));
+      if (intake.digest) thesisDistinctnessErrors(obj, intake.digest).forEach((error) => out.push(error));
+    }
+  }
+  return out;
 }
 
 // --- doctrine audit exhaustiveness (DESIGN-RECORD §8 / T04) ---

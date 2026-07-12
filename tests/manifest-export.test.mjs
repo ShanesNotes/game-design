@@ -54,6 +54,21 @@ function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-t06-"));
 }
 
+function markRunLegacy(dir, id) {
+  const runDir = path.join(dir, ".tgf", "seeds", id);
+  const manifestFile = path.join(runDir, "manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  manifest.factory_version = "0.1.0";
+  manifest.current_phase = "toolchain";
+  manifest.resume_point.phase = "toolchain";
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+  const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
+  const rows = fs.readFileSync(ledgerFile, "utf8").trim().split("\n").map(JSON.parse);
+  rows[0].phase = "toolchain";
+  rows[0].resume_point.phase = "toolchain";
+  fs.writeFileSync(ledgerFile, rows.map(JSON.stringify).join("\n") + "\n");
+}
+
 function thesisMd(overrides = {}) {
   const obj = {
     ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8")),
@@ -126,6 +141,7 @@ function decomposeReadyRun(dir, id, { profile = GODOT_PROFILE, thesisOverrides =
     node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status,
     0
   );
+  markRunLegacy(dir, id);
   const runDir = path.join(dir, ".tgf", "seeds", id);
   fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd(thesisOverrides));
   fs.writeFileSync(path.join(runDir, "decisions", "0001-engine-profile.md"), engineMd(id, { profile }));

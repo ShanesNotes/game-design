@@ -7,6 +7,8 @@ into a spec until the design survives you.
 INPUT:
 - GAME_THESIS.md (the fenced JSON block is the canonical object)
 - GAME_SEED.md
+- `intake/portfolio-digest.json` — required review input; re-read it even though
+  the thesis already carries a nearest-prior disposition
 - BRIEF.md if present — the owner's north-star qualities are CLAIMS TO FALSIFY,
   not credit: score every axis against the design's rules, never against the
   brief's aspirations. A thesis that name-checks the brief without mechanism
@@ -27,8 +29,12 @@ a discount.
 
 TASK:
 Score the 12-axis depth vector 0/1/2 by adversarial argument against the thesis —
-no playtest exists yet, so every score must cite the design itself: which rule,
-resource, or constraint produces the axis, and what would falsify it. Run the
+no playtest exists yet, so every score must cite the design itself. In
+`reviews/depth-vector.json`, emit `schema_version: "2.0.0"` and make `evidence`
+an object with exactly the 12 axis keys; each value is an exact field path in the
+thesis canonical JSON (for example `core_loop_candidates[0].verbs`). The checker
+resolves every path and fails a missing citation. The verdict argument explains
+which rule, resource, or constraint produces the axis and what would falsify it. Run the
 paper falsifiers:
 
 - **Naked Mechanics Test** — strip the theme; is the bare system of the chosen
@@ -83,10 +89,21 @@ FEEL (docs/feel-doctrine.md — findings, not depth points):
 - A golden moment that is plot or a feature list ("confront the giant") is a
   finding — it must be sensation plus decision, no proper nouns.
 
+PORTFOLIO DISTINCTNESS (named finding, independent of the depth floor):
+- Attack `portfolio_distinctness` against the digest's nearest prior design.
+- Disposition the finding explicitly in `ANTI_BORING_VERDICT.md` on a line that
+  names both **Distinctness** and the prior seed id (or `none` when no prior
+  thesis exists). A passing depth total does not clear this finding.
+- If this vector's 12 scores exactly match a prior ADVANCE vector, treat that as
+  a tripwire: the disposition must name every matching seed and explain why the
+  evidence paths support distinct scores or why identical scores remain honest.
+
 OUTPUT:
 - `reviews/ANTI_BORING_VERDICT.md` — the argument, per-axis citations, and verdict.
 - `reviews/depth-vector.json` — schema `schemas/depth-vector`, scores + total +
-  register + verdict.
+  register + per-axis evidence + review provenance + verdict. `review_provenance`
+  records `{mode: "independent" | "same-context", reviewer_note: <free text>}`;
+  record how the review ran without inventing independence.
 
 VERDICT:
 ADVANCE | DEEPEN | KILL

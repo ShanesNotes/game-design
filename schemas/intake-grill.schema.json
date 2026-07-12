@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Design Intake Grill",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seed_id",
+    "portfolio_digest_ref",
+    "demand_reality",
+    "status_quo",
+    "desperate_specificity",
+    "narrow_playable_wedge",
+    "observation_evidence",
+    "premise_challenge",
+    "alternatives",
+    "future_fit",
+    "store_positioning",
+    "reviewer_concern"
+  ],
+  "properties": {
+    "schema_version": { "enum": ["1.0.0"] },
+    "seed_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+    "portfolio_digest_ref": { "type": "string", "pattern": "^\\.tgf/seeds/[a-z0-9][a-z0-9-]*[a-z0-9]/intake/portfolio-digest\\.json$" },
+    "demand_reality": { "type": "string" },
+    "status_quo": { "type": "string" },
+    "desperate_specificity": { "type": "string" },
+    "narrow_playable_wedge": { "type": "string" },
+    "observation_evidence": { "type": "string" },
+    "premise_challenge": { "type": "string" },
+    "alternatives": { "type": "string" },
+    "future_fit": { "type": "string" },
+    "store_positioning": { "type": "string" },
+    "reviewer_concern": { "type": "string" }
+  }
+}

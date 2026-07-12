@@ -43,7 +43,14 @@ const readTpl = (name) =>
 
 const manifest = JSON.parse(readTpl("manifest.json"));
 // Path-registry default: $STUDIO_ROOT/games/{seed-id} (not legacy ~/tgf-games).
+manifest.factory_version = "0.3.0";
 manifest.default_spec_pack_root = specPackRoot;
+manifest.current_phase = "intake";
+manifest.resume_point = {
+  phase: "intake",
+  artifact_path: `${runRel}/intake/office-hours.md`,
+  reason: "Build the portfolio digest and complete the schema-gated intake grill."
+};
 const bootDoc = readTpl("README_AGENT_BOOT.md");
 const nextDoc = readTpl("README_NEXT_ACTIONS.md");
 const seedDoc = `# GAME_SEED.md\n\n${seed}\n`;
@@ -51,7 +58,7 @@ const seedDoc = `# GAME_SEED.md\n\n${seed}\n`;
 const ledgerRow = {
   ts: iso,
   seed_id: seedId,
-  phase: "toolchain",
+  phase: "intake",
   event: "run-initialized",
   status: "checkpointed",
   lane: "solo",
@@ -73,9 +80,9 @@ const ledgerRow = {
   },
   blockers: [],
   resume_point: {
-    phase: "toolchain",
-    artifact_path: `${runRel}/README_AGENT_BOOT.md`,
-    reason: "Run toolchain verification."
+    phase: "intake",
+    artifact_path: `${runRel}/intake/office-hours.md`,
+    reason: "Build the portfolio digest and complete the schema-gated intake grill."
   }
 };
 
@@ -138,5 +145,5 @@ if (force && fs.existsSync(ledgerFile)) {
 }
 
 console.log(`[init-game-run] initialized ${runRel}`);
-console.log(`[init-game-run] phase=toolchain  spec_pack=none (${specPackRoot} not created)`);
+console.log(`[init-game-run] phase=intake  spec_pack=none (${specPackRoot} not created)`);
 console.log(`[init-game-run] next: read ${runRel}/README_AGENT_BOOT.md`);

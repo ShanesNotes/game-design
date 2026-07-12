@@ -5,6 +5,7 @@
   "additionalProperties": false,
   "required": ["scores", "total", "verdict"],
   "properties": {
+    "schema_version": { "enum": ["2.0.0"] },
     "scores": {
       "type": "object",
       "additionalProperties": false,
@@ -39,7 +40,48 @@
     },
     "total": { "type": "integer", "minimum": 0, "maximum": 24 },
     "register": { "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first"] },
-    "evidence": { "type": "array", "items": { "type": "string" } },
+    "evidence": {
+      "type": ["array", "object"],
+      "items": { "type": "string" },
+      "additionalProperties": false,
+      "required": [
+        "meaningful_choice",
+        "tradeoff",
+        "pressure",
+        "uncertainty",
+        "progression",
+        "mastery",
+        "combinatorial",
+        "emergence",
+        "replayable_variation",
+        "failure_recovery",
+        "expression",
+        "expansion_headroom"
+      ],
+      "properties": {
+        "meaningful_choice": { "type": "string" },
+        "tradeoff": { "type": "string" },
+        "pressure": { "type": "string" },
+        "uncertainty": { "type": "string" },
+        "progression": { "type": "string" },
+        "mastery": { "type": "string" },
+        "combinatorial": { "type": "string" },
+        "emergence": { "type": "string" },
+        "replayable_variation": { "type": "string" },
+        "failure_recovery": { "type": "string" },
+        "expression": { "type": "string" },
+        "expansion_headroom": { "type": "string" }
+      }
+    },
+    "review_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "reviewer_note"],
+      "properties": {
+        "mode": { "enum": ["independent", "same-context"] },
+        "reviewer_note": { "type": "string" }
+      }
+    },
     "verdict": { "enum": ["ADVANCE", "DEEPEN", "KILL"] }
   }
 }
