@@ -71,7 +71,10 @@ SLICING RULES:
     that repo root run `python3 _tools/find_lore.py find "<free text>"`; take
     `motif_id` from a result row; read `_pages/<motif_id>.md` before any
     `affordance_claim`. A `no_match` result → report the gap, never invent an
-    id. Values must exist in `lore/_indexes/motifs.jsonl`.
+    id. Values must exist in `lore/_indexes/motifs.jsonl`. After authoring the
+    asset requests and lore refs, run `npm run spec:probe -- --seed-id <id>` and
+    read `reviews/availability-report.json`; its findings are advisory, never a
+    gate.
   - `capabilities` — booleans for
     `persistence | localization | accessibility | multiplayer | world_gen |
     modding | telemetry`.

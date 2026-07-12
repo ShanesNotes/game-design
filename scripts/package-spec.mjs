@@ -103,6 +103,21 @@ if (!engine) fail(`engine decision invalid:\n  ${engineErrors.join("\n  ")}`);
 const { obj: spec, errors: specErrors } = readEmbeddedArtifact(specPath, "spec-decomposition");
 if (!spec) fail(`spec invalid:\n  ${specErrors.join("\n  ")}`);
 
+// Availability is design advice, never an export gate. If P18 authored a report,
+// surface each zero-hit row with a stable token; missing/malformed reports are ignored.
+const availabilityPath = path.join(runDir, "reviews", "availability-report.json");
+try {
+  const availability = JSON.parse(fs.readFileSync(availabilityPath, "utf8"));
+  for (const [requestId, row] of Object.entries(availability.asset_requests || {})) {
+    if (row?.hits === 0) console.warn(`[package-spec] WARN AVAILABILITY-ZERO:asset:${requestId}`);
+  }
+  for (const [motifId, row] of Object.entries(availability.lore_refs || {})) {
+    if (row?.hits === 0) console.warn(`[package-spec] WARN AVAILABILITY-ZERO:lore:${motifId}`);
+  }
+} catch {
+  // Advisory report absent or unreadable: packaging behavior and exit code stay unchanged.
+}
+
 // --- Godot-gate + forge-manifest mapping (BEFORE staging) ---
 const engineProfile = String(engine.profile || "");
 const isGodot = engineProfile === GODOT_PROFILE;

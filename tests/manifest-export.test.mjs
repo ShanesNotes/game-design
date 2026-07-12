@@ -21,6 +21,7 @@ import {
   resolveLoreRoot,
   contractsVersion,
   forgeManifestSchemaPath,
+  findStudioRoot,
   gitHead
 } from "../scripts/lib/studio-paths.mjs";
 import { leakageErrors } from "../scripts/lib/leakage.mjs";
@@ -30,14 +31,8 @@ const rel = (...p) => path.join(REPO, ...p);
 const STUDIO = path.resolve(REPO, "..", ".."); // .worktrees/t06 → game-studio when nested; adjust
 
 function resolveStudioForTests() {
-  // worktree: .../game-studio/.worktrees/t06-manifest-export → studio is ../..
-  // main checkout: .../game-studio/design → studio is ..
-  if (fs.existsSync(path.join(path.dirname(REPO), "DISCIPLINES.md"))) {
-    return path.dirname(REPO);
-  }
-  if (fs.existsSync(path.join(path.dirname(path.dirname(REPO)), "DISCIPLINES.md"))) {
-    return path.dirname(path.dirname(REPO));
-  }
+  const discovered = findStudioRoot(REPO);
+  if (discovered) return discovered;
   return process.env.STUDIO_ROOT || path.resolve(REPO, "..");
 }
 
