@@ -69,7 +69,6 @@ row before any resume. **Post-complete pack revision** is a separate side-path
 `complete` remains absorbing for plain packs; revision does not reopen the
 paper spine.
 
-
 ## The anti-boring gate (`docs/anti-boring-gate.md`)
 
 Runs **on paper, against the thesis**, at `design-review`. Three falsifiers are

@@ -133,4 +133,3 @@ VERIFY (completion is evidence, not prose):
 OUTPUT:
 - `SPEC.md` (manifest.spec_path)
 - `issues/*.md` (one per slice, rendered, validator-clean)
-

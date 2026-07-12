@@ -150,7 +150,6 @@ export function appendRunFileSync(cwd, seedId, runPath, contents) {
 // symlink guard inspects them — one list so the two cannot drift.
 export const RUN_DIRS = ["decisions", "reviews", "issues"];
 
-
 // The files/dirs the initializer owns inside a run dir — the only paths `--force`
 // may rewrite, and the only paths the symlink guard inspects.
 function ownedRunPaths(runDir) {

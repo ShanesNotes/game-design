@@ -138,3 +138,5 @@ section adds only **new** universe paths. Out-of-universe surfaces also touched:
 | --- | --- | --- |
 | `docs/adr/0011-portfolio-at-front-door.md` | rewritten | New ADR: intake default entry, portfolio distinctness, depth evidence/provenance, both consult positions on default-entry (grill-refresh B). |
 
+| `schemas/intake-grill.schema.json` | rewritten | New schema: ten office-hours pressure fields + digest ref as the intake artifact machine surface (ADR 0011 / grill-refresh A). |
+| `schemas/portfolio-digest.schema.json` | rewritten | New schema: portfolio memory — prior theses, lifecycle, sealed human verdicts (UNKNOWN when absent), honest skipped rows (ADR 0011 / grill-refresh A). |
