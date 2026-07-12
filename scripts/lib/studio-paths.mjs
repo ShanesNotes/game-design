@@ -47,7 +47,7 @@ export function gitHead(repoRoot) {
   return /^[0-9a-f]{40}$/i.test(sha) ? sha : null;
 }
 
-/** contracts_version for pins — schema_version of forge-manifest (v1.0.0). */
+/** contracts_version for pins — current forge-manifest schema_version (last enum = current; earlier = N-1). */
 export function contractsVersion(startDir = process.cwd()) {
   const root = resolveContractsRoot(startDir);
   if (!root) return null;
@@ -55,7 +55,9 @@ export function contractsVersion(startDir = process.cwd()) {
   if (!fs.existsSync(schemaPath)) return null;
   try {
     const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
-    const ver = schema?.properties?.schema_version?.enum?.[0];
+    const versions = schema?.properties?.schema_version?.enum;
+    if (!Array.isArray(versions) || versions.length === 0) return null;
+    const ver = versions[versions.length - 1];
     return typeof ver === "string" ? ver : null;
   } catch {
     return null;

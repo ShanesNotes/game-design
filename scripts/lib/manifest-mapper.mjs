@@ -392,9 +392,12 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
       lore_index: pins.lore_index,
       forge_template: pins.forge_template
     },
-    // meta.ext (caller) + validated spec.ext.disciplines (no default injection)
+    // meta.ext (caller) + validated spec.ext.disciplines + pass-through world_gen
     ext: {
       ...(isPlainObject(meta.ext) ? { ...meta.ext } : {}),
+      ...(isPlainObject(spec.ext) && isPlainObject(spec.ext.world_gen)
+        ? { world_gen: spec.ext.world_gen }
+        : {}),
       ...(discResult.disciplines
         ? { disciplines: discResult.disciplines }
         : {})

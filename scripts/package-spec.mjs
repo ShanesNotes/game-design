@@ -202,6 +202,8 @@ if (!isGodot) {
   if (isRevision) {
     pendingManifest.schema_version = REVISION_SCHEMA_VERSION;
     pendingManifest.parent_digest = parentDigest;
+    // Intake requires schema_version === pins.contracts_version; revision is always 1.1.0.
+    pendingManifest.pins.contracts_version = REVISION_SCHEMA_VERSION;
   }
 }
 
