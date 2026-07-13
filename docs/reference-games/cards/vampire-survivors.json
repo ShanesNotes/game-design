@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "vampire-survivors",
   "title": "Vampire Survivors",
-  "edition_pinned": "Vampire Survivors Patch 1.0 full release (poncle / Luca Galante; left Steam Early Access 20 October 2022) — auto-attack + gold meta as design-canonical; later DLC character packs are out of pin.",
+  "edition_pinned": "Vampire Survivors Patch 1.0 full release (poncle / Luca Galante; left Steam Early Access 20 October 2022) \u2014 auto-attack + gold meta as design-canonical; later DLC character packs are out of pin.",
   "genre_tags": [
     "survivor-like",
     "roguelite",
@@ -24,7 +24,7 @@
   "depth_mechanisms": [
     {
       "name": "auto-attack strips aim",
-      "mechanism": "Attacks fire on fixed timers without a fire button. Targeting is weapon-specific (facing cones, orbits, area pulses, directed projectiles) so player skill is position, pathing, and reading attack cadence — not twin-stick aim.",
+      "mechanism": "Attacks fire on fixed timers without a fire button. Targeting is weapon-specific (facing cones, orbits, area pulses, directed projectiles) so player skill is position, pathing, and reading attack cadence \u2014 not twin-stick aim.",
       "falsifiable_claim": "If manual aiming is required for every shot, the exercise-bike and chat-while-playing use case (creator intent) fails because attention cannot leave the aim stick."
     },
     {
@@ -41,17 +41,17 @@
   "feel_signature": "A move commit repositions the character while weapons auto-fire on timers; a level-up pause forces a pick among offered upgrades that rewrite the next minutes of swarm control.",
   "second_session_answer": "Players return to spend gold on PowerUps and try a newly unlocked character or challenge-unlocked weapon evolution path, not to re-watch cutscenes.",
   "packaging_lessons": [
-    "Inference: ship one stage, a handful of weapons, and gold unlocks before multiplayer or narrative arcs — creator designed for short bike sessions.",
+    "Inference: ship one stage, a handful of weapons, and gold unlocks before multiplayer or narrative arcs \u2014 creator designed for short bike sessions.",
     "Keep attack automatic from day one so the skill surface is pathing and build picks only."
   ],
   "anti_lessons": [
-    "Do not add real-money gacha to the gold ladder — the gambling-inspired balance is about run reward pacing, not cash shops.",
+    "Do not add real-money gacha to the gold ladder \u2014 the gambling-inspired balance is about run reward pacing, not cash shops.",
     "Do not copy survivor-likes by only adding auto-fire to an existing twin-stick without timed swarm pressure and evolution recipes."
   ],
   "system_bom": [
     {
       "system": "play-loop",
-      "note": "move → auto-hit → XP gem → level pick is the in-run cycle that either ends in death or timer survival"
+      "note": "move \u2192 auto-hit \u2192 XP gem \u2192 level pick is the in-run cycle that either ends in death or timer survival"
     },
     {
       "system": "loot",
@@ -120,7 +120,7 @@
       "source": "https://en.wikipedia.org/wiki/Vampire_Survivors"
     },
     {
-      "claim": "Feel signature and Pac-Man power cadence inspiration (safe → empowered → safe) cited by creator.",
+      "claim": "Feel signature and Pac-Man power cadence inspiration (safe \u2192 empowered \u2192 safe) cited by creator.",
       "source": "https://www.rockpapershotgun.com/vampire-survivors-interview-creator-wanted-something-to-play-at-the-weekend"
     },
     {
@@ -168,5 +168,5 @@
       "source": "https://vampire.survivors.wiki/w/Evolution"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }

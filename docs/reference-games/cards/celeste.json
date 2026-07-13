@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "celeste",
   "title": "Celeste",
-  "edition_pinned": "Celeste (Maddy Makes Games / Extremely OK Games, 25 January 2018 launch with Assist Mode as shipped) — Farewell DLC is optional post-content, not the pin.",
+  "edition_pinned": "Celeste (Maddy Makes Games / Extremely OK Games, 25 January 2018 launch with Assist Mode as shipped) \u2014 Farewell DLC is optional post-content, not the pin.",
   "genre_tags": [
     "precision-platformer",
     "single-player",
@@ -38,13 +38,13 @@
     }
   ],
   "feel_signature": "Input commits a dash or climb-stamina slice within one screen; failure is a local screen retry, so the decision is always the next frame sequence, not inventory or loadout.",
-  "second_session_answer": "Players return to clear the next chapter screens or collect strawberries they skipped, using the same dash budget on harder geometry — not to spend meta currency.",
+  "second_session_answer": "Players return to clear the next chapter screens or collect strawberries they skipped, using the same dash budget on harder geometry \u2014 not to spend meta currency.",
   "packaging_lessons": [
     "Inference: ship chapter 1 with dash, climb, and screen-scoped retry before any collectible economy; level-design tooling centers on hundreds of precision stages.",
     "Expose Assist toggles as player-owned breaks of the design, not as a hidden difficulty-tier flag that strips story."
   ],
   "anti_lessons": [
-    "Do not bolt an XP or loadout layer onto a dash-budget platformer — it hides which inputs failed.",
+    "Do not bolt an XP or loadout layer onto a dash-budget platformer \u2014 it hides which inputs failed.",
     "Do not replace screen-scoped retry with long checkpoint gaps; the depth is high death count at low time cost."
   ],
   "system_bom": [
@@ -147,5 +147,5 @@
       "source": "https://www.youtube.com/watch?v=4RlpMhBKNr0"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }

@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "megabonk",
   "title": "Megabonk",
-  "edition_pinned": "Megabonk current Steam build as of 2026-07 (vedinad; Windows & Linux; first released 18 September 2025). Pins the 3D survivor-like loop documented on the live Steam page and early post-launch coverage: procedural maps, auto combat, random upgrades that vary in rarity, Silver meta, quests. Launch-day exact counts/mechanics are not preservable from mutable store/wiki material — later content updates may diverge.",
+  "edition_pinned": "Megabonk current Steam build as of 2026-07 (vedinad; Windows & Linux; first released 18 September 2025). Pins the 3D survivor-like loop documented on the live Steam page and early post-launch coverage: procedural maps, auto combat, random upgrades that vary in rarity, Silver meta, quests. Launch-day exact counts/mechanics are not preservable from mutable store/wiki material \u2014 later content updates may diverge.",
   "genre_tags": [
     "survivor-like",
     "roguelike",
@@ -52,7 +52,7 @@
     "Inference: keep meta currency scarce (challenge/pot/tome-linked) and quests task-shaped so unlocks remain session goals after the first clear."
   ],
   "anti_lessons": [
-    "Do not treat Megabonk as a skin of Vampire Survivors — copying auto-attack without 3D vertical mobility misses the moat.",
+    "Do not treat Megabonk as a skin of Vampire Survivors \u2014 copying auto-attack without 3D vertical mobility misses the moat.",
     "Do not flood Silver; scarcity is load-bearing for quest-driven return."
   ],
   "system_bom": [
@@ -127,7 +127,7 @@
       "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
     },
     {
-      "claim": "Feel signature / loop comparison as 3D survivor-like with Risk of Rain 2 × Vampire Survivors framing (early coverage).",
+      "claim": "Feel signature / loop comparison as 3D survivor-like with Risk of Rain 2 \u00d7 Vampire Survivors framing (early coverage).",
       "source": "https://www.gamesradar.com/games/roguelike/i-cant-pry-myself-from-the-computer-new-roguelike-hailed-as-a-mix-of-vampire-survivors-and-risk-of-rain-2-and-im-starting-to-see-why-it-has-4-000-very-positive-steam-reviews-after-just-one-week/"
     },
     {
@@ -179,5 +179,5 @@
       "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }

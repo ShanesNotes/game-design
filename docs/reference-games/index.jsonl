@@ -1,17 +1,17 @@
 {"id":"age-of-empires-2","title":"Age of Empires II","genre_tags":["real-time-strategy","economy","multiplayer"],"register_mapping":"mechanics-first","status":"audited"}
-{"id":"call-of-duty","title":"Call of Duty","genre_tags":["fps","multiplayer","military","progression-shooter"],"register_mapping":"mechanics-first","status":"draft"}
-{"id":"celeste","title":"Celeste","genre_tags":["precision-platformer","single-player","assist-accessibility"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"call-of-duty","title":"Call of Duty","genre_tags":["fps","multiplayer","military","progression-shooter"],"register_mapping":"mechanics-first","status":"audited"}
+{"id":"celeste","title":"Celeste","genre_tags":["precision-platformer","single-player","assist-accessibility"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"diablo-2","title":"Diablo II","genre_tags":["action-rpg","loot","character-building","multiplayer"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"disco-elysium","title":"Disco Elysium","genre_tags":["dialogue-rpg","detective","role-playing"],"register_mapping":"narrative-first","status":"audited"}
-{"id":"hades","title":"Hades","genre_tags":["roguelike","action","narrative-roguelite","isometric"],"register_mapping":"hybrid","status":"draft"}
+{"id":"hades","title":"Hades","genre_tags":["roguelike","action","narrative-roguelite","isometric"],"register_mapping":"hybrid","status":"audited"}
 {"id":"into-the-breach","title":"Into the Breach","genre_tags":["turn-based-tactics","grid-puzzle","run-based-strategy"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"league-of-legends","title":"League of Legends","genre_tags":["multiplayer-online-battle-arena","team-strategy","in-match-progression"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"mario-odyssey","title":"Super Mario Odyssey","genre_tags":["3d-platformer","collectathon","sandbox-kingdom","capture"],"register_mapping":"mechanics-first","status":"draft"}
-{"id":"megabonk","title":"Megabonk","genre_tags":["survivor-like","roguelike","3d","bullet-heaven","action-roguelite"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"megabonk","title":"Megabonk","genre_tags":["survivor-like","roguelike","3d","bullet-heaven","action-roguelite"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"minecraft","title":"Minecraft","genre_tags":["survival","crafting","building","sandbox"],"register_mapping":"world-first","status":"audited"}
 {"id":"phantom-garden","title":"Phantom Garden (FIXTURE — not a real game)","genre_tags":["fixture","garden-puzzle"],"register_mapping":"mechanics-first","status":"draft"}
 {"id":"rust","title":"Rust","genre_tags":["survival","crafting","base-building","multiplayer"],"register_mapping":"hybrid","status":"audited"}
 {"id":"slay-the-spire","title":"Slay the Spire","genre_tags":["deck-builder","roguelike","turn-based","single-player"],"register_mapping":"mechanics-first","status":"audited"}
-{"id":"stardew-valley","title":"Stardew Valley","genre_tags":["farm-sim","life-sim","rpg-lite","open-ended"],"register_mapping":"world-first","status":"draft"}
-{"id":"vampire-survivors","title":"Vampire Survivors","genre_tags":["survivor-like","roguelite","auto-attack","bullet-heaven"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"stardew-valley","title":"Stardew Valley","genre_tags":["farm-sim","life-sim","rpg-lite","open-ended"],"register_mapping":"world-first","status":"audited"}
+{"id":"vampire-survivors","title":"Vampire Survivors","genre_tags":["survivor-like","roguelite","auto-attack","bullet-heaven"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"zelda-botw","title":"The Legend of Zelda: Breath of the Wild","genre_tags":["open-world","action-adventure","physics-systems","exploration"],"register_mapping":"world-first","status":"draft"}

@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "call-of-duty",
   "title": "Call of Duty",
-  "edition_pinned": "Call of Duty 4: Modern Warfare (Infinity Ward, November 2007) — design-canonical multiplayer: create-a-class, XP unlocks, Prestige, killstreaks (3/5/7). Later scorestreaks and specialists are descendants, not the pin.",
+  "edition_pinned": "Call of Duty 4: Modern Warfare (Infinity Ward, November 2007) \u2014 design-canonical multiplayer: create-a-class, XP unlocks, Prestige, killstreaks (3/5/7). Later scorestreaks and specialists are descendants, not the pin.",
   "genre_tags": [
     "fps",
     "multiplayer",
@@ -39,13 +39,13 @@
     }
   ],
   "feel_signature": "A life is a short commit from spawn; each kill without dying ticks a streak meter toward a map-scale reward; death zeroes the meter and returns the player to spawn with the same class.",
-  "second_session_answer": "Players return to finish the next weapon unlock or Prestige rank and to practice maps and classes — goals that persist outside any single match outcome.",
+  "second_session_answer": "Players return to finish the next weapon unlock or Prestige rank and to practice maps and classes \u2014 goals that persist outside any single match outcome.",
   "packaging_lessons": [
     "Ship deathmatch-readable maps and preset classes before mode bloat; COD4 maps were built around deathmatch layouts first.",
     "Put mid-match power on no-death chains (killstreaks), not on contested air-support trigger zones that stall deathmatch flow."
   ],
   "anti_lessons": [
-    "Do not copy killstreaks into a PvE campaign without redesign — the mechanism assumes respawn-based multiplayer opponents.",
+    "Do not copy killstreaks into a PvE campaign without redesign \u2014 the mechanism assumes respawn-based multiplayer opponents.",
     "Do not layer pay-to-unlock weapons onto the XP ladder if the design goal is skill-and-time progression (later remaster microtransactions are a negative lesson)."
   ],
   "system_bom": [
@@ -168,5 +168,5 @@
       "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }

@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "hades",
   "title": "Hades",
-  "edition_pinned": "Hades 1.0 (Supergiant Games, full release September 2020) — House hub + boon run structure as shipped; not Hades II.",
+  "edition_pinned": "Hades 1.0 (Supergiant Games, full release September 2020) \u2014 House hub + boon run structure as shipped; not Hades II.",
   "genre_tags": [
     "roguelike",
     "action",
@@ -45,13 +45,13 @@
     "Gate permanent power behind House systems (Mirror, weapons, keepsakes) while keeping boons run-temporary so death still costs power."
   ],
   "anti_lessons": [
-    "Do not copy death-as-story without a large modular dialogue condition graph — a single linear cutscene on death is not the mechanism.",
+    "Do not copy death-as-story without a large modular dialogue condition graph \u2014 a single linear cutscene on death is not the mechanism.",
     "Do not strip run-temporary power entirely into meta unlocks; if nothing is lost on death, the run ceases to be a decision space."
   ],
   "system_bom": [
     {
       "system": "play-loop",
-      "note": "room clear → boon or reward choice → deeper biome rooms is the run core that feeds either escape or death return"
+      "note": "room clear \u2192 boon or reward choice \u2192 deeper biome rooms is the run core that feeds either escape or death return"
     },
     {
       "system": "meta-progression",
@@ -59,7 +59,7 @@
     },
     {
       "system": "loot",
-      "note": "boons rewrite kit mid-run; hammers alter weapon moves; poms rank-up boons; keepsakes equip for run bonuses — each choice branches the next combat"
+      "note": "boons rewrite kit mid-run; hammers alter weapon moves; poms rank-up boons; keepsakes equip for run bonuses \u2014 each choice branches the next combat"
     },
     {
       "system": "win-loss-death",
@@ -124,11 +124,11 @@
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Darkness"
     },
     {
-      "claim": "Loot BOM — poms: Pom of Power increases existing boon ranks mid-run.",
+      "claim": "Loot BOM \u2014 poms: Pom of Power increases existing boon ranks mid-run.",
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Pom_of_Power"
     },
     {
-      "claim": "Loot BOM — hammers: Daedalus Hammers rewrite weapon moves mid-run, branching combat options.",
+      "claim": "Loot BOM \u2014 hammers: Daedalus Hammers rewrite weapon moves mid-run, branching combat options.",
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Daedalus_Hammer"
     },
     {
@@ -148,7 +148,7 @@
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Mirror_of_Night"
     },
     {
-      "claim": "Play-loop BOM: chamber clear → reward door → deeper Underworld rooms is the run structure.",
+      "claim": "Play-loop BOM: chamber clear \u2192 reward door \u2192 deeper Underworld rooms is the run structure.",
       "source": "https://www.ign.com/wikis/hades/How_to_Find_Duo_Boons"
     },
     {
@@ -172,13 +172,13 @@
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Boons"
     },
     {
-      "claim": "BOM — win-loss-death: death is expected; it ends run power but advances House dialogue and meta currency.",
+      "claim": "BOM \u2014 win-loss-death: death is expected; it ends run power but advances House dialogue and meta currency.",
       "source": "https://natalia-nazeem.medium.com/failure-is-death-and-death-is-progress-the-use-of-repetition-replayability-and-narrative-673cfa4e2e8"
     },
     {
-      "claim": "Loot BOM — keepsakes: equipable House keepsakes provide run bonuses (bias of god offers is not claimed).",
+      "claim": "Loot BOM \u2014 keepsakes: equipable House keepsakes provide run bonuses (bias of god offers is not claimed).",
       "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Nectar"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }

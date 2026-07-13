@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "stardew-valley",
   "title": "Stardew Valley",
-  "edition_pinned": "Stardew Valley 1.0 single-player farm loop (ConcernedApe / Eric Barone; 26 February 2016) — day energy, seasons, Community Center. Multiplayer (1.3) and 1.5/1.6 content are extensions, not the pin.",
+  "edition_pinned": "Stardew Valley 1.0 single-player farm loop (ConcernedApe / Eric Barone; 26 February 2016) \u2014 day energy, seasons, Community Center. Multiplayer (1.3) and 1.5/1.6 content are extensions, not the pin.",
   "genre_tags": [
     "farm-sim",
     "life-sim",
@@ -39,13 +39,13 @@
     }
   ],
   "feel_signature": "Energy-using tool actions spend energy on a shared day clock (scythes, weapons, and pans are exceptions); success is a bed-save with crops watered and a bundle slot filled, not a boss HP bar.",
-  "second_session_answer": "Players return to water crops, hit the next mine floors, and finish the next bundle items before season end — goals that persist on the farm calendar.",
+  "second_session_answer": "Players return to water crops, hit the next mine floors, and finish the next bundle items before season end \u2014 goals that persist on the farm calendar.",
   "packaging_lessons": [
     "Inference: ship day energy, seasons, and one long collection goal (bundles) before marriage or multiplayer.",
     "Make cooking a utility bonus path rather than pure profit so optimization does not erase exploration (Barone design intent)."
   ],
   "anti_lessons": [
-    "Do not copy a farm sim as infinite free time with no shared budget — without energy/day pressure the loop is a spreadsheet.",
+    "Do not copy a farm sim as infinite free time with no shared budget \u2014 without energy/day pressure the loop is a spreadsheet.",
     "Do not require spreadsheets for basic progress; if the only viable play is external optimizers, the day budget failed as a teaching system."
   ],
   "system_bom": [
@@ -84,7 +84,7 @@
       "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
     },
     {
-      "claim": "Moat and energy-time day budget: tool actions drain energy; depleted bar forces bed; next day repeats tasks — described as the core loop. Social interaction is not claimed as an energy cost.",
+      "claim": "Moat and energy-time day budget: tool actions drain energy; depleted bar forces bed; next day repeats tasks \u2014 described as the core loop. Social interaction is not claimed as an energy cost.",
       "source": "https://www.gq.com/story/stardew-valley-eric-barone-profile"
     },
     {
@@ -172,5 +172,5 @@
       "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }
