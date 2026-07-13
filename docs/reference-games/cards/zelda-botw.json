@@ -81,7 +81,7 @@
       "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/"
     },
     {
-      "claim": "Chemistry framed as state calculator alongside Havok physics for consistent world rules (GDC 2017 coverage).",
+      "claim": "Chemistry framed as state calculator alongside physics for consistent world rules (GDC 2017 coverage).",
       "source": "https://www.thumbsticks.com/gdc-17-breath-of-the-wild-science-lies/"
     },
     {
@@ -94,7 +94,7 @@
     },
     {
       "claim": "Stamina vessel progression: Spirit Orbs from shrines trade for Stamina Vessels that expand the stamina wheel used for climbing and gliding.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Stamina_Vessel"
+      "source": "https://www.ign.com/wikis/the-legend-of-zelda-breath-of-the-wild/Shrines"
     },
     {
       "claim": "Shared stamina pool: Link is limited by stamina while running, climbing, swimming, and gliding; Spirit Orbs expand health or stamina.",
@@ -110,19 +110,19 @@
     },
     {
       "claim": "Cooking converts ingredients into food and elixirs that restore hearts/stamina and grant resistance buffs for weather and combat.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Cooking"
+      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
     },
     {
       "claim": "Crafting BOM: cooking is the consumable path that funds stamina and resistance for the next route.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Cooking"
+      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
     },
     {
       "claim": "Shrine function: completing Ancient Shrines awards Spirit Orbs spent at Goddess Statues for hearts or stamina.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Ancient_Shrine"
+      "source": "https://www.ign.com/wikis/the-legend-of-zelda-breath-of-the-wild/Shrines"
     },
     {
       "claim": "Tower function: Sheikah Towers reveal map sectors and serve as vantage and fast-travel anchors once activated.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Sheikah_Tower"
+      "source": "https://www.ign.com/wikis/the-legend-of-zelda-breath-of-the-wild/Towers"
     },
     {
       "claim": "Quests BOM: shrine and tower systems gate map options and permanent stats without requiring linear story order.",
@@ -130,19 +130,19 @@
     },
     {
       "claim": "Save-state BOM: auto-save and manual-save preserve progress across multi-session play and interruptions; autosaves fire on shrine approach (and other progress moments) so durable inventory/map/shrine progress can bank between sessions. Chemistry/material world-state across reloads is not claimed.",
-      "source": "GameRant, 'Breath Of The Wild: How To Save' (manual save path; autosave on shrine approach, campfire, stable, chest, and timed intervals; progress kept intact for multi-session play): https://gamerant.com/breath-of-the-wild-how-to-save/ ; Eiji Aonuma (Waypoint interview via Zelda Dungeon): auto-save and manual-save so battery/session interruption does not erase progress: https://www.zeldadungeon.net/breath-of-the-wild-has-two-saving-methods/"
+      "source": "GameRant, 'Breath Of The Wild: How To Save' (manual save path; autosave on shrine approach, campfire, stable, chest, and timed intervals; progress kept intact for multi-session play): https://web.archive.org/web/20230528193236/https://gamerant.com/breath-of-the-wild-how-to-save/ ; Eiji Aonuma (Waypoint interview via Zelda Dungeon): auto-save and manual-save so battery/session interruption does not erase progress: https://www.zeldadungeon.net/breath-of-the-wild-has-two-saving-methods/"
     },
     {
       "claim": "Win-loss-death BOM: choosing Continue after death loads a save (restoring that save's inventory and progression state, with heart refill on continue); autosaves bank shrine-approach and other progress moments so retained map/shrine/inventory progress is the loaded save, not post-save work.",
-      "source": "Zelda Wiki, Glitches in Breath of the Wild: Continue after dying loads the save: https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Glitches_in_Breath_of_the_Wild ; GameRant, 'Breath Of The Wild: How To Save' (autosave on shrine approach and other progress moments; recoverable save slots): https://gamerant.com/breath-of-the-wild-how-to-save/"
+      "source": "Zelda Wiki, Glitches in Breath of the Wild: Continue after dying loads the save: https://web.archive.org/web/20241227000208/https://zelda.fandom.com/wiki/Glitches_in_Breath_of_the_Wild ; GameRant, 'Breath Of The Wild: How To Save' (autosave on shrine approach and other progress moments; recoverable save slots): https://web.archive.org/web/20230528193236/https://gamerant.com/breath-of-the-wild-how-to-save/"
     },
     {
       "claim": "Play-loop BOM chemistry/physics share: exploration and combat use the same chemistry and physics rules for player-authored solutions.",
       "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/"
     },
     {
-      "claim": "Packaging lesson 1 (labeled Inference): Great Plateau acts as a closed tutorial bed for climb, glider, chemistry, and shrine rules before Hyrule scale.",
-      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Great_Plateau"
+      "claim": "Packaging lesson 1 (labeled Inference): Great Plateau acts as a closed tutorial bed for climb, paraglider exit, Sheikah runes, and shrine rules before Hyrule scale.",
+      "source": "https://www.ign.com/wikis/the-legend-of-zelda-breath-of-the-wild/The_Isolated_Plateau"
     },
     {
       "claim": "Packaging lesson 2 (labeled Inference): default climb/glider and field weapons are world-legal tools before story dungeon keys become the main gate.",
