@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "lethal-company",
+  "title": "Lethal Company",
+  "edition_pinned": "Steam app 1966720, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "runs",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Quota deadlines and scrap value force risky co-op extractions under procedural facility threats.",
+  "scope_efficiency_hypothesis": "One scrap-and-quota loop reuses moons, monsters, and tools across repeated company contracts.",
+  "exemplar_rationale": "Exemplifies co-op run structure from shared economic pressure rather than authored missions.",
+  "evidence": [
+    {
+      "claim": "Steam reported 509660 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 509660,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1966720?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie; Early Access.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie",
+        "Early Access"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1966720&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "deep-rock-galactic",
+  "title": "Deep Rock Galactic",
+  "edition_pinned": "Steam app 548430, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Class roles and procedural caves force coordinated extraction under rising swarm pressure.",
+  "scope_efficiency_hypothesis": "One mission template and class kit recombine across biomes, hazards, and mutators.",
+  "exemplar_rationale": "Shows co-op round structure from role complementarity rather than free-form survival craft.",
+  "evidence": [
+    {
+      "claim": "Steam reported 377903 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 377903,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/548430?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=548430&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

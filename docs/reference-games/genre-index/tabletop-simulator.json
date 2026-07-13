@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "tabletop-simulator",
+  "title": "Tabletop Simulator",
+  "edition_pinned": "Steam app 286160, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "expression"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": [
+        "open-ended"
+      ]
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": [
+        "competitive",
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "casual",
+      "rpg",
+      "strategy"
+    ]
+  },
+  "moat": "Physics-simulated pieces and scripted table rules let players host any board game as a shared session.",
+  "scope_efficiency_hypothesis": "One table physics sandbox hosts infinite imported games without per-title engines.",
+  "exemplar_rationale": "Shows social tabletop depth as a general substrate rather than a single authored ruleset.",
+  "evidence": [
+    {
+      "claim": "Steam reported 73703 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 73703,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/286160?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Casual; Indie; RPG; Simulation; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Casual",
+        "Indie",
+        "RPG",
+        "Simulation",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=286160&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

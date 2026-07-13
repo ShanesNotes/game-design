@@ -222,3 +222,39 @@ authoring. Out-of-universe surfaces also touched:
 `.codex/skills/tgf-office-hours-grill/SKILL.md` (intake vocabulary),
 `tgf-seed-compile/SKILL.md`, `tgf-depth-redteam/SKILL.md`,
 `tgf-decompose/SKILL.md`.
+
+## Fill-to-floors batch B (2026-07-13) — genre-index MMO + breadth
+
+Twenty-seven sourced Tier-2 rows under ratified taxonomy v1: massively-multiplayer
+floor (Rust + FFXIV + OSRS + EVE) plus racing/sports/sim/casual/narrative/coop/systems
+breadth. Reserves used: deep-rock-galactic, shapez-2. Mechanical ledger rows only.
+
+| path | disposition | rationale |
+| --- | --- | --- |
+| `docs/reference-games/genre-index/art-of-rally.json` | created | Sourced Tier-2 fill-to-floors batch B row for art of rally under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/cities-skylines.json` | created | Sourced Tier-2 fill-to-floors batch B row for Cities: Skylines under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/deep-rock-galactic.json` | created | Sourced Tier-2 fill-to-floors batch B row for Deep Rock Galactic under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/dwarf-fortress.json` | created | Sourced Tier-2 fill-to-floors batch B row for Dwarf Fortress under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/ea-sports-fc-25.json` | created | Sourced Tier-2 fill-to-floors batch B row for EA Sports FC 25 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/euro-truck-simulator-2.json` | created | Sourced Tier-2 fill-to-floors batch B row for Euro Truck Simulator 2 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/eve-online.json` | created | Sourced Tier-2 fill-to-floors batch B row for EVE Online under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/final-fantasy-xiv.json` | created | Sourced Tier-2 fill-to-floors batch B row for FINAL FANTASY XIV Online under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/football-manager-2024.json` | created | Sourced Tier-2 fill-to-floors batch B row for Football Manager 2024 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/her-story.json` | created | Sourced Tier-2 fill-to-floors batch B row for Her Story under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/kentucky-route-zero.json` | created | Sourced Tier-2 fill-to-floors batch B row for Kentucky Route Zero under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/lethal-company.json` | created | Sourced Tier-2 fill-to-floors batch B row for Lethal Company under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/microsoft-flight-simulator.json` | created | Sourced Tier-2 fill-to-floors batch B row for Microsoft Flight Simulator under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/noita.json` | created | Sourced Tier-2 fill-to-floors batch B row for Noita under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/old-school-runescape.json` | created | Sourced Tier-2 fill-to-floors batch B row for Old School RuneScape under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/phasmophobia.json` | created | Sourced Tier-2 fill-to-floors batch B row for Phasmophobia under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/powerwash-simulator.json` | created | Sourced Tier-2 fill-to-floors batch B row for PowerWash Simulator under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/project-zomboid.json` | created | Sourced Tier-2 fill-to-floors batch B row for Project Zomboid under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/risk-of-rain-2.json` | created | Sourced Tier-2 fill-to-floors batch B row for Risk of Rain 2 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/rust.json` | created | Sourced Tier-2 fill-to-floors batch B row for Rust with required Tier-1 card_ref under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/shapez-2.json` | created | Sourced Tier-2 fill-to-floors batch B row for shapez 2 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/tabletop-simulator.json` | created | Sourced Tier-2 fill-to-floors batch B row for Tabletop Simulator under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/trackmania.json` | created | Sourced Tier-2 fill-to-floors batch B row for Trackmania under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/unpacking.json` | created | Sourced Tier-2 fill-to-floors batch B row for Unpacking under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/valheim.json` | created | Sourced Tier-2 fill-to-floors batch B row for Valheim under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/what-remains-of-edith-finch.json` | created | Sourced Tier-2 fill-to-floors batch B row for What Remains of Edith Finch under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/wingspan.json` | created | Sourced Tier-2 fill-to-floors batch B row for Wingspan under ratified taxonomy v1. |

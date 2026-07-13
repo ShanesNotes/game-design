@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "euro-truck-simulator-2",
+  "title": "Euro Truck Simulator 2",
+  "edition_pinned": "Steam app 227300, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": [
+        "world-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": []
+  },
+  "moat": "Route planning, cargo deadlines, and vehicle handling turn long-haul deliveries into skillful continuous play.",
+  "scope_efficiency_hypothesis": "One road network and economy scale company growth without authored mission scripts.",
+  "exemplar_rationale": "Exemplifies simulation depth from route execution and logistics rather than combat systems.",
+  "evidence": [
+    {
+      "claim": "Steam reported 930279 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 930279,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/227300?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=227300&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
