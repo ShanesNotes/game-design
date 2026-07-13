@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "id": "vampire-survivors",
+  "title": "Vampire Survivors",
+  "edition_pinned": "Vampire Survivors 1.0 full release baseline (poncle / Luca Galante; post-EA Steam) — auto-attack + gold meta as design-canonical, not later DLC crossovers",
+  "genre_tags": ["survivor-like", "roguelite", "auto-attack", "bullet-heaven"],
+  "register_mapping": "mechanics-first",
+  "moat": "Movement-only control with timed auto-attacks turns positioning and upgrade picks into the whole skill axis.",
+  "loop_skeleton": {
+    "verbs": ["move", "collect-xp", "level-pick", "survive-timer", "spend-gold"],
+    "description": "Move through a timed stage while weapons fire on cooldowns, collect XP gems to choose weapons/passives, evolve combos, die or hit the stage timer, then spend gold between runs to unlock characters and permanent power."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "auto-attack strips aim",
+      "mechanism": "Attacks fire on fixed timers without a fire button so the player only aims by position and facing rules; attention shifts to pathing through swarms and reading attack cadences.",
+      "falsifiable_claim": "If manual aiming is required for every shot, average session length for casual players falls and the exercise-bike / chat-while-playing use case (creator intent) fails."
+    },
+    {
+      "name": "level-up build fork",
+      "mechanism": "Each level presents a random subset of weapons and passives; evolutions require specific weapon+passive pairs at max rank, so runs diverge into named combos rather than pure stat stacking.",
+      "falsifiable_claim": "If every level-up is a free choice of any unlock with no evolution recipes, build identity collapses and second-session experimentation with new combos drops."
+    },
+    {
+      "name": "gold meta unlock ladder",
+      "mechanism": "Gold earned in runs buys permanent PowerUp upgrades and unlocks characters/weapons; free re-spec of PowerUps lets players reallocate gold paths without a new save.",
+      "falsifiable_claim": "If gold cannot buy permanent unlocks between runs, return rate after first death falls because a failed run produces no lasting progress."
+    }
+  ],
+  "feel_signature": "A move commit repositions the auto-fire cone; a level-up pause forces a pick among three options that rewrite the next minutes of swarm control.",
+  "second_session_answer": "Players return to spend gold on PowerUps and try a newly unlocked character or weapon evolution path, not to re-watch cutscenes.",
+  "packaging_lessons": [
+    "Ship one stage, a handful of weapons, and gold unlocks before multiplayer or narrative arcs — creator designed for short bike sessions.",
+    "Keep attack automatic from day one so the skill surface is pathing and build picks only."
+  ],
+  "anti_lessons": [
+    "Do not add real-money gacha to the gold ladder — the gambling-inspired balance is about run reward pacing, not cash shops.",
+    "Do not copy survivor-likes by only adding auto-fire to an existing twin-stick without timed swarm pressure and evolution recipes."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "move → auto-hit → XP → level pick is the in-run cycle" },
+    { "system": "loot", "note": "weapons, passives, and stage chests are the run loot" },
+    { "system": "xp", "note": "gems from kills drive the level-up cadence" },
+    { "system": "leveling", "note": "level-ups are the primary decision points" },
+    { "system": "meta-progression", "note": "gold PowerUps and character unlocks persist across deaths" },
+    { "system": "win-loss-death", "note": "death ends the run but converts gold; timer survival is the stage win" },
+    { "system": "economy", "note": "gold is the between-run currency" }
+  ],
+  "citations": [
+    {
+      "claim": "moat/auto-attack: Galante designed attacks as automatic so the player could concentrate on something else (bike, chat).",
+      "source": "https://www.rockpapershotgun.com/vampire-survivors-interview-creator-wanted-something-to-play-at-the-weekend"
+    },
+    {
+      "claim": "depth_mechanisms.level-up build fork and auto timers: attacks trigger at intervals; upgrades raise frequency, power, range; gold meta between runs.",
+      "source": "https://theconversation.com/vampire-survivors-how-developers-used-gambling-psychology-to-create-a-bafta-winning-game-203613"
+    },
+    {
+      "claim": "depth_mechanisms.gold meta unlock ladder: free reset of upgraded builds to re-spend gold.",
+      "source": "https://www.port.ac.uk/news-events-and-blogs/blogs/popular-culture/vampire-survivors-how-developers-used-gambling-psychology-to-create-a-bafta-winning-game"
+    },
+    {
+      "claim": "feel_signature: player moves; weapons auto-fire; level-ups unlock weapons and upgrades; ~30 minute survival goal.",
+      "source": "https://www.youtube.com/watch?v=XQVdR8mJrds (Noclip: The Making of Vampire Survivors)"
+    },
+    {
+      "claim": "packaging Pac-Man power cadence inspiration (safe → empowered → safe) cited by creator.",
+      "source": "https://www.rockpapershotgun.com/vampire-survivors-interview-creator-wanted-something-to-play-at-the-weekend"
+    },
+    {
+      "claim": "system_bom weapons/items/evolutions as combo space.",
+      "source": "https://brignews.com/2022/04/25/spotlight-on-vampire-survivors-and-the-comeback-of-the-auto-battler/"
+    }
+  ],
+  "status": "draft"
+}

@@ -1,1 +1,9 @@
+{"id":"call-of-duty","title":"Call of Duty","genre_tags":["fps","multiplayer","military","progression-shooter"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"celeste","title":"Celeste","genre_tags":["precision-platformer","single-player","assist-accessibility"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"hades","title":"Hades","genre_tags":["roguelike","action","narrative-roguelite","isometric"],"register_mapping":"hybrid","status":"draft"}
+{"id":"mario-odyssey","title":"Super Mario Odyssey","genre_tags":["3d-platformer","collectathon","sandbox-kingdom","capture"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"megabonk","title":"Megabonk","genre_tags":["survivor-like","roguelike","3d","bullet-heaven","action-roguelite"],"register_mapping":"mechanics-first","status":"draft"}
 {"id":"phantom-garden","title":"Phantom Garden (FIXTURE — not a real game)","genre_tags":["fixture","garden-puzzle"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"stardew-valley","title":"Stardew Valley","genre_tags":["farm-sim","life-sim","rpg-lite","open-ended"],"register_mapping":"world-first","status":"draft"}
+{"id":"vampire-survivors","title":"Vampire Survivors","genre_tags":["survivor-like","roguelite","auto-attack","bullet-heaven"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"zelda-botw","title":"The Legend of Zelda: Breath of the Wild","genre_tags":["open-world","action-adventure","physics-systems","exploration"],"register_mapping":"world-first","status":"draft"}

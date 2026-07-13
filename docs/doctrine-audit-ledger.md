@@ -166,6 +166,22 @@ landed later in FUE W2-B; pigeonhole doctrine lives in
 | `docs/reference-games/index.jsonl` | rewritten | Generated summary index (id/title/genre_tags/register_mapping/status) refreshed by validate-reference-cards. |
 | `schemas/reference-card.schema.json` | rewritten | Draft 2020-12 card shape (moat, loop, depth mechanisms, system BOM, status draft\|audited) for the reference-game canon (FUE e3). |
 
+## FUE cards batch Grok (2026-07-12) — draft research cards (8/16)
+
+Eight draft research cards for the Shane-ratified canon. Status remains
+`draft` (cross-audit later). Mechanical universe rows only.
+
+| path | disposition | rationale |
+| --- | --- | --- |
+| `docs/reference-games/cards/call-of-duty.json` | rewritten | Draft reference card; COD4 pin; killstreak + create-a-class + XP (orch/fue-cards-grok). |
+| `docs/reference-games/cards/celeste.json` | rewritten | Draft reference card; dash budget + screen retry + Assist Mode (orch/fue-cards-grok). |
+| `docs/reference-games/cards/hades.json` | rewritten | Draft reference card; death-as-narrative + boons + God Mode (orch/fue-cards-grok). |
+| `docs/reference-games/cards/mario-odyssey.json` | rewritten | Draft reference card; Capture + over-supplied moons (orch/fue-cards-grok). |
+| `docs/reference-games/cards/megabonk.json` | rewritten | Draft reference card; 2025 3D survivor-like + Silver meta (orch/fue-cards-grok). |
+| `docs/reference-games/cards/stardew-valley.json` | rewritten | Draft reference card; day energy + seasons + bundles (orch/fue-cards-grok). |
+| `docs/reference-games/cards/vampire-survivors.json` | rewritten | Draft reference card; auto-attack + level forks + gold meta (orch/fue-cards-grok). |
+| `docs/reference-games/cards/zelda-botw.json` | rewritten | Draft reference card; chemistry engine + durability + stamina (orch/fue-cards-grok). |
+
 ## FUE W2-B (2026-07-12) — reference-game pipeline hooks
 
 Phase-tiered cite hooks on existing in-universe rows above (P01 / P07 / P18 /

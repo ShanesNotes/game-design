@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "id": "call-of-duty",
+  "title": "Call of Duty",
+  "edition_pinned": "Call of Duty 4: Modern Warfare (Infinity Ward, 2007) — design-canonical multiplayer: create-a-class, XP unlocks, Prestige, killstreaks (3/5/7). Later scorestreaks/specialists are descendants, not the pin.",
+  "genre_tags": ["fps", "multiplayer", "military", "progression-shooter"],
+  "register_mapping": "mechanics-first",
+  "moat": "Killstreaks convert a no-death kill chain into map-scale power while XP unlocks reshape the next loadout.",
+  "loop_skeleton": {
+    "verbs": ["spawn", "aim-fire", "objective-or-elim", "streak-call", "xp-unlock"],
+    "description": "Spawn with a create-a-class loadout, fight short lives in a mode map, chain kills without dying to earn UAV/airstrike/helicopter streaks, die and reset the streak, bank match XP to unlock weapons, attachments, perks, and Prestige resets."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "killstreak ladder",
+      "mechanism": "Three kills without dying call a UAV, five an airstrike, seven a helicopter. Death zeroes streak progress. Designers replaced zone-based air support with streaks so deathmatch flow was not broken by map trigger camping.",
+      "falsifiable_claim": "If killstreak rewards are removed, average mid-match power spikes fall and high-skill players lose a primary reason to risk extended lives instead of passive play."
+    },
+    {
+      "name": "create-a-class perk loadout",
+      "mechanism": "Custom classes pick primary, sidearm, attachments, special grenade, and three perk tiers. Loadout is chosen before the match so weapon hunting mid-map is not required.",
+      "falsifiable_claim": "If players cannot preset classes and must loot weapons only on the map, time-to-meaningful-firefight rises and perk-based playstyle identity disappears."
+    },
+    {
+      "name": "xp prestige treadmill",
+      "mechanism": "Match actions grant XP that ranks the player and unlocks weapons/attachments/camos. Hitting the cap enables Prestige: reset rank for an insignia and a new climb (up to ten on consoles).",
+      "falsifiable_claim": "If XP unlocks and Prestige are removed and all weapons are free at rank 1, second-session goals collapse to raw K/D with no loadout ladder."
+    }
+  ],
+  "feel_signature": "A life is a short commit from spawn; each kill without dying ticks a streak meter toward a map-scale reward; death zeroes the meter and returns the player to spawn with the same class.",
+  "second_session_answer": "Players return to finish the next weapon unlock or Prestige rank and to practice maps/classes — goals that persist outside any single match outcome.",
+  "packaging_lessons": [
+    "Ship deathmatch-readable maps and preset classes before mode bloat; COD4 maps were built around deathmatch layouts first.",
+    "Put mid-match power on no-death chains (killstreaks), not on map pickups that stall flow."
+  ],
+  "anti_lessons": [
+    "Do not copy killstreaks into a PvE campaign without redesign — the mechanism assumes respawn-based multiplayer opponents.",
+    "Do not layer pay-to-unlock weapons onto the XP ladder if the design goal is skill-and-time progression (later remaster microtransactions are a negative lesson)."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "spawn-fight-die cycle is the match atom" },
+    { "system": "multiplayer", "note": "modes and maps are the required multiplayer surface" },
+    { "system": "xp", "note": "match XP drives unlock rank" },
+    { "system": "progression", "note": "weapons, attachments, perks, camos unlock by rank" },
+    { "system": "meta-progression", "note": "Prestige resets rank for long-horizon goals" },
+    { "system": "win-loss-death", "note": "death resets streak but not XP; match score is separate from personal unlock goals" },
+    { "system": "ui", "note": "create-a-class and streak feedback must be readable under 60fps combat" },
+    { "system": "leaderboards", "note": "K/D and rank comparison sustain social return" }
+  ],
+  "citations": [
+    {
+      "claim": "moat/killstreak ladder: 3-kill UAV, 5-kill airstrike, 7-kill helicopter; death resets streak progress.",
+      "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare"
+    },
+    {
+      "claim": "depth_mechanisms.killstreak origin: team replaced zone air-support triggers with killstreaks because zone design hurt deathmatch flow.",
+      "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare (citing Game Informer #178 multiplayer design coverage)"
+    },
+    {
+      "claim": "depth_mechanisms.create-a-class perk loadout: primary, sidearm, attachments, special grenade, three perks; preset before match.",
+      "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare"
+    },
+    {
+      "claim": "depth_mechanisms.xp prestige treadmill: XP unlocks content; Prestige resets rank for insignia up to ten times.",
+      "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare"
+    },
+    {
+      "claim": "feel_signature / packaging: multiplayer XP leveling, Prestige, create-a-class, perks, killstreaks became series hallmarks.",
+      "source": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare (Legacy / retrospective section)"
+    },
+    {
+      "claim": "system_bom postmortem context: Infinity Ward multiplayer design priorities and development notes.",
+      "source": "https://www.gamedeveloper.com/game-platforms/exclusive-inside-the-making-of-i-call-of-duty-4-i-"
+    },
+    {
+      "claim": "edition pin justification: COD4 introduced the modern CoD multiplayer template later titles iterate.",
+      "source": "https://www.gamespot.com/reviews/call-of-duty-4-modern-warfare-review/1900-6182425/"
+    }
+  ],
+  "status": "draft"
+}

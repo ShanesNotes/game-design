@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "id": "mario-odyssey",
+  "title": "Super Mario Odyssey",
+  "edition_pinned": "Super Mario Odyssey (Nintendo Switch, 2017) — Capture + Power Moon kingdom structure as shipped at launch",
+  "genre_tags": ["3d-platformer", "collectathon", "sandbox-kingdom", "capture"],
+  "register_mapping": "mechanics-first",
+  "moat": "Capture converts enemies and objects into temporary move-sets that open moons the base kit cannot reach.",
+  "loop_skeleton": {
+    "verbs": ["jump", "cap-throw", "capture", "moon-collect", "kingdom-exit"],
+    "description": "Traverse a kingdom with Mario's base moves, throw Cappy to capture a target, use the capture's move-set to reach a Power Moon, bank moons to fuel the Odyssey to the next kingdom when the exit threshold is met."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "capture move-set swap",
+      "mechanism": "Throwing Cappy onto a legal target replaces Mario's actions with that target's kit (swim, fly, roll, possess object) for a limited period; moons are authored around capture tools as first-class solutions, with many also solvable by advanced base movement.",
+      "falsifiable_claim": "If capture is removed and only Mario's base kit remains, completion rate for moons tagged as capture-required collapses and second-session kingdom clear time rises sharply."
+    },
+    {
+      "name": "over-supplied moon threshold",
+      "mechanism": "Each kingdom offers more Power Moons than the Odyssey exit cost, so players choose which moons to bank rather than following a single mandatory path.",
+      "falsifiable_claim": "If moon count equals the exact exit requirement with no surplus, second-session exploration of optional moons drops because every moon becomes a choke, not a menu of options."
+    },
+    {
+      "name": "capture-as-exploration bait",
+      "mechanism": "Kingdoms seed large capturable objects and creatures that advertise new experiences (e.g. dinosaur, vehicle-like objects) so exploration seeks new capture toys, not only coin-shaped collectibles.",
+      "falsifiable_claim": "If capturable spectacle targets are removed and only coin/platform moons remain, average distinct capture types per session falls and retention matches a pure collectathon without move-set novelty."
+    }
+  ],
+  "feel_signature": "A throw commits Cappy for a window; success is a new body with different jump, attack, or traversal rules, then a moon bank that advances the ship meter.",
+  "second_session_answer": "Players return to farm surplus moons with newly unlocked captures and post-game moon types, not to re-clear a linear boss gauntlet.",
+  "packaging_lessons": [
+    "Ship one kingdom with base kit plus a small capture roster before stacking multiplayer or post-game moon variants.",
+    "Set exit moon costs below available moon supply so the first clear teaches choice, not completionism."
+  ],
+  "anti_lessons": [
+    "Do not treat Capture as a skin swap — if the captured form does not change legal routes or attacks, it is costume, not depth.",
+    "Do not copy moon spam without multi-solution placement; quantity without alternate solves is checklist padding."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "jump/throw/capture/moon bank is the core cycle per kingdom" },
+    { "system": "progression", "note": "Power Moon totals unlock Odyssey travel and later kingdoms" },
+    { "system": "skills", "note": "capture roster expands legal move-sets without a traditional skill tree" },
+    { "system": "ui", "note": "moon list and kingdom map must surface uncollected moons without forcing order" },
+    { "system": "save-state", "note": "moons, captures unlocked, and kingdom state persist across sessions" },
+    { "system": "win-loss-death", "note": "fall/damage returns Mario with partial coin loss; moons already banked stay banked" }
+  ],
+  "citations": [
+    {
+      "claim": "moat/capture: Capture is the ability to control enemies, creatures, and objects via Cappy to gain new abilities and reach Power Moons.",
+      "source": "https://mario.fandom.com/wiki/Capture"
+    },
+    {
+      "claim": "depth_mechanisms.over-supplied moon threshold: progression banks Power Moons; more moons exist than needed to leave each kingdom.",
+      "source": "https://mario.fandom.com/wiki/Super_Mario_Odyssey"
+    },
+    {
+      "claim": "depth_mechanisms.capture-as-exploration bait: devs describe shifting from pure star search to searching for new captures and experiences.",
+      "source": "https://www.gamedeveloper.com/design/what-are-devs-saying-about-the-design-of-i-super-mario-odyssey-i-"
+    },
+    {
+      "claim": "feel_signature / packaging: director Motokura on Power Moons hidden everywhere and capture limits.",
+      "source": "https://time.com/4816417/super-mario-odyssey-interview-e3/"
+    },
+    {
+      "claim": "system_bom.progression moon-to-travel structure.",
+      "source": "https://mario.fandom.com/wiki/Super_Mario_Odyssey"
+    }
+  ],
+  "status": "draft"
+}

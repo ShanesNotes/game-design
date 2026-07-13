@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "id": "celeste",
+  "title": "Celeste",
+  "edition_pinned": "Celeste (Maddy Makes Games / Extremely OK Games, 2018 launch; Assist Mode as shipped) — Farewell DLC is optional post-content, not the pin",
+  "genre_tags": ["precision-platformer", "single-player", "assist-accessibility"],
+  "register_mapping": "mechanics-first",
+  "moat": "One air dash plus climb stamina frames every screen as a limited-resource precision solve, not a health fight.",
+  "loop_skeleton": {
+    "verbs": ["run", "jump", "dash", "climb", "retry-screen"],
+    "description": "Enter a screen, spend the single air dash and climb stamina to chain geometry, die on contact with hazards, respawn at the screen entrance with full resources, repeat until the screen exits."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "dash budget",
+      "mechanism": "Madeline has one air dash that recharges on solid ground (or specific midair pickups). Screens are authored so the dash is the scarce commit that gates routes; diagonal eight-way dash is part of the legal input space.",
+      "falsifiable_claim": "If players receive unlimited air dashes by default, average deaths-per-screen falls more than 50% and second-session retry time no longer tracks screen geometry difficulty."
+    },
+    {
+      "name": "screen-scoped infinite retry",
+      "mechanism": "Death restarts the current screen instantly with full dash/stamina; progress is room-exit, not a lives currency. The mountain map chains hundreds of screens so failure cost is seconds, not chapter restarts.",
+      "falsifiable_claim": "If death forces a multi-screen checkpoint rollback, completion rate for mid-game chapters drops and session length shortens because retry cost exceeds learning gain."
+    },
+    {
+      "name": "assist mode opt-in break",
+      "mechanism": "Assist Mode lets players change game speed, grant infinite dashes, invincibility, and other toggles without a separate story path. Designer states Assist breaks the fine-tuned difficulty by design so more players can finish.",
+      "falsifiable_claim": "If Assist Mode is removed and no equivalent toggles exist, a measurable subset of players who used Assist to finish never reach the ending (self-report / completion telemetry)."
+    }
+  ],
+  "feel_signature": "Input commits a dash or stamina slice within one screen; failure is instant full-resource retry at the screen door, so the decision is always the next frame sequence, not inventory or loadout.",
+  "second_session_answer": "Players return to clear the next chapter screens or collect strawberries they skipped, using the same dash budget on harder geometry — not to spend meta currency.",
+  "packaging_lessons": [
+    "Ship chapter 1 with dash+climb+instant retry before any collectible economy; GDC level-design talk centers on tools for hundreds of precision stages.",
+    "Expose Assist toggles as player-owned breaks of the design, not as a hidden difficulty-tier flag that strips story."
+  ],
+  "anti_lessons": [
+    "Do not bolt an XP or loadout layer onto a dash-budget platformer — it hides which inputs failed.",
+    "Do not replace screen-scoped retry with long checkpoint gaps; the depth is high death count at low time cost."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "run-jump-dash-climb-retry is the only required combat-free loop" },
+    { "system": "win-loss-death", "note": "death is the primary feedback; no lives counter" },
+    { "system": "save-state", "note": "screen and chapter progress persist; strawberries are optional persistence" },
+    { "system": "ui", "note": "dash ready state and stamina must be readable without opening menus" },
+    { "system": "progression", "note": "chapter unlocks and B-sides gate harder geometry using the same verbs" }
+  ],
+  "citations": [
+    {
+      "claim": "moat/dash budget: dash is central; climb contrasts as slower stamina-limited movement vs dash.",
+      "source": "https://www.youtube.com/watch?v=Imsdo3vwvPo (ACMI: Celeste conversation with Maddy Thorson & Noel Berry)"
+    },
+    {
+      "claim": "depth_mechanisms.screen design tools for 300+ hardcore stages and mountain map arrangement.",
+      "source": "https://www.youtube.com/watch?v=4RlpMhBKNr0 (GDC: Level Design Workshop — Designing Celeste)"
+    },
+    {
+      "claim": "depth_mechanisms.assist mode opt-in break: Assist can alter speed, infinite dashes, invincibility; designer says Assist breaks the game and that is acceptable to empower players.",
+      "source": "https://www.youtube.com/watch?v=NInNVEHj_G4 (Game Maker's Toolkit: What Makes Celeste's Assist Mode Special)"
+    },
+    {
+      "claim": "edition/feel: Celeste released 2018-01-25; Assist Mode is part of the shipped accessibility design.",
+      "source": "https://maddythorson.medium.com/four-years-of-celeste-7dccdcc3f7f4"
+    },
+    {
+      "claim": "system_bom play-loop verbs and single-player platform structure.",
+      "source": "https://en.wikipedia.org/wiki/Celeste_(video_game)"
+    }
+  ],
+  "status": "draft"
+}
