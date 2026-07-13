@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "mario-odyssey",
   "title": "Super Mario Odyssey",
-  "edition_pinned": "Super Mario Odyssey (Nintendo Switch, October 2017 launch) — Capture and Power Moon kingdom structure as shipped; not post-launch costume DLC focus.",
+  "edition_pinned": "Super Mario Odyssey (Nintendo Switch, October 2017 launch) \u2014 Capture and Power Moon kingdom structure as shipped; not post-launch costume DLC focus.",
   "genre_tags": [
     "3d-platformer",
     "collectathon",
@@ -45,7 +45,7 @@
     "Set exit moon costs below available moon supply so the first clear teaches choice, not completionism."
   ],
   "anti_lessons": [
-    "Do not treat Capture as a skin swap — if the captured form does not change legal routes or attacks, it is costume, not depth.",
+    "Do not treat Capture as a skin swap \u2014 if the captured form does not change legal routes or attacks, it is costume, not depth.",
     "Do not copy moon spam without multi-solution placement; quantity without alternate solves is checklist padding."
   ],
   "system_bom": [
@@ -148,5 +148,5 @@
       "source": "https://www.gamedeveloper.com/design/what-are-devs-saying-about-the-design-of-i-super-mario-odyssey-i-"
     }
   ],
-  "status": "draft"
+  "status": "audited"
 }
