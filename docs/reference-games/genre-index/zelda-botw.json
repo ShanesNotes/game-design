@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "zelda-botw",
+  "title": "The Legend of Zelda: Breath of the Wild",
+  "edition_pinned": "Nintendo Switch and Wii U launch edition, March 2017, as pinned by the Tier-1 card.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "execution",
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Shared chemistry and physics rules let elements, materials, and forces solve combat, puzzles, and traversal.",
+  "scope_efficiency_hypothesis": "Reusable state rules let the same objects support traversal, combat, puzzles, survival, and improvisation.",
+  "exemplar_rationale": "Demonstrates world-first depth through consistent interactions rather than one-off open-world content.",
+  "card_ref": "zelda-botw",
+  "evidence": [
+    {
+      "claim": "Nintendo listed the product Genre as: Action; Adventure.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Nintendo Store",
+      "territory": "Australia",
+      "observed_at": "2026-07-13",
+      "source": "https://www.nintendo.com/au/games/nintendo-switch/the-legend-of-zelda-breath-of-the-wild/",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

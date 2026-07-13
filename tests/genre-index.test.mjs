@@ -95,6 +95,43 @@ test("valid genre-index row writes a deterministic grep summary", () => {
   }
 });
 
+test("a row may omit Steam reviews when storefront genre evidence is present", () => {
+  const row = validRow();
+  row.evidence = row.evidence.filter((item) => item.metric_type !== "steam_user_reviews");
+  const paths = tempCorpus([row]);
+  try {
+    const { errors } = validateGenreIndex(paths);
+    assert.deepEqual(errors, []);
+  } finally {
+    fs.rmSync(paths.root, { recursive: true, force: true });
+  }
+});
+
+test("present Steam review evidence still uses taxonomy-derived classes", () => {
+  const row = validRow();
+  row.evidence[0].class = "review-breakout";
+  row.evidence[0].class_definition = "taxonomy-v1#steam-user-reviews/review-breakout";
+  const paths = tempCorpus([row]);
+  try {
+    const { errors } = validateGenreIndex(paths);
+    assert.ok(errors.some((error) => /expected class 'review-established'/.test(error)), errors.join("\n"));
+  } finally {
+    fs.rmSync(paths.root, { recursive: true, force: true });
+  }
+});
+
+test("every row still requires storefront genre evidence", () => {
+  const row = validRow();
+  row.evidence = row.evidence.filter((item) => item.metric_type !== "storefront_genres");
+  const paths = tempCorpus([row]);
+  try {
+    const { errors } = validateGenreIndex(paths);
+    assert.ok(errors.some((error) => /must include storefront_genres evidence/.test(error)), errors.join("\n"));
+  } finally {
+    fs.rmSync(paths.root, { recursive: true, force: true });
+  }
+});
+
 test("semantic checks enforce membership uniqueness, moat length, and evidence classes", () => {
   const row = validRow({ moat: "x".repeat(121) });
   row.design_shape.loop_class.secondary = ["optimization", "optimization"];
@@ -208,7 +245,7 @@ test("repo pilot validates, generates 20 rows, and demonstrates Tier-1 navigatio
     today: "2026-07-13"
   });
   assert.deepEqual(result.errors, [], result.errors.join("\n"));
-  assert.equal(result.rows.length, 20);
+  assert.ok(result.rows.length >= 20, result.rows.length);
   assert.ok(result.rows.filter((row) => row.card_ref).length >= 4);
   assert.equal(new Set(result.rows.map((row) => row.id)).size, result.rows.length);
 });

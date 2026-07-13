@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "league-of-legends",
+  "title": "League of Legends",
+  "edition_pinned": "Patch 12.22, PC, five-player Summoner's Rift, as pinned by the Tier-1 card.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "execution",
+        "social-coordination"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "competitive",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "strategy",
+    "secondary": [
+      "action",
+      "rpg"
+    ]
+  },
+  "moat": "Fogged vision couples lane income, item timing, and objective votes into five-player commitments.",
+  "scope_efficiency_hypothesis": "One symmetric map recombines champion kits, hidden movement, item timings, and team objectives into divergent matches.",
+  "exemplar_rationale": "Shows how partial information and shared objectives bind individual optimization to team commitments.",
+  "card_ref": "league-of-legends",
+  "evidence": [
+    {
+      "claim": "Epic Games Store listed these Genres: Action; RPG; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "RPG",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Epic Games Store",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.epicgames.com/p/league-of-legends?lang=en-US",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

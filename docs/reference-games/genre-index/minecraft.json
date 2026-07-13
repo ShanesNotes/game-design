@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "minecraft",
+  "title": "Minecraft",
+  "edition_pinned": "Java Edition 1.21, Tricky Trials, as pinned by the Tier-1 card.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "expression",
+      "secondary": [
+        "discovery",
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "simulation"
+    ]
+  },
+  "moat": "Breaking and placing the same block set turns terrain into both resource stock and player-authored state.",
+  "scope_efficiency_hypothesis": "One block vocabulary serves terrain, inventory, construction, crafting inputs, and automation circuits.",
+  "exemplar_rationale": "Shows an editable world turning resource conversion into durable expression and future possibility.",
+  "card_ref": "minecraft",
+  "evidence": [
+    {
+      "claim": "Microsoft Store classified Minecraft as: Action & adventure; Family & kids.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action & adventure",
+        "Family & kids"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Microsoft Store",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://www.xbox.com/en-US/games/store/minecraft/9MVXMVT8ZKWC/0010/9PKNQS1G2P2X",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Nintendo's Minecraft product genre record listed: Action; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Nintendo Store",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://www.nintendo.com/us/store/products/minecraft-switch/",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -180,9 +180,6 @@ export function validateGenreIndex({
     row.evidence.forEach((item, index) => {
       errors.push(...evidenceErrors(item, `${file}: evidence[${index}]`, today));
     });
-    if (!row.evidence.some((item) => item.metric_type === "steam_user_reviews")) {
-      errors.push(`${file}: evidence must include steam_user_reviews reach evidence`);
-    }
     if (!row.evidence.some((item) => item.metric_type === "storefront_genres")) {
       errors.push(`${file}: evidence must include storefront_genres evidence`);
     }

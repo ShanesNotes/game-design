@@ -198,7 +198,10 @@ landed later in FUE W2-B; pigeonhole doctrine lives in
 | `docs/reference-games/genre-index/frostpunk.json` | rewritten | Sourced Tier-2 fill row for Frostpunk under frozen taxonomy v1. |
 | `docs/reference-games/genre-index/it-takes-two.json` | rewritten | Sourced Tier-2 fill row for It Takes Two under frozen taxonomy v1. |
 | `docs/reference-games/genre-index/kerbal-space-program.json` | rewritten | Sourced Tier-2 fill row for Kerbal Space Program under frozen taxonomy v1. |
+| `docs/reference-games/genre-index/league-of-legends.json` | rewritten | Sourced Tier-2 fill row for League of Legends with Tier-1 card navigation and Epic storefront evidence. |
+| `docs/reference-games/genre-index/mario-odyssey.json` | rewritten | Sourced Tier-2 fill row for Super Mario Odyssey with Tier-1 card navigation and Nintendo storefront evidence. |
 | `docs/reference-games/genre-index/megabonk.json` | rewritten | Sourced Tier-2 fill row for Megabonk with Tier-1 card navigation. |
+| `docs/reference-games/genre-index/minecraft.json` | rewritten | Sourced Tier-2 fill row for Minecraft with Tier-1 card navigation and Microsoft/Nintendo storefront evidence. |
 | `docs/reference-games/genre-index/return-of-the-obra-dinn.json` | rewritten | Sourced Tier-2 fill row for Return of the Obra Dinn under frozen taxonomy v1. |
 | `docs/reference-games/genre-index/rocket-league.json` | rewritten | Sourced Tier-2 fill row for Rocket League under frozen taxonomy v1. |
 | `docs/reference-games/genre-index/street-fighter-6.json` | rewritten | Sourced Tier-2 fill row for Street Fighter 6 under frozen taxonomy v1. |
@@ -207,8 +210,11 @@ landed later in FUE W2-B; pigeonhole doctrine lives in
 | `docs/reference-games/genre-index/the-witness.json` | rewritten | Sourced Tier-2 fill row for The Witness under frozen taxonomy v1. |
 | `docs/reference-games/genre-index/vampire-survivors.json` | rewritten | Sourced Tier-2 fill row for Vampire Survivors with Tier-1 card navigation. |
 | `docs/reference-games/genre-index/xcom-2.json` | rewritten | Sourced Tier-2 fill row for XCOM 2 under frozen taxonomy v1. |
+| `docs/reference-games/genre-index/zelda-botw.json` | rewritten | Sourced Tier-2 fill row for Breath of the Wild with Tier-1 card navigation and Nintendo storefront evidence. |
 | `schemas/reference-card.schema.json` | rewritten | Draft 2020-12 card shape (moat, loop, depth mechanisms, system BOM, status draft\|audited) for the reference-game canon (FUE e3). |
 | `schemas/genre-index-row.schema.json` | rewritten | Draft 2020-12 Tier-2 row contract for design facets, market memberships, typed evidence, hypotheses, and optional Tier-1 navigation. |
+| `scripts/validate-genre-index.mjs` | rewritten | Validator amendment makes Steam review reach optional while retaining mandatory storefront genres and all present-item checks. |
+| `tests/genre-index.test.mjs` | rewritten | Regression coverage for optional Steam reviews, derived review classes, mandatory storefront genres, and expandable corpus size. |
 
 ## FUE cards batch Grok (2026-07-12) — draft research cards (8/16)
 

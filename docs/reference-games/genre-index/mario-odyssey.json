@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "mario-odyssey",
+  "title": "Super Mario Odyssey",
+  "edition_pinned": "Nintendo Switch launch edition, October 2017, as pinned by the Tier-1 card.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "continuous"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Capture converts enemies and objects into temporary move-sets that open moons the base kit cannot reach.",
+  "scope_efficiency_hypothesis": "Temporary capture kits let one movement system borrow many local verbs without a permanent ability tree.",
+  "exemplar_rationale": "Demonstrates authored discovery through temporary embodiment and surplus objective routing.",
+  "card_ref": "mario-odyssey",
+  "evidence": [
+    {
+      "claim": "Nintendo's product genre record listed: Action; Adventure.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Nintendo Store",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://www.nintendo.com/us/store/products/super-mario-odyssey-switch/",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
