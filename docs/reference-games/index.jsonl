@@ -8,7 +8,7 @@
 {"id":"league-of-legends","title":"League of Legends","genre_tags":["multiplayer-online-battle-arena","team-strategy","in-match-progression"],"register_mapping":"mechanics-first","status":"audited"}
 {"id":"mario-odyssey","title":"Super Mario Odyssey","genre_tags":["3d-platformer","collectathon","sandbox-kingdom","capture"],"register_mapping":"mechanics-first","status":"draft"}
 {"id":"megabonk","title":"Megabonk","genre_tags":["survivor-like","roguelike","3d","bullet-heaven","action-roguelite"],"register_mapping":"mechanics-first","status":"draft"}
-{"id":"minecraft","title":"Minecraft","genre_tags":["survival","crafting","building","sandbox"],"register_mapping":"world-first","status":"draft"}
+{"id":"minecraft","title":"Minecraft","genre_tags":["survival","crafting","building","sandbox"],"register_mapping":"world-first","status":"audited"}
 {"id":"phantom-garden","title":"Phantom Garden (FIXTURE — not a real game)","genre_tags":["fixture","garden-puzzle"],"register_mapping":"mechanics-first","status":"draft"}
 {"id":"rust","title":"Rust","genre_tags":["survival","crafting","base-building","multiplayer"],"register_mapping":"hybrid","status":"audited"}
 {"id":"slay-the-spire","title":"Slay the Spire","genre_tags":["deck-builder","roguelike","turn-based","single-player"],"register_mapping":"mechanics-first","status":"audited"}
