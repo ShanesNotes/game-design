@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { arg } from "./lib/argv.mjs";
 import { depthVectorConsistencyErrors, feelTargetRequiredForAdvanceErrors } from "./lib/anti-boring-gate.mjs";
 import { DEPTH_AXES } from "./lib/portfolio-memory.mjs";
+import { leakageErrors } from "./lib/leakage.mjs";
 import {
   isValidSeedId, readEmbeddedArtifact, readManifest, resolveRunPath,
   runDirFor, runRelFor, writeRunFileSync
@@ -29,6 +32,14 @@ let manifest;
 try { manifest = readManifest(runDir, seedId, process.cwd()); }
 catch (error) { fail(`manifest rejected: ${error.message}`); }
 if (!manifest?.game_thesis_path) fail("manifest has no game_thesis_path");
+
+const runCheck = spawnSync(process.execPath, [
+  path.join(REPO, "scripts", "validate-artifacts.mjs"),
+  "--check", "run", "--seed-id", seedId
+], { cwd: process.cwd(), encoding: "utf8" });
+if (runCheck.status !== 0) {
+  fail(`run has not reached validated design-lock:\n${runCheck.stdout || runCheck.stderr}`);
+}
 
 let thesisPath;
 try { thesisPath = resolveRunPath(process.cwd(), seedId, manifest.game_thesis_path, "game_thesis_path"); }
@@ -75,7 +86,9 @@ for (const file of vectors) {
 if (!depthVector) fail("no gate-passing ADVANCE depth vector exists under reviews/");
 
 const verdictPath = path.join(reviewsDir, "ANTI_BORING_VERDICT.md");
-if (!fs.existsSync(verdictPath) || !/\bADVANCE\b/.test(fs.readFileSync(verdictPath, "utf8"))) {
+const verdictText = fs.existsSync(verdictPath) ? fs.readFileSync(verdictPath, "utf8") : "";
+const verdictMatch = verdictText.match(/(?:^|\n)[ \t]*(?:#{1,6}[ \t]*)?(?:\*\*)?VERDICT[ \t]*:(?:\*\*)?[ \t]*(?:\r?\n[ \t]*)?(ADVANCE|DEEPEN|KILL)[ \t]*(?:\*\*)?[ \t]*(?=\r?\n|$)/i);
+if (verdictMatch?.[1]?.toUpperCase() !== "ADVANCE") {
   fail("reviews/ANTI_BORING_VERDICT.md is missing an ADVANCE verdict");
 }
 
@@ -135,7 +148,18 @@ const lines = [
   ""
 ];
 
+const brief = lines.join("\n");
+const scanDir = fs.mkdtempSync(path.join(os.tmpdir(), "g1-brief-scan-"));
+let leaks;
+try {
+  fs.writeFileSync(path.join(scanDir, "G1_BRIEF.md"), brief);
+  leaks = leakageErrors([scanDir], scanDir);
+} finally {
+  fs.rmSync(scanDir, { recursive: true, force: true });
+}
+if (leaks.length) fail(`rendered brief failed leakage gate:\n  ${leaks.join("\n  ")}`);
+
 const outputRel = `${runRel}/reviews/G1_BRIEF.md`;
-try { writeRunFileSync(process.cwd(), seedId, outputRel, lines.join("\n")); }
+try { writeRunFileSync(process.cwd(), seedId, outputRel, brief); }
 catch (error) { fail(error.message); }
 console.log(`[g1-brief] wrote ${outputRel}`);

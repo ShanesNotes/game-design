@@ -43,6 +43,7 @@
           "design_register": { "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first", "UNKNOWN"] },
           "golden_moment": { "type": "string" },
           "parked": { "type": "boolean" },
+          "candidate_loop_verbs": { "type": "array", "items": { "type": "string" } },
           "depth_vector": {
             "type": "object",
             "additionalProperties": false,

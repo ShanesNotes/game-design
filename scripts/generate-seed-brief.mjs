@@ -28,7 +28,7 @@ for (const row of digest.prior_theses) {
   if (registerCounts.has(row.design_register)) {
     registerCounts.set(row.design_register, registerCounts.get(row.design_register) + 1);
   }
-  const rawVerbs = row.chosen_loop?.verbs;
+  const rawVerbs = row.parked ? row.candidate_loop_verbs : row.chosen_loop?.verbs;
   const verbs = Array.isArray(rawVerbs) ? rawVerbs : (typeof rawVerbs === "string" ? rawVerbs.split(",") : []);
   for (const verb of new Set(verbs.map((value) => String(value).trim().toLowerCase()).filter(Boolean))) {
     verbCounts.set(verb, (verbCounts.get(verb) || 0) + 1);

@@ -159,6 +159,7 @@ Lifecycle enum: fixture.
     assert.deepEqual(prior.depth_vector.scores, scores);
     assert.equal(parked.parked, true);
     assert.equal(parked.chosen_loop, null);
+    assert.deepEqual(parked.candidate_loop_verbs, ["mark", "reroute"]);
     assert.deepEqual(parked.depth_vector, { verdict: "UNKNOWN", scores: null });
     assert.ok(digest.sources.some((row) => row.source === "proposals" && row.status === "read"));
     assert.equal(digest.games.find((row) => row.game_id === "prior-one").human_verdict.verdict, "done");

@@ -117,6 +117,23 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
       ...(typeof chosen.description === "string" ? { description: chosen.description } : {})
     };
   };
+  const thesisRow = (runDir, priorId, thesis, parked = false) => ({
+    seed_id: priorId,
+    pitch: typeof thesis.pitch === "string" ? thesis.pitch : "UNKNOWN",
+    chosen_loop: readChosenLoop(runDir, thesis, priorId),
+    design_register: thesis.design_register ?? "UNKNOWN",
+    golden_moment: thesis.golden_moment ?? "UNKNOWN",
+    depth_vector: readDepthVector(runDir, priorId),
+    ...(parked ? {
+      parked: true,
+      candidate_loop_verbs: [...new Set((thesis.core_loop_candidates || [])
+        .flatMap((candidate) => Array.isArray(candidate.verbs)
+          ? candidate.verbs
+          : (typeof candidate.verbs === "string" ? candidate.verbs.split(",") : []))
+        .map((verb) => String(verb).trim())
+        .filter(Boolean))]
+    } : {})
+  });
 
   const designRoot = resolveDesignRoot(startDir);
   const seedsRoot = designRoot && path.join(designRoot, ".tgf", "seeds");
@@ -128,14 +145,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     const enumeration = enumeratePriorTheses(seedsRoot, seedId);
     for (const row of enumeration.skipped) skip("game-thesis", row.error, row.seedId);
     for (const { seedId: priorId, runDir, thesis } of enumeration.priors) {
-      content.prior_theses.push({
-        seed_id: priorId,
-        pitch: typeof thesis.pitch === "string" ? thesis.pitch : "UNKNOWN",
-        chosen_loop: readChosenLoop(runDir, thesis, priorId),
-        design_register: thesis.design_register ?? "UNKNOWN",
-        golden_moment: thesis.golden_moment ?? "UNKNOWN",
-        depth_vector: readDepthVector(runDir, priorId)
-      });
+      content.prior_theses.push(thesisRow(runDir, priorId, thesis));
     }
   }
 
@@ -169,15 +179,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     const enumeration = enumeratePriorTheses(proposalsRoot, null);
     for (const row of enumeration.skipped) skip("proposal-thesis", row.error, row.seedId);
     for (const { seedId: proposalId, runDir, thesis } of enumeration.priors) {
-      content.prior_theses.push({
-        seed_id: proposalId,
-        pitch: typeof thesis.pitch === "string" ? thesis.pitch : "UNKNOWN",
-        chosen_loop: readChosenLoop(runDir, thesis, proposalId),
-        design_register: thesis.design_register ?? "UNKNOWN",
-        golden_moment: thesis.golden_moment ?? "UNKNOWN",
-        depth_vector: readDepthVector(runDir, proposalId),
-        parked: true
-      });
+      content.prior_theses.push(thesisRow(runDir, proposalId, thesis, true));
     }
     content.prior_theses.sort((a, b) => a.seed_id.localeCompare(b.seed_id));
   }

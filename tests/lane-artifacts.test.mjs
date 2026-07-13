@@ -45,8 +45,19 @@ test("generate-g1-brief requires ADVANCE and renders a content-only taste brief"
     writeEmbedded(path.join(runDir, "GAME_THESIS.md"), thesis);
     const manifestPath = path.join(runDir, "manifest.json");
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.factory_version = "0.1.0";
+    delete manifest.design_lane;
+    manifest.current_phase = "engine-profile";
     manifest.game_thesis_path = `.tgf/seeds/${id}/GAME_THESIS.md`;
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const firstRow = JSON.parse(fs.readFileSync(ledgerPath, "utf8").trim());
+    firstRow.phase = "toolchain";
+    const laterRows = ["thesis", "design-review", "engine-profile"].map((phase) => ({
+      ts: "2026-07-12T12:00:00.000Z", seed_id: id, phase,
+      event: "test-advance", status: "checkpointed", actor: "test"
+    }));
+    fs.writeFileSync(ledgerPath, [firstRow, ...laterRows].map(JSON.stringify).join("\n") + "\n");
 
     const scores = Object.fromEntries(DEPTH_AXES.map((axis) => [axis, 1]));
     for (const axis of ["meaningful_choice", "tradeoff", "pressure", "uncertainty", "mastery", "replayable_variation"]) scores[axis] = 2;
@@ -68,6 +79,14 @@ test("generate-g1-brief requires ADVANCE and renders a content-only taste brief"
 
     vector.verdict = "ADVANCE";
     fs.writeFileSync(path.join(runDir, "reviews", "depth-vector.json"), JSON.stringify(vector, null, 2) + "\n");
+    fs.writeFileSync(path.join(runDir, "reviews", "ANTI_BORING_VERDICT.md"), "Verdict: KILL\nThe prior ADVANCE was invalid.\n");
+    result = run("generate-g1-brief.mjs", ["--seed-id", id], dir);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+
+    fs.writeFileSync(path.join(runDir, "reviews", "ANTI_BORING_VERDICT.md"), "VERDICT:\nADVANCE | DEEPEN | KILL\n");
+    result = run("generate-g1-brief.mjs", ["--seed-id", id], dir);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+
     fs.writeFileSync(path.join(runDir, "reviews", "ANTI_BORING_VERDICT.md"), "Verdict: ADVANCE\nDistinctness: prior-one remains falsified by route removal.\n");
     result = run("generate-g1-brief.mjs", ["--seed-id", id], dir);
     assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -78,6 +97,14 @@ test("generate-g1-brief requires ADVANCE and renders a content-only taste brief"
     assert.match(brief, /failure_recovery: 0\/2 — depth_mechanisms\[0\]/);
     assert.match(brief, /What Shane is being asked to taste-judge/);
     for (const [token, label] of LEAK_TOKENS) assert.doesNotMatch(brief, token, label);
+
+    thesis.out_of_scope = ["Read .tgf state."];
+    writeEmbedded(path.join(runDir, "GAME_THESIS.md"), thesis);
+    fs.rmSync(path.join(runDir, "reviews", "G1_BRIEF.md"));
+    result = run("generate-g1-brief.mjs", ["--seed-id", id], dir);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /rendered brief failed leakage gate/);
+    assert.ok(!fs.existsSync(path.join(runDir, "reviews", "G1_BRIEF.md")));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -102,21 +129,25 @@ test("generate-seed-brief targets count gaps and --init stops at an auto yolo in
       core_loop_candidates: [{ id: "loop", verbs: ["plant", "turn"] }]
     });
     writeEmbedded(path.join(design, ".tgf/seeds/two/SPEC.md"), { chosen_loop_id: "loop" });
+    writeEmbedded(path.join(studio, "games/_proposals/parked/GAME_THESIS.md"), {
+      pitch: "parked", design_register: "world-first", golden_moment: "parked",
+      core_loop_candidates: [{ id: "candidate", verbs: ["listen"] }]
+    });
 
     let result = run("generate-seed-brief.mjs", [], design, env);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /SEED: A hybrid game centered on turn/);
-    assert.match(result.stdout, /WHY:\nGap: hybrid appears 0 time\(s\).*'turn' appears 1 time\(s\)/s);
-    assert.ok(!fs.existsSync(path.join(design, ".tgf/seeds/auto-hybrid-turn")));
+    assert.match(result.stdout, /SEED: A hybrid game centered on listen/);
+    assert.match(result.stdout, /WHY:\nGap: hybrid appears 0 time\(s\).*'listen' appears 1 time\(s\)/s);
+    assert.ok(!fs.existsSync(path.join(design, ".tgf/seeds/auto-hybrid-listen")));
 
     result = run("generate-seed-brief.mjs", ["--init"], design, env);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    const runDir = path.join(design, ".tgf", "seeds", "auto-hybrid-turn");
+    const runDir = path.join(design, ".tgf", "seeds", "auto-hybrid-listen");
     const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"));
     assert.deepEqual(manifest.design_lane, { mode: "yolo", stop_line: "pack", origination: "auto" });
     assert.equal(manifest.current_phase, "intake");
     assert.ok(!fs.existsSync(path.join(runDir, "GAME_THESIS.md")));
-    assert.match(fs.readFileSync(path.join(runDir, "GAME_SEED.md"), "utf8"), /A hybrid game centered on turn/);
+    assert.match(fs.readFileSync(path.join(runDir, "GAME_SEED.md"), "utf8"), /A hybrid game centered on listen/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
