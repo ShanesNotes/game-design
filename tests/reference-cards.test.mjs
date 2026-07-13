@@ -123,6 +123,63 @@ test("card absent from canon fails", () => {
   }
 });
 
+test("filename must equal <id>.json for non-fixture cards", () => {
+  const dir = tmp();
+  try {
+    const cardsDir = path.join(dir, "cards");
+    const canonPath = path.join(dir, "CANON.md");
+    const indexPath = path.join(dir, "index.jsonl");
+    fs.mkdirSync(cardsDir, { recursive: true });
+    const card = validCard({ id: "age-of-empires-2" });
+    // Drift: body id does not match filename (README: cards/<id>.json).
+    fs.writeFileSync(
+      path.join(cardsDir, "wrong-name.json"),
+      JSON.stringify(card, null, 2) + "\n"
+    );
+    fs.writeFileSync(
+      canonPath,
+      "| id | title |\n|----|-------|\n| age-of-empires-2 | Age of Empires II |\n"
+    );
+    const { errors } = validateReferenceCards({
+      cardsDir,
+      canonPath,
+      indexPath,
+      schemaPath: rel("schemas/reference-card.schema.json")
+    });
+    assert.ok(
+      errors.some((e) => /filename must be 'age-of-empires-2\.json'/.test(e)),
+      errors.join("\n")
+    );
+    assert.ok(!fs.existsSync(indexPath), "index must not write on failure");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("CANON membership requires a data-row id column, not header/prose tokens", () => {
+  const dir = tmp();
+  try {
+    // Card id "id" matches only the table header first column — no data row.
+    const card = validCard({ id: "id", title: "Header Token" });
+    const paths = setupTree(dir, {
+      cards: [card],
+      canon:
+        "<!-- ratified -->\n" +
+        "Prose mentioning id is not membership.\n" +
+        "| id | title | notes |\n" +
+        "|----|-------|-------|\n" +
+        "| other-game | Other | real row |\n"
+    });
+    const { errors } = validateReferenceCards(paths);
+    assert.ok(
+      errors.some((e) => /not listed in CANON/.test(e)),
+      "header/prose token must not count as membership:\n" + errors.join("\n")
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("valid card in canon writes deterministic index.jsonl", () => {
   const dir = tmp();
   try {

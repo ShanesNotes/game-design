@@ -42,6 +42,7 @@ export function validateReferenceCards({
   }
 
   const canonText = fs.readFileSync(canonPath, "utf8");
+  const canonIdCounts = parseCanonIdColumnCounts(canonText);
   const files = fs.readdirSync(cardsDir)
     .filter((f) => f.endsWith(".json"))
     .sort();
@@ -63,17 +64,29 @@ export function validateReferenceCards({
     for (const e of schemaErrs) errors.push(`${file}: ${e}`);
     if (schemaErrs.length) continue;
 
+    // README contract: cards/<id>.json. Underscore-prefixed files are fixtures
+    // (e.g. _example.json) and may keep a synthetic name.
+    const isFixture = file.startsWith("_");
+    if (!isFixture && file !== `${card.id}.json`) {
+      errors.push(
+        `${file}: filename must be '${card.id}.json' (got '${file}')`
+      );
+    }
+
     if (seenIds.has(card.id)) {
       errors.push(`${file}: duplicate card id '${card.id}'`);
     }
     seenIds.add(card.id);
 
-    // Canon membership: id must appear as a table-cell token in CANON.md.
-    // Match | id | or bare id on its own path segment style; require whole-token
-    // occurrence so "garden" does not match "phantom-garden".
-    const idToken = new RegExp(`(?:^|[\\s|])${escapeRegExp(card.id)}(?:[\\s|]|$)`, "m");
-    if (!idToken.test(canonText)) {
-      errors.push(`${file}: card id '${card.id}' not listed in CANON.md`);
+    // Canon membership: exactly one data row whose first column equals card.id.
+    // Header cells, prose, and HTML comments do not count.
+    const rowCount = canonIdCounts.get(card.id) || 0;
+    if (rowCount !== 1) {
+      errors.push(
+        rowCount === 0
+          ? `${file}: card id '${card.id}' not listed in CANON.md`
+          : `${file}: card id '${card.id}' appears ${rowCount} times in CANON.md table (need exactly one)`
+      );
     }
 
     summaries.push({
@@ -97,8 +110,25 @@ export function validateReferenceCards({
   return { errors, indexLines };
 }
 
-function escapeRegExp(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/**
+ * Count data-row first-column values in a Markdown table in CANON.md.
+ * Skips header rows (first cell "id") and separator rows (|---|).
+ * @returns {Map<string, number>}
+ */
+export function parseCanonIdColumnCounts(canonText) {
+  const counts = new Map();
+  for (const raw of canonText.split("\n")) {
+    const line = raw.trim();
+    if (!line.startsWith("|")) continue;
+    // Separator: |---|-------| or | --- | --- |
+    if (/^\|[\s\-:|]+\|$/.test(line)) continue;
+    const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+    if (!cells.length) continue;
+    const id = cells[0];
+    if (!id || id.toLowerCase() === "id") continue;
+    counts.set(id, (counts.get(id) || 0) + 1);
+  }
+  return counts;
 }
 
 function main() {

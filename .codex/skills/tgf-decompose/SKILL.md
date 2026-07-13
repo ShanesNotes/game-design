@@ -15,6 +15,7 @@ Read `.factory/prompts/P18_DECOMPOSE_SPEC.md` and execute it exactly.
 
 **Inputs**
 - `GAME_THESIS.md`, `reviews/ANTI_BORING_VERDICT.md`, `decisions/0001-engine-profile.md`
+- `intake/office-hours.md` (named near-references from the grill — with thesis)
 - `schemas/spec-decomposition.schema.json`, `docs/agents/issue-tracker.md`
 - `docs/reference-games/index.jsonl` + `cards/<id>.json` for each audited id
   named as near (packaging + system-BOM checklist tier)

@@ -8,6 +8,7 @@ INPUT:
 - GAME_THESIS.md (design-locked: reviews/ holds a gate-passing ADVANCE depth vector)
 - decisions/0001-engine-profile.md (status: accepted)
 - reviews/ANTI_BORING_VERDICT.md (the depth argument — slice toward what it praised)
+- intake/office-hours.md (named near-references from the grill — disposition with thesis)
 - schemas/spec-decomposition.schema.json
 - docs/agents/issue-tracker.md (the issue contract the renderer targets)
 
