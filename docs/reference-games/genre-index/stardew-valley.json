@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "stardew-valley",
+  "title": "Stardew Valley",
+  "edition_pinned": "Steam app 413150, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "expression"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "rpg"
+    ]
+  },
+  "moat": "One day-and-season clock couples farming, travel, energy, relationships, and upgrades into consequential scheduling.",
+  "scope_efficiency_hypothesis": "A shared calendar lets many light systems pressure the same scarce time budget.",
+  "exemplar_rationale": "Demonstrates how a place gains depth when every activity competes for the same day.",
+  "card_ref": "stardew-valley",
+  "evidence": [
+    {
+      "claim": "Steam reported 1022770 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 1022770,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/413150?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; RPG; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "RPG",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=413150&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

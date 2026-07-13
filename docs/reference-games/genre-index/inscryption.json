@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "inscryption",
+  "title": "Inscryption",
+  "edition_pinned": "Steam app 1092790, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": [
+        "narrative-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "runs",
+      "secondary": [
+        "chapters"
+      ]
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "adventure",
+    "secondary": [
+      "strategy"
+    ]
+  },
+  "moat": "Sacrificing creatures funds stronger cards while rule revelations repeatedly reframe the same table.",
+  "scope_efficiency_hypothesis": "One card interface carries deck tactics, escape-room clues, and authored mechanical reveals.",
+  "exemplar_rationale": "Shows mechanics and narrative becoming mutually load-bearing through rule-changing acts.",
+  "evidence": [
+    {
+      "claim": "Steam reported 146782 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 146782,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1092790?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Adventure; Indie; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "Indie",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1092790&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

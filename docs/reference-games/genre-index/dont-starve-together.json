@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "dont-starve-together",
+  "title": "Don't Starve Together",
+  "edition_pinned": "Steam app 322330, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": [
+        "hybrid"
+      ]
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure",
+      "rpg",
+      "simulation",
+      "strategy"
+    ]
+  },
+  "moat": "Shared survival clocks and resource jobs force coordination while one systemic wilderness supplies variation.",
+  "scope_efficiency_hypothesis": "Weather, hunger, crafting, and creatures all reuse a shared time-and-resource simulation.",
+  "exemplar_rationale": "Shows cooperative roles emerging from systemic pressure rather than fixed character classes.",
+  "evidence": [
+    {
+      "claim": "Steam reported 538752 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 538752,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/322330?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie; RPG; Simulation; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie",
+        "RPG",
+        "Simulation",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=322330&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

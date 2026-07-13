@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "dredge",
+  "title": "DREDGE",
+  "edition_pinned": "Steam app 1562430, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "narrative-first",
+      "secondary": [
+        "hybrid"
+      ]
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "adventure",
+    "secondary": [
+      "rpg"
+    ]
+  },
+  "moat": "Fishing trips trade cargo space and daylight against night danger, reusing one archipelago for economy and horror.",
+  "scope_efficiency_hypothesis": "A single sailing loop binds collection, inventory packing, upgrades, quests, and escalating risk.",
+  "exemplar_rationale": "Demonstrates tonal narrative leverage from mechanical constraints on time and cargo.",
+  "evidence": [
+    {
+      "claim": "Steam reported 55522 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 55522,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1562430?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Adventure; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1562430&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

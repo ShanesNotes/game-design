@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "into-the-breach",
+  "title": "Into the Breach",
+  "edition_pinned": "Steam app 590380, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": [
+        "runs"
+      ]
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": [
+        "run-reset"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "strategy",
+    "secondary": [
+      "rpg",
+      "simulation"
+    ]
+  },
+  "moat": "Telegraphed attacks and displacement turn tiny boards into deterministic rescue puzzles instead of damage races.",
+  "scope_efficiency_hypothesis": "Small boards and few units deepen because every move changes several forecast outcomes.",
+  "exemplar_rationale": "A clean exemplar of high decision density produced by information, not content volume.",
+  "card_ref": "into-the-breach",
+  "evidence": [
+    {
+      "claim": "Steam reported 22080 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 22080,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/590380?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; RPG; Simulation; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "RPG",
+        "Simulation",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=590380&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

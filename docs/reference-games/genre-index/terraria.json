@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "terraria",
+  "title": "Terraria",
+  "edition_pinned": "Steam app 105600, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "expression",
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure",
+      "rpg"
+    ]
+  },
+  "moat": "Digging yields materials that craft traversal and combat upgrades, so one world feeds repeated progression.",
+  "scope_efficiency_hypothesis": "Generated terrain, crafting tiers, and boss gates reuse the same blocks across exploration and building.",
+  "exemplar_rationale": "Connects discovery, expression, and capability growth through one material economy.",
+  "evidence": [
+    {
+      "claim": "Steam reported 1536737 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 1536737,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/105600?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=105600&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

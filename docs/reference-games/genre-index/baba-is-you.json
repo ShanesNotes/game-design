@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "baba-is-you",
+  "title": "Baba Is You",
+  "edition_pinned": "Steam app 736260, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "puzzle",
+    "secondary": [
+      "strategy"
+    ]
+  },
+  "moat": "Movable words rewrite level rules, producing many puzzle behaviors from a compact object-and-sentence grammar.",
+  "scope_efficiency_hypothesis": "A few noun and property tokens generate the rules, goals, and exceptions of each level.",
+  "exemplar_rationale": "An extreme scope-efficiency exemplar: content emerges from recombining a tiny formal language.",
+  "evidence": [
+    {
+      "claim": "Steam reported 24310 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 24310,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/736260?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Puzzle; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Puzzle",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/app/736260/?cc=us&l=english",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

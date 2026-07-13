@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "overcooked-2",
+  "title": "Overcooked! 2",
+  "edition_pinned": "Steam app 728880, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "casual"
+    ]
+  },
+  "moat": "Shared stations, recipe order, and timers turn spatial interference into communication-driven play.",
+  "scope_efficiency_hypothesis": "A few kitchen verbs gain variety from layouts, recipes, hazards, and teammate contention.",
+  "exemplar_rationale": "A compact exemplar of coordination depth where players are each other's moving constraint.",
+  "evidence": [
+    {
+      "claim": "Steam reported 82882 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 82882,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/728880?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Casual; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Casual",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=728880&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

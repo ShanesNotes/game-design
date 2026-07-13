@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "dead-cells",
+  "title": "Dead Cells",
+  "edition_pinned": "Steam app 588650, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "runs",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Death resets a changing castle while combat learning and unlocks widen viable route and weapon combinations.",
+  "scope_efficiency_hypothesis": "Reusable rooms, route branches, and weapon interactions vary attempts without bespoke campaign scenes.",
+  "exemplar_rationale": "Pairs demanding execution with enough persistent choice to keep repeated runs strategically distinct.",
+  "evidence": [
+    {
+      "claim": "Steam reported 181719 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 181719,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/588650?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=588650&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

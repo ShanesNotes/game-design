@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "hollow-knight",
+  "title": "Hollow Knight",
+  "edition_pinned": "Steam app 367520, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": [
+        "chapters"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "New movement abilities reopen old branches, multiplying the design value of one interconnected world.",
+  "scope_efficiency_hypothesis": "Backtracking turns existing rooms into new routes as traversal abilities accumulate.",
+  "exemplar_rationale": "A strong map-first example where capability growth continuously reinterprets place.",
+  "evidence": [
+    {
+      "claim": "Steam reported 551267 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 551267,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/367520?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=367520&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

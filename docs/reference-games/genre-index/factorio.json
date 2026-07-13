@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "factorio",
+  "title": "Factorio",
+  "edition_pinned": "Steam app 427520, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": [
+        "world-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "expression"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "strategy",
+      "casual"
+    ]
+  },
+  "moat": "Each production line supplies the next expansion while throughput bottlenecks recursively create new design problems.",
+  "scope_efficiency_hypothesis": "The same transport and transformation rules scale from a hand-fed line to a megabase.",
+  "exemplar_rationale": "Exemplifies depth from recursive production dependencies rather than authored missions.",
+  "evidence": [
+    {
+      "claim": "Steam reported 231936 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 231936,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/427520?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Casual; Indie; Simulation; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Casual",
+        "Indie",
+        "Simulation",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=427520&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
