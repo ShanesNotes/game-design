@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "vampire-survivors",
+  "title": "Vampire Survivors",
+  "edition_pinned": "Steam app 1794680, observed 2026-07-13; Tier-1 card pins Patch 1.0.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "runs",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "casual",
+      "rpg"
+    ]
+  },
+  "moat": "Movement-only control with timed auto-attacks turns positioning and upgrade picks into the whole skill axis.",
+  "scope_efficiency_hypothesis": "Automatic attacks concentrate content leverage in weapon cadence, upgrade combinations, and swarm composition.",
+  "exemplar_rationale": "Shows how removing aim can deepen pathing and build choice while keeping the input surface tiny.",
+  "card_ref": "vampire-survivors",
+  "evidence": [
+    {
+      "claim": "Steam reported 263946 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 263946,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1794680?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails reported these genres: Action; Casual; Indie; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Casual",
+        "Indie",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1794680&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

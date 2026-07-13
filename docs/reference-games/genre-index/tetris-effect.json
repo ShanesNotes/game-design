@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "tetris-effect",
+  "title": "Tetris Effect: Connected",
+  "edition_pinned": "Steam app 1003590, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative",
+        "competitive"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "casual",
+    "secondary": []
+  },
+  "moat": "Tetromino clears synchronize speed, music, and visuals, turning one fixed rule set into escalating sensory timing.",
+  "scope_efficiency_hypothesis": "One board grammar supports solo, score, cooperative, and versus modes through timing and rule modifiers.",
+  "exemplar_rationale": "Demonstrates experiential variation around a nearly immutable, immediately legible core rule set.",
+  "evidence": [
+    {
+      "claim": "Steam reported 8915 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 8915,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1003590?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails reported these genres: Casual; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Casual",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1003590&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

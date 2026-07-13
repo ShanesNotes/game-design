@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "the-witness",
+  "title": "The Witness",
+  "edition_pinned": "Steam app 210970, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": [
+        "world-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "adventure",
+    "secondary": []
+  },
+  "moat": "Puzzle panels teach a visual grammar whose learned rules transfer across an open island without character upgrades.",
+  "scope_efficiency_hypothesis": "A shared line-drawing grammar produces hundreds of puzzles by introducing and recombining local rules.",
+  "exemplar_rationale": "Shows how player knowledge can be the progression system across an explorable place.",
+  "evidence": [
+    {
+      "claim": "Steam reported 21045 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 21045,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/210970?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam's appdetails genres field listed: Adventure; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=210970&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

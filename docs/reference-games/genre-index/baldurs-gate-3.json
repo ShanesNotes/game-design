@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "baldurs-gate-3",
+  "title": "Baldur's Gate 3",
+  "edition_pinned": "Steam app 1086940, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "expression",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "continuous"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "rpg",
+    "secondary": [
+      "adventure",
+      "strategy"
+    ]
+  },
+  "moat": "Dice-resolved abilities and reactive world flags let one encounter alter combat, dialogue, and later quests.",
+  "scope_efficiency_hypothesis": "Shared abilities, checks, and world flags recombine authored encounters across combat and conversation.",
+  "exemplar_rationale": "Shows systemic role-play and authored consequence supporting each other across a long cooperative campaign.",
+  "evidence": [
+    {
+      "claim": "Steam reported 847312 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 847312,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1086940?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails reported these genres: Adventure; RPG; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "RPG",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1086940&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

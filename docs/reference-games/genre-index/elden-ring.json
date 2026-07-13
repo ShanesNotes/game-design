@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "elden-ring",
+  "title": "ELDEN RING",
+  "edition_pinned": "Steam app 1245620, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": [
+        "mechanics-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "discovery",
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative",
+        "competitive"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "rpg"
+    ]
+  },
+  "moat": "Stamina combat, build stats, and landmark sightlines make each open-world route a preparation-and-execution wager.",
+  "scope_efficiency_hypothesis": "One combat and stat grammar gives field enemies, dungeons, bosses, and multiplayer a shared decision language.",
+  "exemplar_rationale": "Joins execution mastery to world discovery without making authored route order the primary progression spine.",
+  "evidence": [
+    {
+      "claim": "Steam reported 1143266 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 1143266,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1245620?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails reported these genres: Action; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1245620&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

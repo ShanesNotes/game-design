@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "it-takes-two",
+  "title": "It Takes Two",
+  "edition_pinned": "Steam app 1426210, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": [
+        "mechanics-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Paired asymmetric tools make each obstacle require timing, division of labor, and partner-dependent setup.",
+  "scope_efficiency_hypothesis": "Two-role interactions let each chapter mechanic serve traversal, puzzles, combat, and comic failure.",
+  "exemplar_rationale": "A cooperative exemplar where partner dependency is designed into every authored mechanic and obstacle.",
+  "evidence": [
+    {
+      "claim": "Steam reported 264806 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 264806,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1426210?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails reported these genres: Action; Adventure.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1426210&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

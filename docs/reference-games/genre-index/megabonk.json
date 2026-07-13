@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "megabonk",
+  "title": "Megabonk",
+  "edition_pinned": "Current Steam build, app 3405340, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "runs",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "run-reset",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "casual"
+    ]
+  },
+  "moat": "3D vertical maps plus jump/slide speed turns survivor auto-combat into mobility routing, not only 2D kiting.",
+  "scope_efficiency_hypothesis": "Auto-combat lets procedural terrain, movement, and upgrade offers carry most moment-to-moment variation.",
+  "exemplar_rationale": "Demonstrates how a spatial movement change can distinguish a familiar survivor-like loop.",
+  "card_ref": "megabonk",
+  "evidence": [
+    {
+      "claim": "Steam reported 103952 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 103952,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/3405340?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam's appdetails genres field listed: Action; Casual; Indie.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Casual",
+        "Indie"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=3405340&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
