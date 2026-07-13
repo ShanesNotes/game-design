@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "football-manager-2024",
+  "title": "Football Manager 2024",
+  "edition_pinned": "Steam app 2252570, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "sports",
+      "strategy"
+    ]
+  },
+  "moat": "Match tactics boards and attribute matchups turn squad selection into a season-long optimization problem.",
+  "scope_efficiency_hypothesis": "One player-attribute and fixture simulation serves scouting, tactics, and multi-season career arcs.",
+  "exemplar_rationale": "Exemplifies sports depth from managerial systems rather than on-pitch execution controls.",
+  "evidence": [
+    {
+      "claim": "Steam reported 28276 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 28276,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/2252570?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Simulation; Sports; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Simulation",
+        "Sports",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=2252570&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

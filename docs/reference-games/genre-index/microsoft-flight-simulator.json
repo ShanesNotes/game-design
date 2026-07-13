@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "microsoft-flight-simulator",
+  "title": "Microsoft Flight Simulator",
+  "edition_pinned": "Steam app 1250410, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": [
+        "mechanics-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": []
+  },
+  "moat": "Live weather and a planet-scale terrain model turn aircraft systems mastery into open-world flight discovery.",
+  "scope_efficiency_hypothesis": "One earth simulation and aircraft systems stack serve sightseeing, training, and long-haul routes.",
+  "exemplar_rationale": "Shows world-first simulation when the planet itself is the content substrate.",
+  "evidence": [
+    {
+      "claim": "Steam reported 72302 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 72302,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1250410?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1250410&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

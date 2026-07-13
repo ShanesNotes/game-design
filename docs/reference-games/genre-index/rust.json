@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "rust",
+  "title": "Rust",
+  "edition_pinned": "Steam app 252490, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "massively-multiplayer",
+      "secondary": [
+        "competitive"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure",
+      "rpg"
+    ]
+  },
+  "moat": "Monument-gated workbenches and base upkeep make loot progression contestable on shared wipe clocks.",
+  "scope_efficiency_hypothesis": "One contested resource graph yields harvest, research, building, and raiding from shared monument routes.",
+  "exemplar_rationale": "Shows massively multiplayer depth from wipe-bounded contested gains rather than quest lists.",
+  "card_ref": "rust",
+  "evidence": [
+    {
+      "claim": "Steam reported 1380768 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 1380768,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/252490?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie; Massively Multiplayer; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie",
+        "Massively Multiplayer",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=252490&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

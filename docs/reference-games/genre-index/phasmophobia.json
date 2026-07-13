@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "phasmophobia",
+  "title": "Phasmophobia",
+  "edition_pinned": "Steam app 739630, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "social-coordination",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Evidence tools and voice-triggered ghost rules force co-op roles while incomplete data risks wrong IDs.",
+  "scope_efficiency_hypothesis": "One investigation kit and ghost behavior table recombine across maps and difficulty tiers.",
+  "exemplar_rationale": "Shows cooperative discovery depth from evidence uncertainty rather than pure combat.",
+  "evidence": [
+    {
+      "claim": "Steam reported 833896 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 833896,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/739630?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Indie; Early Access.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Indie",
+        "Early Access"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=739630&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

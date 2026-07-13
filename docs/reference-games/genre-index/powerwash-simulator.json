@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "powerwash-simulator",
+  "title": "PowerWash Simulator",
+  "edition_pinned": "Steam app 1290000, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "expression"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "casual"
+    ]
+  },
+  "moat": "Dirt masks and nozzle pressure turn each surface into a satisfying completeness problem with readable feedback.",
+  "scope_efficiency_hypothesis": "One wash toolset reuses across career jobs, free play, and co-op without new verbs per level.",
+  "exemplar_rationale": "Proves casual execution depth from cleaning completeness rather than combat or narrative stakes.",
+  "evidence": [
+    {
+      "claim": "Steam reported 58366 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 58366,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1290000?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Casual; Indie; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Casual",
+        "Indie",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1290000&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

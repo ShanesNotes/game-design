@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "ea-sports-fc-25",
+  "title": "EA Sports FC 25",
+  "edition_pinned": "Steam app 2669320, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "persistent-unlocks",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "competitive",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "sports",
+    "secondary": [
+      "simulation"
+    ]
+  },
+  "moat": "Formation pressing and player chemistry convert match-to-match squad choices into contested on-pitch outcomes.",
+  "scope_efficiency_hypothesis": "Shared match simulation powers career, clubs, and Ultimate Team without separate physics stacks.",
+  "exemplar_rationale": "Shows competitive sports depth when tactical setup and moment-to-moment control share one pitch model.",
+  "evidence": [
+    {
+      "claim": "Steam reported 106581 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 106581,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/2669320?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Simulation; Sports.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Simulation",
+        "Sports"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=2669320&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

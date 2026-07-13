@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "project-zomboid",
+  "title": "Project Zomboid",
+  "edition_pinned": "Steam app 108600, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": [
+        "world-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": [
+        "runs"
+      ]
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "run-reset"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "rpg"
+    ]
+  },
+  "moat": "Permadeath skill growth and tile-accurate infection risk turn looting routes into long survival plans.",
+  "scope_efficiency_hypothesis": "One Knox County simulation supports multi-month stories without a fixed quest spine.",
+  "exemplar_rationale": "Exemplifies open-ended survival depth from systemic infection and skill permanence.",
+  "evidence": [
+    {
+      "claim": "Steam reported 459515 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 459515,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/108600?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; RPG; Simulation; Early Access.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "RPG",
+        "Simulation",
+        "Early Access"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=108600&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "wingspan",
+  "title": "Wingspan",
+  "edition_pinned": "Steam app 1054490, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "competitive",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "strategy",
+    "secondary": []
+  },
+  "moat": "Bird card engines and habitat columns convert round-limited actions into competing engine-building paths.",
+  "scope_efficiency_hypothesis": "One card-and-dice engine serves multiplayer contests and solo automa without rule rewrites.",
+  "exemplar_rationale": "Isolates competitive engine-building depth from digital-only systems.",
+  "evidence": [
+    {
+      "claim": "Steam reported 11814 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 11814,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1054490?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1054490&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

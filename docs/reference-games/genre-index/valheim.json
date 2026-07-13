@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "valheim",
+  "title": "Valheim",
+  "edition_pinned": "Steam app 892970, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": [
+        "mechanics-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "cooperative",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": [
+      "adventure",
+      "rpg"
+    ]
+  },
+  "moat": "Biome-gated progression and shared building materials turn exploration into cooperative power spikes.",
+  "scope_efficiency_hypothesis": "One survival craft graph scales from solo mead huts to multi-player mead halls and boss fights.",
+  "exemplar_rationale": "Shows cooperative world-first depth from biome gates rather than instanced matchmaking.",
+  "evidence": [
+    {
+      "claim": "Steam reported 537500 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 537500,
+      "class": "review-breakout",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-breakout",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/892970?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Adventure; Indie; RPG; Early Access.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Adventure",
+        "Indie",
+        "RPG",
+        "Early Access"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=892970&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "her-story",
+  "title": "Her Story",
+  "edition_pinned": "Steam app 368370, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "narrative-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "adventure",
+    "secondary": [
+      "casual",
+      "simulation"
+    ]
+  },
+  "moat": "Keyword database search turns fragmented interview clips into a player-directed investigation graph.",
+  "scope_efficiency_hypothesis": "One video database and search box replace branching dialogue trees and inventory puzzles.",
+  "exemplar_rationale": "Proves discovery depth when the interface is a full-text archive rather than a room graph.",
+  "evidence": [
+    {
+      "claim": "Steam reported 10353 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 10353,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/368370?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Adventure; Casual; Indie; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "Casual",
+        "Indie",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=368370&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

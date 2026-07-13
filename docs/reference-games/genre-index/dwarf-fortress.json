@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "dwarf-fortress",
+  "title": "Dwarf Fortress",
+  "edition_pinned": "Steam app 975370, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "world-first",
+      "secondary": [
+        "mechanics-first"
+      ]
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "discovery"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "strategy"
+    ]
+  },
+  "moat": "Material properties and historical simulation make fortress logistics cascade into unique failure stories.",
+  "scope_efficiency_hypothesis": "One worldgen and stockpile graph produce endless fortress problems without authored missions.",
+  "exemplar_rationale": "Shows systems depth when simulation fidelity replaces hand-authored content volume.",
+  "evidence": [
+    {
+      "claim": "Steam reported 31263 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 31263,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/975370?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Indie; Simulation; Strategy.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Indie",
+        "Simulation",
+        "Strategy"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=975370&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

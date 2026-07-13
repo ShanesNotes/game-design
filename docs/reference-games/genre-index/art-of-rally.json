@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "art-of-rally",
+  "title": "art of rally",
+  "edition_pinned": "Steam app 550320, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "rounds"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "racing",
+    "secondary": [
+      "action",
+      "simulation",
+      "sports"
+    ]
+  },
+  "moat": "Stage surface physics and committed corner lines make each rally section a replayable execution problem.",
+  "scope_efficiency_hypothesis": "A compact car set and stage list recombine across career, time attack, and daily challenges.",
+  "exemplar_rationale": "Shows racing depth from surface commitment rather than online ladder systems.",
+  "evidence": [
+    {
+      "claim": "Steam reported 6479 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 6479,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/550320?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Action; Indie; Racing; Simulation; Sports.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action",
+        "Indie",
+        "Racing",
+        "Simulation",
+        "Sports"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=550320&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

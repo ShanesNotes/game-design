@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "final-fantasy-xiv",
+  "title": "FINAL FANTASY XIV Online",
+  "edition_pinned": "Steam app 39210, observed 2026-07-13.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "social-coordination"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": [
+        "chapters"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "massively-multiplayer",
+      "secondary": [
+        "cooperative"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "rpg",
+    "secondary": []
+  },
+  "moat": "Job rotations and party roles recombine across shared raid timers while the main scenario gates durable unlocks.",
+  "scope_efficiency_hypothesis": "One combat-role system and duty finder serve story, raids, and craft loops without separate game modes.",
+  "exemplar_rationale": "Exemplifies hybrid MMO depth where authored story and live duty coordination share one progression spine.",
+  "evidence": [
+    {
+      "claim": "Steam reported 85083 all-language, all-purchase user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 85083,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/39210?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed these storefront genres or main tags: Massively Multiplayer; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Massively Multiplayer",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=39210&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
