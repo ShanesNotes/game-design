@@ -67,7 +67,7 @@
     },
     {
       "system": "save-state",
-      "note": "Power Moon totals and kingdom travel progress structure multi-session collection; captures remain world-local temporary tools rather than a permanent unlock roster"
+      "note": "Power Moon totals persist through save points and fund multi-session Odyssey kingdom travel; Checkpoint Flags permanently mark respawn/fast-travel; captures remain world-local temporary tools rather than a permanent unlock roster"
     },
     {
       "system": "win-loss-death",
@@ -116,8 +116,8 @@
       "source": "https://en.wikipedia.org/wiki/Super_Mario_Odyssey"
     },
     {
-      "claim": "Save-state BOM (narrowed): multi-session moon collection and kingdom travel are the documented structure; captures are temporary world-local tools, not a permanent unlock roster. Exact story-flag/checkpoint save semantics are not claimed.",
-      "source": "https://en.wikipedia.org/wiki/Super_Mario_Odyssey"
+      "claim": "Save-state BOM: Power Moons persist through save points (kept when switching Assist/Regular mode resets position to a prior save point) and fuel Odyssey travel between kingdoms; Checkpoint Flags permanently mark respawn/fast-travel across kingdom visits. Captures remain temporary world-local tools, not a permanent unlock roster.",
+      "source": "Super Mario Wiki, Super Mario Odyssey (Power Moons kept through prior save point; Power Moons power Odyssey travel): https://www.mariowiki.com/Super_Mario_Odyssey ; Super Mario Wiki, Checkpoint Flag (Odyssey: permanent flag activation; respawn/fast-travel): https://www.mariowiki.com/Checkpoint_Flag"
     },
     {
       "claim": "Win-loss-death BOM: unlimited lives; dying costs up to ten coins. Banked-moon retention through death is not claimed from this source.",

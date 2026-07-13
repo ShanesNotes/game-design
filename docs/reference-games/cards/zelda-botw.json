@@ -68,11 +68,11 @@
     },
     {
       "system": "save-state",
-      "note": "open-world progression (map reveal via towers, shrine completion, inventory loadout) is structured for multi-session play; the card does not claim durable material/chemistry object-state persistence across reloads"
+      "note": "auto and manual saves preserve player progress across sessions and interruptions; frequent autosaves (including shrine approach) bank map/shrine and inventory state for multi-session return; the card does not claim durable material/chemistry object-state across reloads"
     },
     {
       "system": "win-loss-death",
-      "note": "failed combat can end an attempt; banked inventory and map/shrine progress continue to structure the next push, while uncommitted exploration time is lost"
+      "note": "death ends the attempt; Continue loads a prior auto/manual save and restores that save's inventory/map/shrine progress; uncommitted post-save exploration is lost"
     }
   ],
   "citations": [
@@ -129,12 +129,12 @@
       "source": "https://www.shacknews.com/article/99236/how-to-get-hearts-and-stamina-breath-of-the-wild"
     },
     {
-      "claim": "Save-state BOM (narrowed): multi-session open-world progression via map reveal, shrines, and inventory is the documented structure; durable chemistry/material world-state across reloads is not claimed.",
-      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
+      "claim": "Save-state BOM: auto-save and manual-save preserve progress across multi-session play and interruptions; autosaves fire on shrine approach (and other progress moments) so durable inventory/map/shrine progress can bank between sessions. Chemistry/material world-state across reloads is not claimed.",
+      "source": "GameRant, 'Breath Of The Wild: How To Save' (manual save path; autosave on shrine approach, campfire, stable, chest, and timed intervals; progress kept intact for multi-session play): https://gamerant.com/breath-of-the-wild-how-to-save/ ; Eiji Aonuma (Waypoint interview via Zelda Dungeon): auto-save and manual-save so battery/session interruption does not erase progress: https://www.zeldadungeon.net/breath-of-the-wild-has-two-saving-methods/"
     },
     {
-      "claim": "Win-loss-death BOM (narrowed): inventory and map/shrine progress structure continued play after failed attempts; exact last-autosave/manual-save restore semantics are not claimed from this overview source.",
-      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
+      "claim": "Win-loss-death BOM: choosing Continue after death loads a save (restoring that save's inventory and progression state, with heart refill on continue); autosaves bank shrine-approach and other progress moments so retained map/shrine/inventory progress is the loaded save, not post-save work.",
+      "source": "Zelda Wiki, Glitches in Breath of the Wild: Continue after dying loads the save: https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Glitches_in_Breath_of_the_Wild ; GameRant, 'Breath Of The Wild: How To Save' (autosave on shrine approach and other progress moments; recoverable save slots): https://gamerant.com/breath-of-the-wild-how-to-save/"
     },
     {
       "claim": "Play-loop BOM chemistry/physics share: exploration and combat use the same chemistry and physics rules for player-authored solutions.",
