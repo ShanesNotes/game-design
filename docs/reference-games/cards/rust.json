@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0.0",
+  "id": "rust",
+  "title": "Rust",
+  "edition_pinned": "PC Steam, Meta Shift update (2 October 2025) — pins monument-gated workbenches while retaining upkeep, raiding, and server wipes.",
+  "genre_tags": ["survival", "crafting", "base-building", "multiplayer"],
+  "register_mapping": "hybrid",
+  "moat": "Loot progression leaves the base at monuments, while upkeep and raids make stored gains contestable.",
+  "loop_skeleton": {
+    "verbs": ["harvest", "loot", "recycle", "research", "build", "raid", "defend"],
+    "description": "Harvest enough to leave spawn, loot and recycle at monuments, unlock equipment, store it behind a maintained base, then contest another base or route."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "monument-gated workbenches",
+      "mechanism": "Workbench tiers require fragments found through monument puzzles and events, pushing crafting progression into routes other players can contest.",
+      "falsifiable_claim": "If workbench gates can be completed inside the base, encounters at monuments no longer mediate the move into later crafting tiers."
+    },
+    {
+      "name": "base upkeep curve",
+      "mechanism": "A tool cupboard consumes building resources, and the upkeep share rises with block count, so storage capacity and raid resistance carry recurring cost.",
+      "falsifiable_claim": "If added building blocks carry no recurring resource cost, the material decision between another wall and another excursion disappears after construction."
+    },
+    {
+      "name": "loot-to-research conversion",
+      "mechanism": "A found item can be consumed with scrap at a research bench to unlock its blueprint, turning one contested drop into a future crafting option.",
+      "falsifiable_claim": "If found equipment cannot change later crafting access, recovering one item affects only the current fight and not the wipe's progression path."
+    },
+    {
+      "name": "wipe-bounded accumulation",
+      "mechanism": "Server wipes remove map state on a schedule, converting base location, route knowledge, and progression speed into repeat-session decisions.",
+      "falsifiable_claim": "If servers never reset and decay cannot clear abandoned structures, later sessions converge on accumulated ownership instead of a new land-and-route race."
+    }
+  ],
+  "feel_signature": "Footsteps or gunfire interrupt harvesting; the player chooses whether to expose carried loot, hide it in a maintained base, or spend it on a raid.",
+  "second_session_answer": "A return session inherits blueprint access and route knowledge but faces changed ownership, depleted bases, and a wipe clock that reprices every stockpile.",
+  "packaging_lessons": [
+    "Ship harvesting, one monument route, recycling, one research tier, building upkeep, death-loot transfer, and save-state as one loop.",
+    "Place progression inputs at shared map destinations so equipment growth creates encounters instead of menu time.",
+    "Charge storage and defense after construction so the base remains a resource decision each session."
+  ],
+  "anti_lessons": [
+    "Do not copy full-loot loss without recoverable routes, research carryover, and storage choices; loss alone only deletes time.",
+    "Do not copy wipe schedules into a solo loop; resets matter because players race and contest the same resource graph."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "harvest, monument run, research, build, raid, and defend must exchange resources" },
+    { "system": "loot", "note": "monuments, barrels, crates, and defeated players supply components and equipment" },
+    { "system": "crafting", "note": "recipes and workbench tiers convert gathered resources into tools, weapons, and building parts" },
+    { "system": "progression", "note": "blueprints, scrap, fragments, research, and workbenches gate the wipe's equipment path" },
+    { "system": "inventory", "note": "carried loot is exposed to death transfer until deposited or spent" },
+    { "system": "win-loss-death", "note": "death transfers carried items and raiding can transfer stored resources" },
+    { "system": "economy", "note": "scrap, fragments, workbenches, and crafted equipment can be exchanged between players" },
+    { "system": "multiplayer", "note": "shared monuments, build sites, and bases make routes and ownership contestable" },
+    { "system": "save-state", "note": "server state preserves buildings, containers, ownership, decay, and blueprint progress until wipe rules remove them" }
+  ],
+  "citations": [
+    {
+      "claim": "The edition pin, moat, monument-gate depth entry, and progression BOM row rely on the October 2025 fragment requirements for workbenches and their monument and event sources.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "The base-upkeep depth entry and third packaging lesson rely on tool-cupboard resource consumption, block-count tax bands, outside-in decay, and repair through paid upkeep.",
+      "source": "https://rust.facepunch.com/news/devblog-189"
+    },
+    {
+      "claim": "The loot-to-research depth entry relies on found items, scrap, a research bench, and blueprint creation.",
+      "source": "https://rust.facepunch.com/news/devblog-180"
+    },
+    {
+      "claim": "The wipe-bounded depth entry relies on the documented first-update-of-month wipe policy and the use of wipes for map and data changes.",
+      "source": "https://rust.facepunch.com/news/devblog-72"
+    },
+    {
+      "claim": "The feel signature's interruption and exposure decision relies on progression resources being placed at monuments to generate clashes over territory.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "The feel signature's store-or-spend decision relies on upkeep making stored resources carry a cost after construction.",
+      "source": "https://rust.facepunch.com/news/devblog-189"
+    },
+    {
+      "claim": "The second-session answer's blueprint carryover relies on blueprint progression providing a reason to remain after death.",
+      "source": "https://rust.facepunch.com/news/devblog-180"
+    },
+    {
+      "claim": "The second-session answer's changed ownership and depletion rely on decay state persisting across restarts and abandoned structures being removed.",
+      "source": "https://rust.facepunch.com/news/devblog-110"
+    },
+    {
+      "claim": "The second-session answer's wipe clock relies on the documented monthly wipe policy.",
+      "source": "https://rust.facepunch.com/news/devblog-72"
+    },
+    {
+      "claim": "The first packaging lesson's monument, recycling, and workbench chain follows the fragment and scrap path documented for the pinned update.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "The first packaging lesson's research step follows the documented found-item, scrap, research-bench, and blueprint path.",
+      "source": "https://rust.facepunch.com/news/devblog-180"
+    },
+    {
+      "claim": "The first packaging lesson's building-upkeep step follows the documented tool-cupboard resource charge and decay behavior.",
+      "source": "https://rust.facepunch.com/news/devblog-189"
+    },
+    {
+      "claim": "The shared-destination packaging lesson relies on fragments being placed in monument puzzles and events to produce player encounters.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "The loot, economy, and multiplayer BOM rows rely on monument loot, fragment conversion, fragment and workbench trading, and contested destinations.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "The crafting and progression BOM rows rely on default blueprints, workbench tiers, found equipment, scrap research, and blueprint unlocks.",
+      "source": "https://rust.facepunch.com/news/devblog-180"
+    },
+    {
+      "claim": "The inventory and win-loss-death BOM rows rely on corpses and destroyed storage dropping retrievable item containers whose lifetime follows their contents.",
+      "source": "https://rust.facepunch.com/news/devblog-166"
+    },
+    {
+      "claim": "The save-state BOM row relies on decay state surviving server restarts and unattended structures continuing to decay.",
+      "source": "https://rust.facepunch.com/news/devblog-110"
+    },
+    {
+      "claim": "The raid portions of the loop and win-loss-death BOM row rely on building blocks being attackable with tool-specific wear and explosive charges.",
+      "source": "https://rust.facepunch.com/news/devblog-46"
+    }
+  ],
+  "status": "draft"
+}

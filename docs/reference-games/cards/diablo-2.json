@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.0.0",
+  "id": "diablo-2",
+  "title": "Diablo II",
+  "edition_pinned": "PC, Lord of Destruction, patch 1.14d (2016). This pins the expansion's final legacy rules before Resurrected added Terror Zones and ladder runewords.",
+  "genre_tags": ["action-rpg", "loot", "character-building", "multiplayer"],
+  "register_mapping": "mechanics-first",
+  "moat": "Item affix rolls, sockets, and skill-point commitments make each drop a build-routing decision.",
+  "loop_skeleton": {
+    "verbs": ["kill", "inspect", "equip", "allocate", "reset"],
+    "description": "Kill a pack, inspect drops, change equipment or skill allocation, reach a waypoint, then reset the world to run it again."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "layered item search",
+      "mechanism": "Base types, affixes, rarity classes, sockets, runes, sets, uniques, charms, and cube recipes create intersecting equipment searches.",
+      "falsifiable_claim": "If affix rolls and sockets are removed, repeated boss runs yield fewer equipment decisions per hour because only named item upgrades remain."
+    },
+    {
+      "name": "skill commitment",
+      "mechanism": "Each level grants a choice between unlocking a prerequisite path and strengthening a learned skill; item bonuses then change the result.",
+      "falsifiable_claim": "If skill points unlock every class skill at fixed levels, same-class characters converge on one action set before the second difficulty."
+    },
+    {
+      "name": "persistent character, reset world",
+      "mechanism": "Saving retains the character and waypoints but reloads monsters, treasure, and world placement, converting cleared spaces into repeatable resource routes.",
+      "falsifiable_claim": "If monster and treasure state persists after clearing, waypoint-to-boss routes stop producing repeat runs and the item search loses its replenishing input."
+    },
+    {
+      "name": "build-state combat tests",
+      "mechanism": "Random equipment and chosen skill paths determine whether a character can cross later difficulty and multiplayer checks.",
+      "falsifiable_claim": "If late encounters ignore equipment and skill allocation, clear rates cease to separate builds with different damage, resistance, and control profiles."
+    }
+  ],
+  "feel_signature": "A click drops a pack; an item label stops movement; the player compares breakpoints, equips or discards, then enters the next reset map.",
+  "second_session_answer": "A return starts another item sample and another skill path against regenerated routes; the player tests whether a build reaches a breakpoint sooner.",
+  "packaging_lessons": [
+    "Ship one end-to-end class path with item generation and a repeatable boss route before multiplying classes, because skills and treasure rates must be tested together.",
+    "Use the same character-persistence contract across solo and multiplayer, with reset worlds and waypoints defining session boundaries.",
+    "Expose recipe inputs and socket order as data so the loot layer can add conversions without changing the kill-and-inspect loop."
+  ],
+  "anti_lessons": [
+    "Do not copy the one-year crunch reported by the project lead; scope and scheduling are system constraints.",
+    "Do not make irreversible skill spending the sole source of experimentation; the pinned patch includes a drop-fed respec path.",
+    "Do not reproduce item volume without filters, comparison support, and a disposal rule; labels otherwise halt the combat loop without yielding decisions."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "Monster packs emit experience and item samples, feeding the next equipment or skill decision."
+    },
+    {
+      "system": "loot",
+      "note": "Base items, quality tiers, affixes, sockets, runes, sets, uniques, charms, and crafted items supply build inputs."
+    },
+    {
+      "system": "skills",
+      "note": "Class trees turn level gains into prerequisite, specialization, and skill-rank choices."
+    },
+    {
+      "system": "leveling",
+      "note": "Experience grants skill choices while item requirements gate when equipment can enter the build."
+    },
+    {
+      "system": "inventory",
+      "note": "Equipment slots, backpack cells, stash space, charms, and the cube force keep, equip, convert, or discard decisions."
+    },
+    {
+      "system": "crafting",
+      "note": "Cube recipes and ordered rune insertion convert drops into repair, upgrade, crafted-item, and runeword outcomes."
+    },
+    {
+      "system": "save-state",
+      "note": "Character and waypoint persistence survive sessions while monster and treasure state resets."
+    },
+    {
+      "system": "multiplayer",
+      "note": "Battle.net parties combine class skills and equipment states, adding party-composition checks to the same character model."
+    },
+    {
+      "system": "ui",
+      "note": "Ground labels, item tooltips, skill trees, inventory cells, and waypoint selection expose the decisions that interrupt combat."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: patch 1.14d is the final PC legacy Lord of Destruction patch used by Blizzard's hosted updater.",
+      "source": "Blizzard legacy patch binary: https://ftp.blizzard.com/pub/diablo2/patches/PC/D2Patch_114d.exe"
+    },
+    {
+      "claim": "Moat: item qualities, affixes, sockets, runes, sets, uniques, charms, crafted items, and cube recipes layer multiple decisions onto a drop.",
+      "source": "Blizzard, The Arreat Summit, Items index: https://classic.battle.net/diablo2exp/items/"
+    },
+    {
+      "claim": "Depth — layered item search: rune order creates runewords, charms consume backpack space, and cube recipes transform item inputs.",
+      "source": "Blizzard, The Arreat Summit, Items index: https://classic.battle.net/diablo2exp/items/ ; Horadric Cube: https://classic.battle.net/diablo2exp/items/cube.shtml"
+    },
+    {
+      "claim": "Depth — skill commitment: level gains can strengthen a skill or pursue prerequisites, producing specialization and divergent same-class builds.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Depth — persistent character, reset world: reload returns the character to town, resets monsters and treasure, and preserves waypoint access.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, save-game discussion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Depth — build-state combat tests: the team had to replay the game because equipment, skill paths, multiplayer, and difficulty modes changed encounter balance.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, quality-assurance discussion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Feel signature: real-time monster clearing alternates with item inspection and character-build decisions.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000; Blizzard, The Arreat Summit, Basic Item Information: https://classic.battle.net/diablo2exp/items/basics.shtml"
+    },
+    {
+      "claim": "Second-session answer: regenerated monsters and treasure let a character refight routes for experience and loot, while skill branches support another build path.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, skill-tree and save-game discussions: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Packaging lesson — first class slice: item rates and skill paths could not be balanced apart from a full playthrough; this supports shipping one integrated path before class multiplication.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, quality-assurance discussion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Packaging lesson — persistence contract: the team made solo and multiplayer use one reset-world save model and added waypoints for return access.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, save-game discussion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Packaging lesson — data-driven conversions: documented cube equations and ordered rune sets add item outcomes through recipes.",
+      "source": "Blizzard, The Arreat Summit, Horadric Cube: https://classic.battle.net/diablo2exp/items/cube.shtml ; Items index: https://classic.battle.net/diablo2exp/items/"
+    },
+    {
+      "claim": "BOM — play-loop, save-state: reset monsters and treasure replenish experience and loot while town and waypoints bound sessions.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, save-game discussion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "BOM — loot and inventory: Blizzard documents item tiers, equipment, backpack and stash storage, charms, sockets, and ground-item persistence.",
+      "source": "Blizzard, The Arreat Summit, Items index: https://classic.battle.net/diablo2exp/items/ ; Basic Item Information: https://classic.battle.net/diablo2exp/items/basics.shtml"
+    },
+    {
+      "claim": "BOM — skills and leveling: each experience level supports choosing or strengthening class-tree skills; item bonuses can raise learned skill ranks.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000; Blizzard, Basic Skill Information: https://classic.battle.net/diablo2exp/skills/basics.shtml"
+    },
+    {
+      "claim": "BOM — crafting: cube recipes upgrade runes, repair gear, remove socket contents, and produce crafted items; rune order produces runewords.",
+      "source": "Blizzard, The Arreat Summit, Horadric Cube: https://classic.battle.net/diablo2exp/items/cube.shtml ; Items index: https://classic.battle.net/diablo2exp/items/"
+    },
+    {
+      "claim": "BOM — multiplayer: Battle.net support and multiplayer difficulty required testing parties whose class skills interact.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, Battle.net and quality-assurance discussions: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "BOM — UI: item descriptions, backpack cells, cube interaction, skill-tree allocation, and waypoint travel surface loop decisions.",
+      "source": "Blizzard, Diablo II manual: https://download.blizzard.com/pub/misc/Diablo%20II%20Manual.pdf ; Blizzard, The Arreat Summit, Horadric Cube: https://classic.battle.net/diablo2exp/items/cube.shtml"
+    },
+    {
+      "claim": "Anti-lesson — production: the project lead reports a yearlong crunch and relationship costs.",
+      "source": "Erich Schaefer, “Postmortem: Blizzard's Diablo II,” Game Developer Magazine, October 2000, conclusion: https://www.gamedeveloper.com/design/postmortem-blizzard-s-i-diablo-ii-i-"
+    },
+    {
+      "claim": "Anti-lesson — respec support: patch-era skill documentation lists the Token of Absolution recipe from Hell act-boss essences.",
+      "source": "Blizzard, The Arreat Summit, Basic Skill Information: https://classic.battle.net/diablo2exp/skills/basics.shtml"
+    }
+  ],
+  "status": "draft"
+}

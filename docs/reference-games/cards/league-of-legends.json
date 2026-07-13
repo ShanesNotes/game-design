@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0.0",
+  "id": "league-of-legends",
+  "title": "League of Legends",
+  "edition_pinned": "Patch 12.22, PC, five-player Summoner's Rift. This patch pins jungle companions, objective voting, vision timers, turret-plate gold, and the item roster documented in one rules snapshot.",
+  "genre_tags": ["multiplayer-online-battle-arena", "team-strategy", "in-match-progression"],
+  "register_mapping": "mechanics-first",
+  "moat": "Fogged vision couples lane income, item timing, and objective votes into five-player commitments.",
+  "loop_skeleton": {
+    "verbs": ["farm", "trade", "ward", "buy", "rotate", "contest", "push"],
+    "description": "Earn gold and levels in a lane or jungle, reveal routes with wards, buy for the match state, coordinate an objective, then convert its reward into turret and nexus pressure."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "expiring team vision",
+      "mechanism": "Enemy positions leave the minimap outside allied sight, while ward timers and vision pings let five players share partial information and its expiry.",
+      "falsifiable_claim": "If enemy positions remain visible, ward placements and vision pings will stop changing objective-contest decisions in match logs."
+    },
+    {
+      "name": "state-bound item builds",
+      "mechanism": "Gold becomes item slots whose purchase order responds to the champion, current lead, opposing threats, and remaining build space.",
+      "falsifiable_claim": "If each champion has one fixed purchase sequence, item-order variation at equal gold will approach zero across opponent compositions."
+    },
+    {
+      "name": "role-coupled objectives",
+      "mechanism": "Lane states and jungle pathing determine who can reach an objective, while pings and a team vote expose whether teammates will take or contest it.",
+      "falsifiable_claim": "If one player can secure each objective without leaving a lane exposed or requesting help, objective votes will stop predicting team movement."
+    },
+    {
+      "name": "matchup-dependent pathing",
+      "mechanism": "The first jungle route and later rotations depend on allied composition, lane matchups, jungle matchup, and visible enemy commitments.",
+      "falsifiable_claim": "If composition and lane state do not alter camp or rotation value, first-clear and first-objective routes will converge across drafts."
+    }
+  ],
+  "feel_signature": "Enemy icons vanish as a wave reaches the turret; the player chooses farm, ward placement, an item recall, or movement toward the objective vote.",
+  "second_session_answer": "Champion draft, lane matchup, jungle route, and item response change what can be farmed, revealed, or contested before the next recall.",
+  "packaging_lessons": [
+    "Give teammates a bounded signal set for retreat, movement, vision, pushing, commitment, and objective consent.",
+    "Make item recommendations an entry point while preserving purchases that respond to opponent, role, and current lead.",
+    "Teach one route from aggregate play data, then state which composition and matchup conditions invalidate it."
+  ],
+  "anti_lessons": [
+    "Do not copy the champion count; prove a composition change alters ward, purchase, and objective decisions first.",
+    "Do not use patch churn to conceal unreadable combat rules; each changed number needs a visible consequence in the match."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "Farm, reveal, recall, buy, group, contest, and push repeat as map control changes."
+    },
+    {
+      "system": "multiplayer",
+      "note": "Five players coordinate through role assignments, pings, shared ward information, and objective votes."
+    },
+    {
+      "system": "economy",
+      "note": "Units, champions, and structures pay experience; gold buys items; jungle monsters grant buffs; turret plates pay gold."
+    },
+    {
+      "system": "inventory",
+      "note": "Item slots convert gold into a purchase order whose value depends on match state and build position."
+    },
+    {
+      "system": "leveling",
+      "note": "Champion levels and ability ranks change combat thresholds during the match; jungle companion stacks also unlock Smite thresholds."
+    },
+    {
+      "system": "skills",
+      "note": "Each champion's ability order, execution, and item response define a learning path inside team decisions."
+    },
+    {
+      "system": "ui",
+      "note": "Minimap pings, ward timers, objective votes, route hints, and ability recommendations expose team intent and timing."
+    },
+    {
+      "system": "win-loss-death",
+      "note": "Kills and jungle objectives grant resources or buffs; minions enable turret attacks; destroying the opposing nexus wins."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: Patch 12.22 specifies jungle companions and stacks, vision timers, objective voting, item changes, and turret-plate gold in one rules snapshot.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Moat: Patch 12.22 joins team vision signals and expiry, objective consent, gold-bearing turret plates, jungle progression, and item purchases in Summoner's Rift play.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ sections Jungle Companions, New Communication Tools, Vision System Updates, Items, and Turret Adjustments, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Expiring-team-vision depth: allied ward icons show approaching expiry; seen enemy wards receive timers shared with all teammates; vision pings request, mark, or clear vision.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ New Communication Tools and Vision System Updates, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "State-bound-item depth: Riot's item framework says players buy several items per match, purchase position and current lead affect item data, and item choices should vary by circumstance.",
+      "source": "Summoner's Rift Team, ‘/dev: Updated Approach to Item Balancing,’ 2020-09-14, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/dev/dev-updated-approach-to-item-balancing/"
+    },
+    {
+      "claim": "Role-coupled-objective depth: Patch 12.22 calls League a team game, adds purpose-specific pings, and gives an objective vote to all players with the jungler's vote weighted twice.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ New Communication Tools and Objective Planning, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Matchup-dependent-pathing depth: Riot states that recommended first clears come from player data but remain situational based on team compositions and lane and jungle matchups.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ Recommended Pathing, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Feel signature: the patch connects expiring map information, ward placement requests, objective votes, item gold costs, and turret-plate gold to time-bounded player choices.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ Vision System Updates, Objective Planning, Items, and Turret Adjustments, 2022-11-15, and ‘League of Legends How to Play,’ sections Clear the Path and Power Up Your Champ, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/ ; https://www.leagueoflegends.com/en-us/how-to-play/"
+    },
+    {
+      "claim": "Second-session answer: Riot identifies team composition, lane matchup, and jungle matchup as conditions that change the first clear, and its item framework requires per-game purchase decisions.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ Recommended Pathing, 2022-11-15, and Summoner's Rift Team, ‘/dev: Updated Approach to Item Balancing,’ 2020-09-14, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/ ; https://www.leagueoflegends.com/en-us/news/dev/dev-updated-approach-to-item-balancing/"
+    },
+    {
+      "claim": "Packaging lesson 1 and multiplayer/UI BOM: the patch defines eight intent pings, three vision pings, shared ward timers, and an objective vote for team coordination.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ New Communication Tools and Vision System Updates, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Packaging lesson 2 and inventory BOM: Riot's item goals require per-game strategy through purchases and explain that purchase order and an existing lead alter an item's measured value.",
+      "source": "Summoner's Rift Team, ‘/dev: Updated Approach to Item Balancing,’ sections Items Aren't Champions and Welcoming the New Preseason, 2020-09-14, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/dev/dev-updated-approach-to-item-balancing/"
+    },
+    {
+      "claim": "Packaging lesson 3 and play-loop BOM: route recommendations derive from high-mastery player data and are explicitly overridden by team compositions and matchups.",
+      "source": "Riot Games, ‘Patch 12.22 Notes,’ Recommended Pathing, 2022-11-15, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Play-loop BOM: lane and jungle play generates gold and experience, recall grants shop access, vision supports movement, objective kills grant team buffs, and minions enable turret pressure.",
+      "source": "Riot Games, ‘League of Legends How to Play,’ sections Destroy the Base, Clear the Path, Take on the Jungle, and Power Up Your Champ, plus ‘Patch 12.22 Notes,’ Vision System Updates, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Economy and win-loss-death BOM: units, champions, and structures grant experience; gold buys items; jungle monsters grant team buffs; turret plates pay gold; nexus destruction wins.",
+      "source": "Riot Games, ‘League of Legends How to Play,’ sections Destroy the Base, Take on the Jungle, and Power Up Your Champ, and ‘Patch 12.22 Notes,’ Turret Adjustments, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Leveling and skills BOM: experience unlocks or strengthens champion abilities, ability and item order define champion play, and companion stacks change Smite thresholds.",
+      "source": "Riot Games, ‘League of Legends How to Play,’ sections Power Up Your Champ and Unlock Your Abilities, and ‘Patch 12.22 Notes,’ Companion Progression and Summoner Spells, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    }
+  ],
+  "status": "draft"
+}

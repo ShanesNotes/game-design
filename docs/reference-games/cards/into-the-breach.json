@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.0.0",
+  "id": "into-the-breach",
+  "title": "Into the Breach",
+  "edition_pinned": "Advanced Edition, 2022-07-19 release era — pins the base combat rules plus five squads, nearly forty weapons, more enemies, bosses, objectives, pilots, and promotion skills.",
+  "genre_tags": ["turn-based-tactics", "grid-puzzle", "run-based-strategy"],
+  "register_mapping": "mechanics-first",
+  "moat": "Enemy intent plus displacement turns each player phase into a plan for redirecting damage before it resolves.",
+  "loop_skeleton": {
+    "verbs": ["inspect", "move", "displace", "protect", "upgrade"],
+    "description": "Inspect attack markers, move three mechs, displace or disable threats, protect buildings through the turn limit, then spend rewards before choosing another mission."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "telegraphed resolution",
+      "mechanism": "The interface marks every enemy target and attack type before the player acts; player-turn attacks have no hit roll.",
+      "falsifiable_claim": "Hide enemy targets or add hit rolls: players can no longer reproduce a turn outcome from the displayed state, so counterplanning errors cannot be separated from concealed information or chance."
+    },
+    {
+      "name": "displacement as damage routing",
+      "mechanism": "Push, pull, block, smoke, and terrain effects can redirect attacks into enemies or away from buildings, so removing a threat need not mean reducing its health to zero.",
+      "falsifiable_claim": "Remove displacement and blocking from a squad: on matched boards, the count of turns solved by redirecting enemy damage falls to zero and attacks converge on health removal."
+    },
+    {
+      "name": "shared grid loss",
+      "mechanism": "Building hits reduce one Power Grid meter across missions, while mechs and mission objectives compete for the same moves used to protect it.",
+      "falsifiable_claim": "Reset the Power Grid after each mission: damage accepted to secure an objective stops affecting later mission choice, eliminating the run-level cost of a least-loss turn."
+    },
+    {
+      "name": "run recombination",
+      "mechanism": "Squad rules, pilot skills, weapons, island order, enemies, bosses, and mission objectives recombine across attempts.",
+      "falsifiable_claim": "Hold squad, pilot, weapons, island order, enemies, and objectives constant across two attempts: the number of state-dependent plan changes attributable to run setup becomes zero."
+    }
+  ],
+  "feel_signature": "See each pending impact, pause over a grid with no safe answer, then choose which unit, building, or objective absorbs the cost.",
+  "second_session_answer": "Return with another squad or island order; known rules produce different displacement chains, upgrade choices, and losses to accept.",
+  "packaging_lessons": [
+    "Ship one screen that exposes targets, attack types, movement, terrain, health, and Grid risk before adding a campaign layer.",
+    "Package missions as turn-limited encounters, then let three resources and displayed rewards carry the route choice between them."
+  ],
+  "anti_lessons": [
+    "Do not copy telegraphing without displacement, collateral targets, and scarcity; intent markers alone turn combat into arithmetic cleanup.",
+    "Do not add a research tree that ignores combat constraints; Subset cut its first strategy layer after it produced complexity without depth."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "A player phase reads attack intent, commits mech actions, and resolves all attacks; this is the counterplanning loop."
+    },
+    {
+      "system": "ui",
+      "note": "Target markers, attack icons, movement previews, and one-screen state make each forecast inspectable before commitment."
+    },
+    {
+      "system": "win-loss-death",
+      "note": "Turn limits end missions, Grid depletion ends a timeline, and one pilot can cross into the next attempt."
+    },
+    {
+      "system": "missions",
+      "note": "Objectives and displayed rewards alter which assets the player protects and which losses the player accepts."
+    },
+    {
+      "system": "progression",
+      "note": "Reactor cores, weapons, pilots, and promotion skills change the action set without replacing grid forecasting."
+    },
+    {
+      "system": "meta-progression",
+      "note": "Squad and pilot unlocks change the rules brought into a later timeline rather than adding power to every attempt."
+    },
+    {
+      "system": "save-state",
+      "note": "The run must persist Grid damage, island progress, pilots, weapons, reactor assignments, objectives, and unlock state."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: Advanced Edition is the 2022-07-19 update and adds five squads, nearly forty weapons, enemies, bosses, objectives, pilots, and promotion skills.",
+      "source": "Subset Games, 'Into the Breach: Advanced Edition' announcement, https://subsetgames.com/itb_ae.html; Subset Games FAQ (release date), https://subsetgames.com/faq.html"
+    },
+    {
+      "claim": "Moat: all enemy attacks are shown, player-turn resolution has no hit chance, and the design shifted from killing enemies toward manipulating them.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 13 and 19–21, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "Depth — telegraphed resolution: enemy attacks are shown and player-turn combat is deterministic.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slide 13, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "Depth — displacement as damage routing: the postmortem identifies manipulation over killing and non-lethal weapons as consequences of telegraphed attacks.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 19–21, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "Depth — shared grid loss: civilian buildings power the mechs and must be defended from both Vek and player fire; the Power Grid became the fail state.",
+      "source": "Subset Games, 'Into the Breach' product page, https://subsetgames.com/itb.html; Matthew Davis, GDC 2019 postmortem, slides 23–26"
+    },
+    {
+      "claim": "Depth — run recombination: attempts generate challenges, while Advanced Edition expands squads, weapons, enemies, bosses, objectives, pilots, and skills.",
+      "source": "Subset Games, 'Into the Breach' product page, https://subsetgames.com/itb.html; Advanced Edition announcement, https://subsetgames.com/itb_ae.html"
+    },
+    {
+      "claim": "Feel signature: displayed attacks support analysis before a counter, while the grid fail state and defensive play force a least-loss choice.",
+      "source": "Subset Games, 'Into the Breach' product page, https://subsetgames.com/itb.html; Matthew Davis, GDC 2019 postmortem, slides 23–26"
+    },
+    {
+      "claim": "Packaging lesson — one-screen forecast: the design uses one-screen UI, target and attack-type icons, orthogonal aiming, static enemy rules, and three attack types.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 27–36, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "Packaging lesson — mission wrapper: battles use a turn limit; islands expose difficulty through resource count, allow planning, and use three resources.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 21–22 and 42–45, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "BOM — play-loop and UI: attacks telegraph targets and types on one screen before deterministic player action.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 13 and 27–36, https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "BOM — win-loss-death and save-state: the Power Grid is the fail state, battles have turn limits, and defeat permits one pilot to travel to another timeline.",
+      "source": "Matthew Davis, GDC 2019 postmortem, slides 21–26; Subset Games product page, https://subsetgames.com/itb.html"
+    },
+    {
+      "claim": "BOM — missions: Advanced Edition adds mission objectives, enemies, and bosses to vary run challenges.",
+      "source": "Subset Games, 'Into the Breach: Advanced Edition' announcement, https://subsetgames.com/itb_ae.html"
+    },
+    {
+      "claim": "BOM — progression and meta-progression: runs find weapons and pilots; Advanced Edition expands squads and promotion skills.",
+      "source": "Subset Games product page, https://subsetgames.com/itb.html; Advanced Edition announcement, https://subsetgames.com/itb_ae.html"
+    }
+  ],
+  "status": "draft"
+}

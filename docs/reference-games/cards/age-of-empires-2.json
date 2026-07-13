@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "id": "age-of-empires-2",
+  "title": "Age of Empires II",
+  "edition_pinned": "Definitive Edition on PC, Random Map rules in the Learn to Play guide as consulted 2026-07-12. This edition pins the four-Age economy, civilization tech-tree omissions, unit counters, and generated starts.",
+  "genre_tags": ["real-time-strategy", "economy", "multiplayer"],
+  "register_mapping": "mechanics-first",
+  "moat": "Four gathered resources fund villagers, age advances, unit counters, and upgrades while scouting predicts demand.",
+  "loop_skeleton": {
+    "verbs": ["gather", "scout", "train", "advance", "raid", "counter"],
+    "description": "Assign villagers to resources, scout the generated map and opponent, spend the stockpile on forces or an age, then raid, defend, and change production."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "shared-stockpile timing",
+      "mechanism": "Villagers gather the resources that pay for population growth, units, economy upgrades, and age advances, so each timing removes another timing from the queue.",
+      "falsifiable_claim": "If age advances use a separate currency, replay logs will show no drop in unit production while players save for the next age."
+    },
+    {
+      "name": "scouted map variance",
+      "mechanism": "Each Random Map start generates resource locations, and the starting scout converts hidden terrain into a plan for gathering, walls, raids, and contact.",
+      "falsifiable_claim": "If the map and both starts are revealed at match start, opening scout routes will stop predicting changes in the player's first military plan."
+    },
+    {
+      "name": "counter-and-tech transitions",
+      "mechanism": "Unit classes counter other classes, while each civilization removes or modifies branches of the shared technology tree.",
+      "falsifiable_claim": "If unit classes deal the same relative damage and civilizations share one technology tree, production-building changes after enemy contact will fall in replay logs."
+    },
+    {
+      "name": "economic damage without elimination",
+      "mechanism": "Raids can force villagers off resources, converting seconds of idle work into a resource lead before either base can be destroyed.",
+      "falsifiable_claim": "If displaced villagers keep gathering, Feudal raids that kill no unit will stop changing resource-income separation between players."
+    }
+  ],
+  "feel_signature": "The stockpile reaches an age threshold as the scout exposes enemy production; the player chooses to advance, train a counter, or raid its resource line.",
+  "second_session_answer": "A generated start, opponent opening, and civilization tech tree change which resource must be scouted, denied, or funded before the next age.",
+  "packaging_lessons": [
+    "Put unit, building, technology, and age costs in one economy so a build order can be read as a sequence of foregone spends.",
+    "Give the first scout resource locations and opponent production to discover before combat can decide the match.",
+    "Ship shared unit classes first, then express civilization identity through bonuses, branch omissions, and one unit or technology path."
+  ],
+  "anti_lessons": [
+    "Do not copy the civilization count before one economy, one age transition, and one counter transition produce replay divergence.",
+    "Do not make command rate the only mastery test; scouting and stockpile choices must change the value of each command."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "Gather, scout, spend, pressure, and transition repeat while each spend changes the next available action."
+    },
+    {
+      "system": "economy",
+      "note": "Villager assignment controls food, wood, gold, and stone income; military plans require reassignment to their costs."
+    },
+    {
+      "system": "progression",
+      "note": "Four paid age advances unlock units, buildings, and technologies while exposing the economy during research."
+    },
+    {
+      "system": "skills",
+      "note": "Technology-tree branches and unit counters turn observed enemy production into a production and upgrade choice."
+    },
+    {
+      "system": "multiplayer",
+      "note": "Random Map supports human or AI opponents, and each opponent supplies build, timing, and raid uncertainty."
+    },
+    {
+      "system": "ui",
+      "note": "The technology tree displays trainable units, research, buildings, upgrade links, and civilization omissions."
+    },
+    {
+      "system": "win-loss-death",
+      "note": "Military force protects income, denies enemy income, and gains the position needed to defeat rival empires."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: Definitive Edition Random Map starts train villagers, build houses, scout resources, and use a map generated per match.",
+      "source": "World's Edge, ‘Expanding Your Empire,’ Age of Empires II: Definitive Edition Learn to Play, lessons 2–3, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/"
+    },
+    {
+      "claim": "Moat and shared-stockpile depth: resource costs pay for units, buildings, technologies, and age advances; players balance military spending against saving for Castle Age.",
+      "source": "World's Edge, ‘Advancing to the Next Age,’ lessons 1–3, and ‘Match Goals & Hotkeys,’ lesson 3, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/advancing-aoe2/ ; https://www.ageofempires.com/learn-to-play/match-goals-aoe2/"
+    },
+    {
+      "claim": "Scouted-map depth: the Random Map changes each match, and the guide directs the scout to find food, resources, the opponent, and map locations.",
+      "source": "World's Edge, ‘Expanding Your Empire,’ lesson 2, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/"
+    },
+    {
+      "claim": "Counter-and-tech depth: archers, spears, and cavalry counter other classes; civilization upgrades vary through branch availability in the technology tree.",
+      "source": "World's Edge, ‘Military & Economy,’ lesson 3, and ‘Civilizations & Game Modes,’ lessons 3–5, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/military-and-economy-aoe2/ ; https://www.ageofempires.com/learn-to-play/civilizations-game-modes-aoe2/"
+    },
+    {
+      "claim": "Economic-damage depth: Feudal attacks can force villagers from resources; each second of idle economy gives the attacker an income lead.",
+      "source": "World's Edge, ‘Match Goals & Hotkeys,’ lesson 2, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/match-goals-aoe2/"
+    },
+    {
+      "claim": "Feel signature: scouting occurs while the economy prepares a plan, and the player must choose military production or saving for an age when enemy pressure appears.",
+      "source": "World's Edge, ‘Match Goals & Hotkeys,’ lessons 1–3, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/match-goals-aoe2/"
+    },
+    {
+      "claim": "Second-session answer: Random Map varies the map layout each match, while civilizations vary bonuses and technology-tree branches.",
+      "source": "World's Edge, ‘Expanding Your Empire,’ lesson 2, and ‘Civilizations & Game Modes,’ lessons 3–4, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/ ; https://www.ageofempires.com/learn-to-play/civilizations-game-modes-aoe2/"
+    },
+    {
+      "claim": "Packaging lesson 1 and economy/play-loop BOM: unit plans dictate villager allocation; unit, building, technology, and age actions consume the resource stockpile.",
+      "source": "World's Edge, ‘Getting Started with Age of Empires II: DE – PC,’ lessons 1 and 3, and ‘Expanding Your Empire,’ lesson 3, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/getting-started-aoe2/ ; https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/"
+    },
+    {
+      "claim": "Packaging lesson 2 and multiplayer BOM: the opening scout is assigned to resources and the opponent; Random Map supports multiplayer and AI skirmishes.",
+      "source": "World's Edge, ‘Expanding Your Empire,’ lesson 2, and ‘Civilizations & Game Modes,’ lesson 1, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/expanding-your-empire-aoe2/ ; https://www.ageofempires.com/learn-to-play/civilizations-game-modes-aoe2/"
+    },
+    {
+      "claim": "Packaging lesson 3 and skills/UI BOM: civilizations share unit classes but vary bonuses, units, technologies, and branch availability displayed by the technology tree.",
+      "source": "World's Edge, ‘Civilizations & Game Modes,’ lessons 3–5, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/civilizations-game-modes-aoe2/"
+    },
+    {
+      "claim": "Progression BOM: four resource-paid ages unlock technologies, units, and buildings; later buildings also have prerequisite buildings.",
+      "source": "World's Edge, ‘Advancing to the Next Age,’ lessons 1–3, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/advancing-aoe2/"
+    },
+    {
+      "claim": "Win-loss-death BOM: the stated match goal joins economy growth, research, military training, and defeat of rival empires.",
+      "source": "World's Edge, ‘Getting Started with Age of Empires II: DE – PC,’ lesson 1, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/getting-started-aoe2/"
+    }
+  ],
+  "status": "draft"
+}

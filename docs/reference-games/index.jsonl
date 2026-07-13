@@ -1,1 +1,9 @@
+{"id":"age-of-empires-2","title":"Age of Empires II","genre_tags":["real-time-strategy","economy","multiplayer"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"diablo-2","title":"Diablo II","genre_tags":["action-rpg","loot","character-building","multiplayer"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"disco-elysium","title":"Disco Elysium","genre_tags":["dialogue-rpg","detective","role-playing"],"register_mapping":"narrative-first","status":"draft"}
+{"id":"into-the-breach","title":"Into the Breach","genre_tags":["turn-based-tactics","grid-puzzle","run-based-strategy"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"league-of-legends","title":"League of Legends","genre_tags":["multiplayer-online-battle-arena","team-strategy","in-match-progression"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"minecraft","title":"Minecraft","genre_tags":["survival","crafting","building","sandbox"],"register_mapping":"world-first","status":"draft"}
 {"id":"phantom-garden","title":"Phantom Garden (FIXTURE — not a real game)","genre_tags":["fixture","garden-puzzle"],"register_mapping":"mechanics-first","status":"draft"}
+{"id":"rust","title":"Rust","genre_tags":["survival","crafting","base-building","multiplayer"],"register_mapping":"hybrid","status":"draft"}
+{"id":"slay-the-spire","title":"Slay the Spire","genre_tags":["deck-builder","roguelike","turn-based","single-player"],"register_mapping":"mechanics-first","status":"draft"}

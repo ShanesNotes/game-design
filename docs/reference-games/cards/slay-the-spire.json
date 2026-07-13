@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.0.0",
+  "id": "slay-the-spire",
+  "title": "Slay the Spire",
+  "edition_pinned": "PC stable build V2.3.4 (December 20, 2022). This pins the four-character game after the Watcher and balance updates, excluding Slay the Spire 2.",
+  "genre_tags": ["deck-builder", "roguelike", "turn-based", "single-player"],
+  "register_mapping": "mechanics-first",
+  "moat": "Enemy intents price each card play while map branches price which future tests the deck must survive.",
+  "loop_skeleton": {
+    "verbs": ["route", "draw", "read", "play", "draft", "upgrade"],
+    "description": "Choose a map node, read enemy intents, spend energy from a drawn hand, take or skip a reward, then route toward the next deck test."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "intent-priced turns",
+      "mechanism": "Icons and numbers reveal each enemy's next action, so damage, block, setup, and potion use compete against a stated consequence.",
+      "falsifiable_claim": "If intent numbers are hidden, players cannot calculate block against incoming damage and card choice shifts from planning toward guessing."
+    },
+    {
+      "name": "uncorrelated card offers",
+      "mechanism": "Each battle offers cards from a rarity-weighted pool without steering toward cards already taken, forcing adaptation instead of recipe completion.",
+      "falsifiable_claim": "If rewards always follow the deck's current tag, run-to-run drafts converge on a declared archetype and off-plan cards stop testing adaptation."
+    },
+    {
+      "name": "route as resource forecast",
+      "mechanism": "Branching paths let the player choose risk exposure against current health and deck needs before the next encounter.",
+      "falsifiable_claim": "If the map becomes a fixed corridor, health, gold, upgrade, and relic needs no longer compete at route choice and one planning layer disappears."
+    },
+    {
+      "name": "enemy portfolio tests",
+      "mechanism": "Encounters pressure different deck properties, preventing one damage-block sequence from answering every fight.",
+      "falsifiable_claim": "If encounters test the same damage race, card picks converge on the highest output-per-energy line and utility cards lose draft value."
+    },
+    {
+      "name": "cross-system combo assembly",
+      "mechanism": "Cards, relics, upgrades, and potions alter draw, energy, scaling, and timing until a run-specific engine emerges.",
+      "falsifiable_claim": "If relics and upgrades only add damage, deck engines cease to change action order or resource flow and mastery reduces to value comparison."
+    }
+  ],
+  "feel_signature": "The intent number sets pressure; cards snap into a sequence; damage or block resolves; the player then accepts, skips, or upgrades a future draw.",
+  "second_session_answer": "The next run changes card offers, routes, relics, and encounter order, so the player tests whether prior matchup knowledge produces another deck rather than repeats one recipe.",
+  "packaging_lessons": [
+    "Ship intent display with the first combat slice because hidden enemy action leaves the player without a basis for hand sequencing.",
+    "Package card rewards, route choice, and at least two encounter tests together; deckbuilding has no decision target when rewards do not answer future pressure.",
+    "Instrument card picks and win rates during content iteration, but retain designer review for game feel and difficulty.",
+    "Keep card text focused on the decision variables; move enemy forecasts into icons and numbers visible without inspection."
+  ],
+  "anti_lessons": [
+    "Do not copy the act map, energy count, relic slots, and intent icons as a skin; preserve the decision function only after changing its mechanical inputs.",
+    "Do not steer reward generation toward a named archetype; the developer states that uncorrelated offers force adaptation.",
+    "Do not add card volume before encounter roles exist; without tests for the cards, choice count measures browsing rather than strategy."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "Node choice leads to intent-driven combat, reward choice, and another node."
+    },
+    {
+      "system": "skills",
+      "note": "Cards are the action vocabulary; draw order, energy cost, and upgrade state determine which sequences exist."
+    },
+    {
+      "system": "loot",
+      "note": "Relics and potions alter deck constraints or supply a one-use answer, linking encounter rewards to later turns."
+    },
+    {
+      "system": "progression",
+      "note": "Card additions, upgrades, and relics accumulate for the run and change later combat."
+    },
+    {
+      "system": "missions",
+      "note": "The generated map varies routes, enemies, card offers, relics, and bosses between climbs."
+    },
+    {
+      "system": "win-loss-death",
+      "note": "Defeat ends the run and returns the player to a generated climb with another strategy to assemble."
+    },
+    {
+      "system": "ui",
+      "note": "Intent icons and numbers plus card costs and text expose turn decisions; map paths expose route decisions."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: V2.3.4 is the listed PC hotfix line for the original Slay the Spire, after the four-character release state.",
+      "source": "Mega Crit, “V2.3.4: Crash on launch fix for Non-English PC users,” Steam announcement, December 20, 2022: https://steamcommunity.com/ogg/646570/announcements/detail/5201125680698695379 ; Mega Crit press kit: https://www.megacrit.com/press-kits/slay-the-spire/"
+    },
+    {
+      "claim": "Moat: visible enemy intents make the hand a planning problem, while map paths add risk, reward, and planning across encounters.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d ; Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "Depth — intent-priced turns: Mega Crit added icons and numbers after hidden or click-to-inspect actions failed to support player and viewer planning.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019, intent-system discussion: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d"
+    },
+    {
+      "claim": "Depth — uncorrelated card offers: battle rewards vary each run and do not react to cards already acquired; rarity alone weights appearance.",
+      "source": "Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/ ; Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d"
+    },
+    {
+      "claim": "Depth — route as resource forecast: the developer identifies map navigation as a risk/reward and planning layer inspired by FTL.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020, path-choice discussion: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i- ; Mega Crit, Slay the Spire Steam page, “An Ever-changing Spire”: https://store.steampowered.com/app/646570/Slay_the_Spire/"
+    },
+    {
+      "claim": "Depth — enemy portfolio tests: Mega Crit designed enemies to challenge different strategies and prevent one dominant strategy.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020, enemy-design discussion: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "Depth — cross-system combo assembly: the design process rewards card synergies and run-specific combo engines; relics and potions add run inputs.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020, combo discussion: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i- ; Mega Crit press kit: https://www.megacrit.com/press-kits/slay-the-spire/ ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    },
+    {
+      "claim": "Feel signature: visible intent sets a numeric consequence, card order resolves the response, and post-battle card choice changes future draws.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019, intent-system discussion: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    },
+    {
+      "claim": "Second-session answer: generated levels, varying card offers, deck permutations, and strategy-specific enemies force another adaptation rather than a fixed build order.",
+      "source": "Mega Crit press kit: https://www.megacrit.com/press-kits/slay-the-spire/ ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/ ; Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "Packaging lesson — intent first: the prototype without visible intent left players without a strategy basis; icons and numbers fixed the information gap.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019, intent-system discussion: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d"
+    },
+    {
+      "claim": "Packaging lesson — rewards, routes, and encounter tests: path choice adds planning, while enemies test multiple strategies and rewards begin the next adaptation.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "Packaging lesson — instrumentation: Mega Crit used metrics and community feedback throughout early access while maintaining feel and difficulty.",
+      "source": "Anthony Giovannetti, “Slay the Spire: Metrics Driven Design and Balance,” GDC 2019, GDC Vault session 1025731"
+    },
+    {
+      "claim": "Packaging lesson — information compression: the intent system moved forecasts to visible icons and numbers so players focus on the decision variables.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019, intent-system discussion: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d"
+    },
+    {
+      "claim": "BOM — play-loop and skills: generated node selection frames turn-based card combat, then each battle presents a card decision that changes later hands.",
+      "source": "Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    },
+    {
+      "claim": "BOM — loot and progression: card additions and upgrades change later draws, relics change deck interactions, and potions provide encounter resources.",
+      "source": "Mega Crit, Slay the Spire Steam page: https://store.steampowered.com/app/646570/Slay_the_Spire/ ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    },
+    {
+      "claim": "BOM — missions: map navigation supplies a risk/reward planning layer, and generated levels vary the route between combat encounters.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i- ; Mega Crit, Slay the Spire Steam page, “An Ever-changing Spire”: https://store.steampowered.com/app/646570/Slay_the_Spire/"
+    },
+    {
+      "claim": "BOM — win-loss-death: failed fights restart the climb, and a new run begins carving another strategy from generated inputs.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "BOM — UI: intent icons and numbers expose enemy action without inspection; card and deck information supports draw-consistency decisions.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    }
+  ],
+  "status": "draft"
+}

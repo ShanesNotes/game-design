@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0.0",
+  "id": "minecraft",
+  "title": "Minecraft",
+  "edition_pinned": "Java Edition 1.21, Tricky Trials (2024) — pins the Crafter, trial chambers, Survival rules, and Java server surface in one release.",
+  "genre_tags": ["survival", "crafting", "building", "sandbox"],
+  "register_mapping": "world-first",
+  "moat": "Breaking and placing the same block set turns terrain into both resource stock and player-authored state.",
+  "loop_skeleton": {
+    "verbs": ["mine", "craft", "place", "explore", "fight", "automate"],
+    "description": "Mine blocks, convert drops through recipes, place blocks to change the world, then use the changed world to reach another resource or project."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "block conversion loop",
+      "mechanism": "A block can be removed into inventory, transformed by a recipe, and placed back as shelter, tool support, route marker, or machine part.",
+      "falsifiable_claim": "If mined materials cannot return to the world as placed blocks, players cannot turn an expedition result into a build that changes the next expedition."
+    },
+    {
+      "name": "recipe dependency graph",
+      "mechanism": "Recipes turn gathered supplies into tools and stations; the crafting table opens the recipe set that supports later mining and building.",
+      "falsifiable_claim": "If every recipe is available without supplies or stations, route choice stops being constrained by what the player can craft next."
+    },
+    {
+      "name": "night preparation clock",
+      "mechanism": "Survival couples daytime gathering and construction to mob attacks at night, making shelter and equipment compete for the first resources.",
+      "falsifiable_claim": "If night adds no attack risk, first-day players have no survival deadline for choosing between shelter, tools, and exploration."
+    },
+    {
+      "name": "redstone production circuits",
+      "mechanism": "Redstone signals can trigger blocks such as the Crafter, so spatial layouts encode repeated item transformations.",
+      "falsifiable_claim": "If signals cannot trigger crafting or block actions, players cannot replace a repeated manual production step with a circuit they designed."
+    }
+  ],
+  "feel_signature": "A mined block enters the inventory with a pop; the player chooses whether its next form is a tool, shelter wall, route marker, or circuit.",
+  "second_session_answer": "The saved world contains unfinished builds, altered routes, stored materials, and machines whose next step depends on yesterday's placements.",
+  "packaging_lessons": [
+    "Ship mining, one recipe chain, block placement, a day-night threat, and save-state before adding bosses or dimensions.",
+    "Use one block representation across terrain, inventory, recipes, and placement so each new block can serve more than one loop verb.",
+    "Expose automation as placeable world rules so production remains a spatial design problem."
+  ],
+  "anti_lessons": [
+    "Do not copy the material count without the break-craft-place conversion loop; item volume cannot substitute for world transformation.",
+    "Do not make a required quest chain choose the next project; Minecraft's world and recipe constraints leave that choice with the player."
+  ],
+  "system_bom": [
+    { "system": "play-loop", "note": "break, collect, craft, and place must update one world state" },
+    { "system": "crafting", "note": "recipes convert expedition drops into tools, blocks, and circuit parts" },
+    { "system": "inventory", "note": "slots make carried blocks compete with food, tools, and expedition loot" },
+    { "system": "win-loss-death", "note": "health, hunger, mob attacks, and dropped inventory put built progress at risk" },
+    { "system": "save-state", "note": "block edits, containers, circuits, and player position preserve unfinished projects" },
+    { "system": "progression", "note": "tool and station requirements gate which blocks and recipes can be reached" },
+    { "system": "multiplayer", "note": "a server lets players alter the same saved world and divide project work" },
+    { "system": "ui", "note": "inventory, recipe book, and crafting grids show inputs, missing supplies, and outputs" }
+  ],
+  "citations": [
+    {
+      "claim": "The moat and block-conversion depth entry rely on mining supplies, crafting from them, and placing blocks to build in Survival.",
+      "source": "https://www.minecraft.net/en-us/article/how-minecraft"
+    },
+    {
+      "claim": "The recipe-dependency entry and crafting BOM row rely on recipes, supplies, the inventory grid, and the crafting table's recipe access.",
+      "source": "https://www.minecraft.net/en-us/article/how-craft"
+    },
+    {
+      "claim": "The night-clock entry and win-loss-death BOM row rely on Survival resource collection, construction, and mob attacks at night.",
+      "source": "https://help.minecraft.net/hc/en-us/articles/360058743992-Minecraft-Differences-Between-Creative-Survival-and-Hardcore-Game-Modes"
+    },
+    {
+      "claim": "The redstone entry and packaging lesson 3 rely on the 1.21 Crafter receiving redstone pulses and ejecting recipe results.",
+      "source": "https://feedback.minecraft.net/hc/en-us/articles/27547857163917-Minecraft-Java-Edition-1-21-Tricky-Trials"
+    },
+    {
+      "claim": "The edition pin includes trial chambers, trial keys, reward vaults, the Crafter, and new combat encounters in Java Edition 1.21.",
+      "source": "https://www.minecraft.net/en-us/article/1-21-update-officially-named-tricky-trials"
+    },
+    {
+      "claim": "The feel signature follows the documented sequence of gathering supplies, moving them through inventory and recipes, then placing crafted objects in the world.",
+      "source": "https://www.minecraft.net/en-us/article/how-minecraft"
+    },
+    {
+      "claim": "Packaging lesson 1 follows Minecraft's documented starting sequence: gather wood, craft a table and tools, then build shelter for survival.",
+      "source": "https://www.minecraft.net/en-us/article/how-minecraft"
+    },
+    {
+      "claim": "Packaging lesson 2 is supported by supplies becoming building blocks, mining tools, armor, and crafting-station inputs.",
+      "source": "https://www.minecraft.net/en-us/article/how-craft"
+    },
+    {
+      "claim": "The second-session answer and save-state BOM row rely on a Realm restoring the same world state when players return and retaining backups.",
+      "source": "https://www.minecraft.net/en-us/article/what-are-minecraft-realms"
+    },
+    {
+      "claim": "The multiplayer BOM row relies on Java servers and Realms supporting players who plan builds, explore, and fight bosses together.",
+      "source": "https://www.minecraft.net/en-us/article/how-play-minecraft-server"
+    },
+    {
+      "claim": "The inventory and UI BOM rows rely on the recipe book showing recipes, supplies, missing inputs, and the crafting grid.",
+      "source": "https://www.minecraft.net/en-us/article/how-craft"
+    },
+    {
+      "claim": "The progression BOM row relies on supplies and crafting stations determining which tools and recipes the player can produce.",
+      "source": "https://www.minecraft.net/en-us/article/how-craft"
+    }
+  ],
+  "status": "draft"
+}

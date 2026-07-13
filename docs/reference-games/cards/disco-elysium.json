@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.0.0",
+  "id": "disco-elysium",
+  "title": "Disco Elysium",
+  "edition_pinned": "The Final Cut, March 2021 release era — pins full English voice-over, political vision quests, added characters and area, controller support, and UI changes.",
+  "genre_tags": ["dialogue-rpg", "detective", "role-playing"],
+  "register_mapping": "narrative-first",
+  "moat": "Skills speak as characters, turning stat allocation into control over which thoughts enter dialogue.",
+  "loop_skeleton": {
+    "verbs": ["inspect", "question", "listen", "choose", "roll", "internalize"],
+    "description": "Inspect Martinaise, question a person, receive skill interjections, choose what to say, resolve checks, then spend points on skills or thoughts before returning to blocked leads."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "skills as interlocutors",
+      "mechanism": "Twenty-four skills have voices; passive checks insert observations and arguments, and some unlock lines the player may speak or suppress.",
+      "falsifiable_claim": "Replace passive skill speech with bonus labels: two builds facing the same conversation lose build-dependent lines and the player loses the choice to repeat or suppress an idea."
+    },
+    {
+      "name": "failure continuation",
+      "mechanism": "Dice checks can fail into authored outcomes instead of ending every route; some checks reopen after a skill or thought changes.",
+      "falsifiable_claim": "Replace failed checks with a refusal and reload prompt: the count of scenes reachable only through a failed roll becomes zero and failure stops generating role-play state."
+    },
+    {
+      "name": "thought internalization",
+      "mechanism": "Discovered Thoughts occupy slots, take in-world time to internalize, apply effects, unlock topics, and cost skill points to forget or expand capacity.",
+      "falsifiable_claim": "Remove slot limits, time, and forgetting costs: players never trade a skill point or cabinet slot between identities, so thought curation decisions fall to zero."
+    },
+    {
+      "name": "build-gated perception",
+      "mechanism": "Attribute and skill allocation opens some observations and solutions while closing others, so a build changes what the detective can notice, infer, endure, or say.",
+      "falsifiable_claim": "Equalize all skill values for two playthroughs: at matched conversations and objects, the set of skill-gated observations and solutions stops differing by build."
+    }
+  ],
+  "feel_signature": "Hear parts of the detective argue, decide which impulse becomes speech, then accept a dice result that may expose another route or another failure.",
+  "second_session_answer": "Return with another attribute spread, signature skill, and Thought Cabinet; the same district supplies different voices, clues, failures, and political commitments.",
+  "packaging_lessons": [
+    "Ship one conversation where two skill builds receive different interjections and can act on or suppress them before expanding the district.",
+    "Treat failure as authored content: every shipped check needs a consequence, a continuation, or a route to retry rather than a reload dependency."
+  ],
+  "anti_lessons": [
+    "Do not copy the volume of text without build-conditioned delivery; prose that reaches every build in the same order does not reproduce the mechanism.",
+    "Do not make every skill increase an upgrade; high skill values can interrupt, mislead, or push behavior, which keeps allocation from becoming one-way optimization."
+  ],
+  "system_bom": [
+    {
+      "system": "play-loop",
+      "note": "Exploration feeds conversations; conversations feed checks, thoughts, tasks, and reasons to revisit people or places."
+    },
+    {
+      "system": "skills",
+      "note": "Twenty-four skills control check odds, passive interjections, dialogue options, perception, and the voices addressing the player."
+    },
+    {
+      "system": "ui",
+      "note": "A scrolling dialogue reel presents speaker text, skill voices, check odds, and response choices in one reading surface."
+    },
+    {
+      "system": "quests",
+      "note": "The murder case, side tasks, and political vision quests turn dialogue state into leads, returns, and consequences."
+    },
+    {
+      "system": "progression",
+      "note": "Experience becomes skill points spent on skill ranks, Thought slots, or forgetting a Thought, tying growth to dialogue access and identity."
+    },
+    {
+      "system": "inventory",
+      "note": "Clothing and tools alter skills or enable interactions, letting the player change a check setup through carried objects."
+    },
+    {
+      "system": "save-state",
+      "note": "The game must persist dialogue variables, failed and reopened checks, tasks, time, skill ranks, equipment, health, morale, and Thought progress."
+    },
+    {
+      "system": "win-loss-death",
+      "note": "Health and morale can end the investigation, while most failed checks continue into authored state rather than death."
+    }
+  ],
+  "citations": [
+    {
+      "claim": "Edition pin: The Final Cut added full voice acting, political quests, an area, characters, controller support, and UI changes in its 2021 release.",
+      "source": "ZA/UM, 'Disco Elysium – The Final Cut coming to PS4 and PS5 in 2021,' PlayStation Blog, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/; ZA/UM, 'Jamais Vu Update,' https://discoelysium.com/devblog/2022/02/07/jamais-vu-update-huge-thanks-for-2021"
+    },
+    {
+      "claim": "Moat: skills speak to the player, passive checks form ideas, and the player may voice or suppress those ideas.",
+      "source": "ZA/UM, 'On skill checks,' 2016, https://discoelysium.com/devblog/2016/09/19/on-skill-checks"
+    },
+    {
+      "claim": "Depth — skills as interlocutors: passive skills deliver observations, converse with one another, and can add dialogue choices.",
+      "source": "ZA/UM, 'On skill checks,' https://discoelysium.com/devblog/2016/09/19/on-skill-checks; Robert Kurvitz interview, 'The Guts of the Game,' https://discoelysium.com/devblog/2017/08/07/the-guts-of-the-game"
+    },
+    {
+      "claim": "Depth — failure continuation: big moments use dice and the team authored outcomes so failed rolls can produce play rather than require success.",
+      "source": "ZA/UM, 'Disco Elysium – The Final Cut coming to PS4 and PS5 in 2021,' PlayStation Blog, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/"
+    },
+    {
+      "claim": "Depth — thought internalization: Thoughts use slots and in-world time, can unlock return topics, and cost skill points to forget or expand capacity.",
+      "source": "ZA/UM, 'Introducing The Thought Cabinet,' 2019, https://discoelysium.com/devblog/2019/09/30/introducing-the-thought-cabinet"
+    },
+    {
+      "claim": "Depth — build-gated perception: skill levels open and close options; Visual Calculus, Empathy, Suggestion, and Physical Instrument expose different evidence and routes.",
+      "source": "Chris Priestman, ZA/UM, 'What kind of detective to become in Disco Elysium – The Final Cut,' PlayStation Blog, https://blog.playstation.com/2021/03/29/what-kind-of-detective-to-become-in-disco-elysium-the-final-cut/"
+    },
+    {
+      "claim": "Feel signature: twenty-four skill personalities address the player, while dice decide moments and failures have authored outcomes.",
+      "source": "ZA/UM, Final Cut announcement, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/"
+    },
+    {
+      "claim": "Packaging lesson — build-conditioned conversation: passive checks generate observations and optional lines according to skill level.",
+      "source": "ZA/UM, 'On skill checks,' https://discoelysium.com/devblog/2016/09/19/on-skill-checks"
+    },
+    {
+      "claim": "Packaging lesson — authored failure: ZA/UM says dice determine moments and failed outcomes were written to remain playable.",
+      "source": "ZA/UM, Final Cut announcement, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/"
+    },
+    {
+      "claim": "BOM — play-loop and quests: conversations discover Thoughts; some Thoughts direct the player back to a person with another topic, and Final Cut adds political quests.",
+      "source": "ZA/UM, Thought Cabinet post, https://discoelysium.com/devblog/2019/09/30/introducing-the-thought-cabinet; Final Cut announcement, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/"
+    },
+    {
+      "claim": "BOM — skills: the game has twenty-four skills across four attributes; levels change proficiency, solutions, perception, and dialogue access.",
+      "source": "ZA/UM, Final Cut announcement, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/; ZA/UM build guide, https://blog.playstation.com/2021/03/29/what-kind-of-detective-to-become-in-disco-elysium-the-final-cut/"
+    },
+    {
+      "claim": "BOM — UI: ZA/UM's skill-check post shows the dialogue engine using animation cues and a dialogue surface for passive interjections and player lines.",
+      "source": "ZA/UM, 'On skill checks,' https://discoelysium.com/devblog/2016/09/19/on-skill-checks"
+    },
+    {
+      "claim": "BOM — progression: skill points improve skills, open Thought slots, or remove Thoughts; Thoughts take in-world time and apply effects.",
+      "source": "ZA/UM, 'Introducing The Thought Cabinet,' https://discoelysium.com/devblog/2019/09/30/introducing-the-thought-cabinet"
+    },
+    {
+      "claim": "BOM — inventory: the Final Cut guide documents clothing bonuses that modify Drama and support the autopsy, plus equipment changes before checks.",
+      "source": "Chris Priestman, ZA/UM, 'How to become a superstar detective in Disco Elysium – The Final Cut,' PlayStation Blog, https://blog.playstation.com/?p=347308"
+    },
+    {
+      "claim": "BOM — save-state and win-loss-death: Thoughts persist internalization time and slots; Physique grants health and can prevent death, while skill choices change available routes.",
+      "source": "ZA/UM, Thought Cabinet post, https://discoelysium.com/devblog/2019/09/30/introducing-the-thought-cabinet; ZA/UM build guide, https://blog.playstation.com/2021/03/29/what-kind-of-detective-to-become-in-disco-elysium-the-final-cut/"
+    }
+  ],
+  "status": "draft"
+}
