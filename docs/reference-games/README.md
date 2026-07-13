@@ -15,6 +15,22 @@ is `CANON.md`, and `index.jsonl` is the generated summary (one row per card).
 Pipeline hooks that *cite* cards land in a later slice (P01 / P07 / P18). This
 directory is substrate only: schema, canon, validator, index.
 
+## Tier 2 — genre index
+
+Tier-2 rows live under `genre-index/*.json`, use the frozen vocabulary in
+`TAXONOMY.md`, and are summarized in the generated `genre-index.jsonl`. They
+are a lighter discovery surface than Tier-1 cards: one game has one row, while
+primary and secondary memberships let that row appear in several generated
+coverage counts.
+
+The genre index is a NAVIGATION surface for agents, PULL-ONLY:
+
+- It is NOT consulted for every game design idea or seed run, and is NEVER auto-injected into intake/grill context by default.
+- It activates when the user points to a specific reference (or explicitly asks for reference options). Then it serves two functions: (a) route to the Tier-1 card if `card_ref` exists — the card is what a "full reference" means — or to the promotion path (disposition item 9) if not; (b) surface facet-neighbor rows as OPTIONS the agent can offer the user for game generation.
+
+This directory remains substrate only. Pipeline hooks that activate the
+pull-only lookup or promotion path land separately.
+
 ## Pigeonhole doctrine
 
 **Never treat a reference as a target at thesis time.** The thesis must name its
@@ -51,3 +67,12 @@ node scripts/validate-reference-cards.mjs
 
 Writes/refreshes `docs/reference-games/index.jsonl` (sorted by `id`; fields:
 `id`, `title`, `genre_tags`, `register_mapping`, `status`).
+
+```bash
+node scripts/validate-genre-index.mjs
+node scripts/genre-index-critic.mjs
+```
+
+The Tier-2 validator refreshes `genre-index.jsonl`, sorted by `id`, with one
+greppable line keyed by title, design facets, market genres, and optional
+Tier-1 `card_ref`.

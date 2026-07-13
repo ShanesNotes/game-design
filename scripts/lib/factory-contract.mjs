@@ -16,7 +16,7 @@ export const SKILLS = [
 export const SCHEMAS = [
   "seed-manifest", "intake-grill", "portfolio-digest", "game-thesis", "engine-profile-decision", "spec-decomposition",
   "depth-vector", "playtest-report", "execution-ledger-row", "asset-provenance",
-  "module-card", "reference-card"
+  "module-card", "reference-card", "genre-index-row"
 ];
 
 // Hooks that gate THIS repo (the spec pipeline). Proven by run-gates.mjs from hooks/.

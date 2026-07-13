@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reference canon genre-index row",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "taxonomy_version",
+    "id",
+    "title",
+    "edition_pinned",
+    "design_shape",
+    "market_genres",
+    "moat",
+    "scope_efficiency_hypothesis",
+    "exemplar_rationale",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0.0"] },
+    "taxonomy_version": { "type": "string", "enum": ["1.0.0"] },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "title": { "type": "string", "pattern": "\\S" },
+    "edition_pinned": { "type": "string", "pattern": "\\S" },
+    "design_shape": {
+      "type": "object",
+      "required": ["register", "loop_class", "session_structure", "progression_form", "player_count"],
+      "properties": {
+        "register": {
+          "type": "object",
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "type": "string", "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first"] },
+            "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["mechanics-first", "narrative-first", "hybrid", "world-first"] } }
+          },
+          "additionalProperties": false
+        },
+        "loop_class": {
+          "type": "object",
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "type": "string", "enum": ["execution", "optimization", "discovery", "expression", "social-coordination"] },
+            "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["execution", "optimization", "discovery", "expression", "social-coordination"] } }
+          },
+          "additionalProperties": false
+        },
+        "session_structure": {
+          "type": "object",
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "type": "string", "enum": ["rounds", "runs", "chapters", "continuous"] },
+            "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["rounds", "runs", "chapters", "continuous"] } }
+          },
+          "additionalProperties": false
+        },
+        "progression_form": {
+          "type": "object",
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "type": "string", "enum": ["fixed-kit", "run-reset", "persistent-unlocks", "authored-campaign", "open-ended"] },
+            "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["fixed-kit", "run-reset", "persistent-unlocks", "authored-campaign", "open-ended"] } }
+          },
+          "additionalProperties": false
+        },
+        "player_count": {
+          "type": "object",
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "type": "string", "enum": ["solo", "cooperative", "competitive", "massively-multiplayer"] },
+            "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["solo", "cooperative", "competitive", "massively-multiplayer"] } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "market_genres": {
+      "type": "object",
+      "required": ["primary", "secondary"],
+      "properties": {
+        "primary": { "type": "string", "enum": ["action", "adventure", "casual", "experimental", "puzzle", "racing", "rpg", "simulation", "sports", "strategy", "tabletop"] },
+        "secondary": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["action", "adventure", "casual", "experimental", "puzzle", "racing", "rpg", "simulation", "sports", "strategy", "tabletop"] } }
+      },
+      "additionalProperties": false
+    },
+    "moat": { "type": "string", "pattern": "\\S", "maxLength": 120 },
+    "scope_efficiency_hypothesis": { "type": "string", "pattern": "\\S" },
+    "production_scale_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim", "metric_type", "value_or_range", "class", "class_definition", "platform", "territory", "observed_at", "source", "source_tier"],
+        "properties": {
+          "claim": { "type": "string", "pattern": "\\S" },
+          "metric_type": { "type": "string", "enum": ["development_team_size", "development_time_months"] },
+          "value_or_range": { "type": ["integer", "string"] },
+          "class": { "type": "string", "enum": ["team-solo", "team-micro", "team-small", "team-large", "time-short", "time-medium", "time-long"] },
+          "class_definition": { "type": "string", "pattern": "^taxonomy-v1#" },
+          "platform": { "type": "string", "pattern": "\\S" },
+          "territory": { "type": "string", "pattern": "\\S" },
+          "observed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "source": { "type": "string", "pattern": "^https://" },
+          "source_tier": { "type": "string", "enum": ["primary-platform", "primary-developer", "reputable-secondary", "archival-secondary"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exemplar_rationale": { "type": "string", "pattern": "\\S" },
+    "card_ref": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim", "metric_type", "value_or_range", "class", "class_definition", "platform", "territory", "observed_at", "source", "source_tier"],
+        "properties": {
+          "claim": { "type": "string", "pattern": "\\S" },
+          "metric_type": { "type": "string", "enum": ["steam_user_reviews", "storefront_genres"] },
+          "value_or_range": { "type": ["integer", "string", "array"], "items": { "type": "string" }, "minItems": 1 },
+          "class": { "type": "string", "enum": ["review-niche", "review-established", "review-breakout", "storefront-listed"] },
+          "class_definition": { "type": "string", "pattern": "^taxonomy-v1#" },
+          "platform": { "type": "string", "pattern": "\\S" },
+          "territory": { "type": "string", "pattern": "\\S" },
+          "observed_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "source": { "type": "string", "pattern": "^https://" },
+          "source_tier": { "type": "string", "enum": ["primary-platform", "primary-developer", "reputable-secondary", "archival-secondary"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
