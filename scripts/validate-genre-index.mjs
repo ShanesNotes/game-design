@@ -207,6 +207,9 @@ export function validateGenreIndex({
       errors.push(`${file}: existing Tier-1 card requires card_ref '${row.id}'`);
     }
     if (row.card_ref) {
+      if (row.card_ref !== row.id) {
+        errors.push(`${file}: card_ref must equal row id '${row.id}'`);
+      }
       const cardPath = path.join(cardsDir, `${row.card_ref}.json`);
       if (!fs.existsSync(cardPath)) {
         errors.push(`${file}: card_ref '${row.card_ref}' does not resolve`);

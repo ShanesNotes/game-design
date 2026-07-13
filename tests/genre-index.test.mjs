@@ -126,6 +126,19 @@ test("card_ref must resolve to the same Tier-1 card id", () => {
   }
 });
 
+test("card_ref cannot point at a different game's existing Tier-1 card", () => {
+  const paths = tempCorpus(
+    [validRow({ card_ref: "other-game" })],
+    [{ id: "other-game", title: "Other Game" }]
+  );
+  try {
+    const { errors } = validateGenreIndex(paths);
+    assert.ok(errors.some((e) => /card_ref must equal row id/.test(e)), errors.join("\n"));
+  } finally {
+    fs.rmSync(paths.root, { recursive: true, force: true });
+  }
+});
+
 test("critic flags facet floors and missing cross-genre representation deterministically", () => {
   const rows = [
     validRow({
