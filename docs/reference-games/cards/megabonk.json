@@ -2,84 +2,181 @@
   "schema_version": "1.0.0",
   "id": "megabonk",
   "title": "Megabonk",
-  "edition_pinned": "Megabonk Steam 1.0 (vedinad / John Megabonk; released 2025-09-18 for Windows & Linux) — 3D survivor-like as shipped at launch",
-  "genre_tags": ["survivor-like", "roguelike", "3d", "bullet-heaven", "action-roguelite"],
+  "edition_pinned": "Megabonk Steam release 18 September 2025 (vedinad; Windows & Linux) \u2014 pins the 3D survivor-like loop documented by early post-launch sources (Sep\u2013Oct 2025): procedural maps, auto combat, random upgrades, Silver meta, quests. Later December 2025 content updates are out of pin.",
+  "genre_tags": [
+    "survivor-like",
+    "roguelike",
+    "3d",
+    "bullet-heaven",
+    "action-roguelite"
+  ],
   "register_mapping": "mechanics-first",
   "moat": "3D vertical maps plus jump/slide speed turns survivor auto-combat into mobility routing, not only 2D kiting.",
   "loop_skeleton": {
-    "verbs": ["move-jump-slide", "auto-attack", "collect-xp", "upgrade-pick", "quest-objective", "spend-silver"],
+    "verbs": [
+      "move-jump-slide",
+      "auto-attack",
+      "collect-xp",
+      "upgrade-pick",
+      "quest-objective",
+      "spend-silver"
+    ],
     "description": "Navigate a procedurally generated 3D map with vertical routes, auto-attack hordes and bosses, collect XP gems for random upgrade offers, complete in-run quests and elites, die or survive, then spend scarce Silver for permanent unlocks."
   },
   "depth_mechanisms": [
     {
       "name": "3d vertical kite space",
-      "mechanism": "Procedural third-person maps include height, ramps, and fall risk; enemies can knock the player through space. Positioning uses jump, slide, and speed boosts, not only planar orbiting.",
-      "falsifiable_claim": "If maps are flattened to 2D with no jump/slide/height, death-from-knockback and route-secret rates fall and the game becomes statistically closer to a flat survivor-like clone."
+      "mechanism": "Procedural third-person maps include height, ramps, and multi-level routes. Movement uses jump, slide, and speed boosts so positioning is a 3D pathing problem rather than planar orbiting alone.",
+      "falsifiable_claim": "If maps are flattened to 2D with no jump, slide, or height, route choice collapses to planar kiting and the game stops differentiating from flat survivor-likes on movement."
     },
     {
       "name": "random upgrade synergy offers",
-      "mechanism": "Level-ups present random rarity-weighted upgrade offers across weapons and items so runs assemble different synergies; 70+ items and many weapons support combo explosion late run.",
-      "falsifiable_claim": "If upgrade offers are fixed sequential unlocks with no random forks, run-to-run build variance collapses and second-session 'try another combo' motive weakens."
+      "mechanism": "Level-ups present random rarity-weighted upgrade offers across weapons and items so runs assemble different weapon-and-item synergies rather than a fixed unlock order.",
+      "falsifiable_claim": "If upgrade offers are fixed sequential unlocks with no random forks, run-to-run builds converge and second-session motive to try another synergy weakens."
     },
     {
       "name": "scarce silver meta",
       "mechanism": "Silver is uncommon meta currency earned from challenges, silvery-blue pots, and Silver Tome upgrades; it permanently unlocks characters, weapons, and tomes rather than flooding every run with permanent power.",
-      "falsifiable_claim": "If Silver drops at the same rate as common gold every run, permanent unlock speed spikes and the challenge-gated unlock ladder stops structuring second-session goals."
+      "falsifiable_claim": "If Silver drops at the same rate as common gold every run, challenge-gated unlock goals stop structuring second-session play."
     },
     {
       "name": "quest-gated roster unlocks",
-      "mechanism": "200+ in-game quests gate the 20-character roster and weapons during rounds, so meta progress is task-shaped rather than pure time-played.",
-      "falsifiable_claim": "If all characters unlock by cumulative XP only, quest completion rates drop and players stop hunting in-run challenge objectives."
+      "mechanism": "A large quest list (200+) gates characters, weapons, and other content, so meta progress is task-shaped rather than pure time-played. Exact per-character gate conditions vary by quest; not every roster entry is proven gated only by mid-round combat quests.",
+      "falsifiable_claim": "If all characters unlock by cumulative XP only, players stop hunting quest objectives as the path to new roster options."
     }
   ],
-  "feel_signature": "A slide or jump commits a 3D path while auto-weapons fire; a level-up pause forces a rarity-weighted pick that changes how the next horde is cleared.",
-  "second_session_answer": "Players return to complete quests for Silver and unlock the next character or tome, then test a new mobility+weapon synergy on procedural maps.",
+  "feel_signature": "A slide or jump commits a 3D path while auto-weapons fire; a level-up pause forces a rarity-weighted pick that changes how the next wave is cleared.",
+  "second_session_answer": "Players return to complete quests for Silver and unlock the next character or tome, then test a new mobility-and-weapon synergy on procedural maps.",
   "packaging_lessons": [
-    "Ship auto-combat first, then add 3D movement (jump/slide/speed) as the differentiator from 2D survivor-likes.",
-    "Keep meta currency scarce and quest-gated so unlocks remain session goals after the first clear."
+    "Inference: ship auto-combat first, then add 3D movement (jump/slide/speed) as the differentiator from 2D survivor-likes.",
+    "Inference: keep meta currency scarce and quest-linked so unlocks remain session goals after the first clear."
   ],
   "anti_lessons": [
-    "Do not treat Megabonk as a skin of Vampire Survivors — copying auto-attack without 3D vertical mobility and knockback space misses the moat.",
+    "Do not treat Megabonk as a skin of Vampire Survivors \u2014 copying auto-attack without 3D vertical mobility misses the moat.",
     "Do not flood Silver; scarcity is load-bearing for quest-driven return."
   ],
   "system_bom": [
-    { "system": "play-loop", "note": "3D move + auto-attack + XP pick is the run core" },
-    { "system": "loot", "note": "items, chests, and upgrade offers are the run loot" },
-    { "system": "xp", "note": "gems from kills drive level-up offers" },
-    { "system": "leveling", "note": "random rarity upgrades are the decision points" },
-    { "system": "meta-progression", "note": "Silver unlocks characters, weapons, tomes across runs" },
-    { "system": "quests", "note": "200+ quests gate roster and content" },
-    { "system": "leaderboards", "note": "Steam leaderboards/stats support score-attack return" },
-    { "system": "win-loss-death", "note": "death ends the run; survival length and bosses structure success" }
+    {
+      "system": "play-loop",
+      "note": "3D move + auto-attack + XP pick is the run core that either ends in death or longer survival"
+    },
+    {
+      "system": "loot",
+      "note": "items, chests, and upgrade offers change combat options mid-run so the next wave is cleared differently"
+    },
+    {
+      "system": "xp",
+      "note": "gems from kills drive level-up offers that fork the build"
+    },
+    {
+      "system": "leveling",
+      "note": "random rarity upgrades are the decision points that assemble run synergies"
+    },
+    {
+      "system": "meta-progression",
+      "note": "Silver unlocks characters, weapons, and tomes across runs so permanent progress sits outside a single survival"
+    },
+    {
+      "system": "quests",
+      "note": "quest list gates roster and content so return goals are task-shaped"
+    },
+    {
+      "system": "leaderboards",
+      "note": "Steam stats/leaderboards support score-attack return after unlock goals settle"
+    },
+    {
+      "system": "win-loss-death",
+      "note": "death ends the run; survival length and bosses structure success"
+    }
   ],
   "citations": [
     {
-      "claim": "moat/edition: 3D Vampire Survivors-like; procedural maps; auto combat; random upgrades; released 2025-09-18 Windows/Linux by vedinad.",
+      "claim": "Edition pin: released 18 September 2025 for Windows and Linux by vedinad as a 3D Vampire Survivors\u2013like with procedural maps, auto combat, and random upgrades.",
       "source": "https://en.wikipedia.org/wiki/Megabonk"
     },
     {
-      "claim": "depth_mechanisms.3d vertical kite space: third-person maps with verticality; slide, jump, speed boosts; movement is multi-directional.",
-      "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
-    },
-    {
-      "claim": "depth_mechanisms.random upgrade synergy offers and Steam loop: fight hordes, loot, level up, random upgrade rarity, unlock characters.",
-      "source": "https://store.steampowered.com/app/3405340/Megabonk/"
-    },
-    {
-      "claim": "depth_mechanisms.scarce silver meta: Silver via challenges, pots, Silver Tome; permanent unlocks.",
-      "source": "https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
-    },
-    {
-      "claim": "depth_mechanisms.quest-gated roster: 20 characters, 70+ items, 200+ quests documented.",
-      "source": "https://en.wikipedia.org/wiki/Megabonk"
-    },
-    {
-      "claim": "feel_signature Risk of Rain 2 × Vampire Survivors comparison for 3D survivor loop.",
+      "claim": "Edition pin excludes later December mega-update content as proof of launch mechanics; pin rests on Sep\u2013Oct 2025 documentation.",
       "source": "https://www.gamingonlinux.com/2025/12/the-popular-megabonk-gets-a-mega-update-with-new-content/"
     },
     {
-      "claim": "system_bom character count and unlock surface.",
+      "claim": "3d vertical kite space: third-person maps with verticality; slide, jump, speed boosts; multi-directional movement.",
+      "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
+    },
+    {
+      "claim": "Random upgrade synergy offers: fight hordes, loot, level up, random upgrade rarity, unlock characters (Steam store loop).",
+      "source": "https://store.steampowered.com/app/3405340/Megabonk/"
+    },
+    {
+      "claim": "Scarce silver meta: Silver via challenges, pots, Silver Tome; permanent unlocks; not common.",
+      "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
+    },
+    {
+      "claim": "Quest-gated roster surface: 20 characters, 70+ items, 200+ quests documented.",
+      "source": "https://en.wikipedia.org/wiki/Megabonk"
+    },
+    {
+      "claim": "Quest list details for content gating.",
+      "source": "https://gamerant.com/all-quests-in-megabonk/"
+    },
+    {
+      "claim": "Character roster count and unlock surface (20 characters).",
       "source": "https://www.rockpapershotgun.com/megabonk-tier-list-all-20-characters-ranked"
+    },
+    {
+      "claim": "Feel signature: 3D movement with auto-combat and level-up upgrade picks during horde survival.",
+      "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
+    },
+    {
+      "claim": "Feel signature / loop comparison as 3D survivor-like with Risk of Rain 2 \u00d7 Vampire Survivors framing (early coverage).",
+      "source": "https://www.gamesradar.com/games/roguelike/i-cant-pry-myself-from-the-computer-new-roguelike-hailed-as-a-mix-of-vampire-survivors-and-risk-of-rain-2-and-im-starting-to-see-why-it-has-4-000-very-positive-steam-reviews-after-just-one-week/"
+    },
+    {
+      "claim": "Second-session answer: Silver and unlocks structure return after runs.",
+      "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
+    },
+    {
+      "claim": "Play-loop BOM: procedural 3D map, auto attack, XP upgrades is the run atom.",
+      "source": "https://store.steampowered.com/app/3405340/Megabonk/"
+    },
+    {
+      "claim": "Loot BOM: items and upgrade offers change combat mid-run.",
+      "source": "https://www.ign.com/wikis/megabonk/Best_Items_Tier_List"
+    },
+    {
+      "claim": "XP and leveling BOM: gems and random rarity upgrades are decision points.",
+      "source": "https://store.steampowered.com/app/3405340/Megabonk/"
+    },
+    {
+      "claim": "Meta-progression BOM: Silver unlocks permanent content across runs.",
+      "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
+    },
+    {
+      "claim": "Quests BOM: 200+ quests gate roster and content.",
+      "source": "https://gamerant.com/all-quests-in-megabonk/"
+    },
+    {
+      "claim": "Leaderboards BOM: Steam-facing competitive stats support score-attack return (store feature surface).",
+      "source": "https://store.steampowered.com/app/3405340/Megabonk/"
+    },
+    {
+      "claim": "Win-loss-death BOM: death ends the run; survival and bosses structure success.",
+      "source": "https://en.wikipedia.org/wiki/Megabonk"
+    },
+    {
+      "claim": "Packaging lesson 1 (labeled Inference): auto-combat base plus 3D movement differentiator.",
+      "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
+    },
+    {
+      "claim": "Packaging lesson 2 (labeled Inference): scarce Silver and quests keep unlock goals after first clear.",
+      "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
+    },
+    {
+      "claim": "Anti-lesson VS skin: 3D terrain and verticality are the cited differentiator.",
+      "source": "https://www.thegamer.com/megabonk-game-of-the-year/"
+    },
+    {
+      "claim": "Anti-lesson flood Silver: scarcity is load-bearing for challenge-gated unlocks.",
+      "source": "https://web.archive.org/web/20251003192749/https://www.thegamer.com/megabonk-farm-silver-currency-tips-guide/"
     }
   ],
   "status": "draft"

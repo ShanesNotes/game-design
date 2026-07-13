@@ -2,13 +2,24 @@
   "schema_version": "1.0.0",
   "id": "hades",
   "title": "Hades",
-  "edition_pinned": "Hades 1.0 (Supergiant Games, full release 2020) — not Hades II; House hub + boon run structure as shipped",
-  "genre_tags": ["roguelike", "action", "narrative-roguelite", "isometric"],
+  "edition_pinned": "Hades 1.0 (Supergiant Games, full release September 2020) \u2014 House hub + boon run structure as shipped; not Hades II.",
+  "genre_tags": [
+    "roguelike",
+    "action",
+    "narrative-roguelite",
+    "isometric"
+  ],
   "register_mapping": "hybrid",
   "moat": "Death returns Zagreus to the House where dialogue and meta unlocks advance; runs feed story instead of only reset.",
   "loop_skeleton": {
-    "verbs": ["dash-strike", "boon-pick", "room-clear", "die-or-escape", "hub-gift"],
-    "description": "Leave the House, clear rooms while choosing god boons that rewrite the attack kit, die or reach surface, return via Styx to the House to spend resources, gift NPCs, and unlock dialogue that only fires after specific run outcomes."
+    "verbs": [
+      "dash-strike",
+      "boon-pick",
+      "room-clear",
+      "die-or-escape",
+      "hub-gift"
+    ],
+    "description": "Leave the House, clear rooms while choosing god boons that rewrite the attack kit, die or reach the surface, return via the Styx to the House to spend resources, gift NPCs, and unlock dialogue that only fires after specific run outcomes."
   },
   "depth_mechanisms": [
     {
@@ -23,53 +34,142 @@
     },
     {
       "name": "god mode death ramp",
-      "mechanism": "Optional God Mode grants 20% damage resistance on enable, then +2% per death up to 80%, without changing rewards or story access, so mechanical skill can lag narrative progress without a separate story-stripped path.",
+      "mechanism": "Optional God Mode grants 20% damage resistance on enable, then +2% per death up to 80%. It is designed so players can keep looping narrative progress while mechanical skill lags, without a separate story-stripped path.",
       "falsifiable_claim": "If God Mode is removed and no other continuous death-scaling assist exists, players who die often abandon before the multi-escape story climax."
     }
   ],
-  "feel_signature": "A dash-strike chain ends in a boon choice that rewrites the next rooms; death is a Styx return that opens new House lines rather than a blank slate.",
-  "second_session_answer": "Players return to hear the next dialogue branch and spend Darkness/Nectar unlocked by the previous run, not only to beat a personal best time.",
+  "feel_signature": "A room clear ends in a boon choice that rewrites the next rooms; death is a Styx return that opens new House lines rather than a blank slate.",
+  "second_session_answer": "Players return to hear the next dialogue branch and spend Darkness and Nectar unlocked by the previous run, not only to beat a personal best time.",
   "packaging_lessons": [
-    "Ship the hub-return dialogue queue before expanding biome count; narrative continuity is the retention spine.",
+    "Inference: ship the hub-return dialogue queue before expanding biome count; narrative continuity is the retention spine.",
     "Gate permanent power behind House systems (Mirror, weapons, keepsakes) while keeping boons run-temporary so death still costs power."
   ],
   "anti_lessons": [
-    "Do not copy death-as-story without a large modular dialogue condition graph — a single linear cutscene on death is not the mechanism.",
+    "Do not copy death-as-story without a large modular dialogue condition graph \u2014 a single linear cutscene on death is not the mechanism.",
     "Do not strip run-temporary power entirely into meta unlocks; if nothing is lost on death, the run ceases to be a decision space."
   ],
   "system_bom": [
-    { "system": "play-loop", "note": "room clear → boon → deeper biome is the run core" },
-    { "system": "meta-progression", "note": "Darkness, gems, and House upgrades persist across deaths" },
-    { "system": "loot", "note": "boons, hammers, poms, and keepsakes are the run loot vocabulary" },
-    { "system": "win-loss-death", "note": "death is expected; it spends the run but advances House state" },
-    { "system": "quests", "note": "prophecy and relationship tracks give long goals beyond a single escape" },
-    { "system": "skills", "note": "weapon aspects and Mirror talents change base kit between runs" },
-    { "system": "ui", "note": "boon rarity, heat, and relationship meters must be readable mid-run and in hub" }
+    {
+      "system": "play-loop",
+      "note": "room clear \u2192 boon or reward choice \u2192 deeper biome rooms is the run core that feeds either escape or death return"
+    },
+    {
+      "system": "meta-progression",
+      "note": "Darkness spent at the Mirror and House Contractor upgrades persist so failed runs still change the next attempt"
+    },
+    {
+      "system": "loot",
+      "note": "boons rewrite kit mid-run; hammers alter weapon moves; poms rank-up boons; keepsakes bias god offers \u2014 each choice branches the next combat"
+    },
+    {
+      "system": "win-loss-death",
+      "note": "death is expected; it ends run power but advances House dialogue and meta currency"
+    },
+    {
+      "system": "quests",
+      "note": "Fated List prophecies and NPC relationship tracks give long goals beyond a single escape"
+    },
+    {
+      "system": "skills",
+      "note": "weapon aspects and Mirror talents change base kit between runs"
+    },
+    {
+      "system": "ui",
+      "note": "boon rarity, Heat/Pact settings, and relationship meters must be readable in run and in hub so choices stay legible"
+    }
   ],
   "citations": [
     {
-      "claim": "moat/death-as-narrative: home base between runs is hub for storytelling and progression; clear-encounter-meet-reward structure.",
+      "claim": "Moat and death-as-narrative: home base between runs is the hub for storytelling and progression; clear-encounter-meet-reward structure.",
       "source": "https://www.gamedeveloper.com/design/hades-devs-say-accidentally-inventing-a-subgenre-was-surreal-"
     },
     {
-      "claim": "depth_mechanisms.death-as-narrative tick: modular context-sensitive dialogue responds to weapons, gifts, milestones; death/failure treated as narrative events.",
-      "source": "https://uu.diva-portal.org/smash/get/diva2:1965991/FULLTEXT01.pdf (Pakkan, How Hades Balances Narrative and Gameplay)"
-    },
-    {
-      "claim": "depth_mechanisms.boon build rewrite: boons grant mechanical buffs plus dialogue and meta increments each activation.",
-      "source": "https://benjaminglover.substack.com/p/why-hades-was-a-success"
-    },
-    {
-      "claim": "depth_mechanisms.god mode death ramp: 20% DR on enable, +2% per death to 80%; no story or reward loss.",
-      "source": "https://www.inverse.com/gaming/hades-god-mode-interview"
-    },
-    {
-      "claim": "feel_signature second_session: narrative continuity carried forward despite roguelike reset; knowledge and hub state persist.",
+      "claim": "Narrative continuity and hub state persist across roguelike resets; knowledge and House state carry forward.",
       "source": "https://gdconf.com/article/roguelikes-and-narrative-design-with-hades-creative-director-greg-kasavin-gdc-podcast-ep-16/"
     },
     {
-      "claim": "system_bom hub after death for permanent upgrades and NPC dialogue.",
+      "claim": "Death-as-narrative tick: hub after death for permanent upgrades and NPC dialogue; failure is progress.",
       "source": "https://natalia-nazeem.medium.com/failure-is-death-and-death-is-progress-the-use-of-repetition-replayability-and-narrative-673cfa4e2e8"
+    },
+    {
+      "claim": "Boon build rewrite: room rewards include god boons that alter attack kit for the rest of the run.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Boons"
+    },
+    {
+      "claim": "Boon dialogue and mechanical buffs stack narrative with build choice each activation.",
+      "source": "https://benjaminglover.substack.com/p/why-hades-was-a-success"
+    },
+    {
+      "claim": "God Mode death ramp: 20% damage resistance on enable, +2% per death to 80% cap.",
+      "source": "https://www.inverse.com/gaming/hades-god-mode-interview"
+    },
+    {
+      "claim": "God Mode keeps narrative looping accessible without a separate story-stripped path; designed around Hades death structure.",
+      "source": "https://www.inverse.com/gaming/hades-god-mode-interview"
+    },
+    {
+      "claim": "Feel signature: room combat leads to boon choice; death returns through Styx to the House for story and upgrades.",
+      "source": "https://www.gamedeveloper.com/design/hades-devs-say-accidentally-inventing-a-subgenre-was-surreal-"
+    },
+    {
+      "claim": "Second-session answer: Darkness and hub spend after runs fund Mirror upgrades and relationship gifts.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Mirror_of_Night"
+    },
+    {
+      "claim": "Meta-progression BOM: Mirror of Night spends Darkness for permanent talent ranks between runs.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Mirror_of_Night"
+    },
+    {
+      "claim": "Meta currency Darkness and gemstones feed House progression across deaths.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Darkness"
+    },
+    {
+      "claim": "Loot BOM: poms increase boon ranks; hammers alter weapon moves; keepsakes bias god offers.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Pom_of_Power"
+    },
+    {
+      "claim": "Loot loop service: Daedalus Hammers rewrite weapon moves mid-run, branching combat options.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Daedalus_Hammer"
+    },
+    {
+      "claim": "Quests BOM: Fated List of Minor Prophecies tracks long-term goals across many runs.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Fated_List_of_Minor_Prophecies"
+    },
+    {
+      "claim": "Relationship tracks and gifts (Nectar) advance NPC affinity and story lines across returns to the House.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Nectar"
+    },
+    {
+      "claim": "Skills BOM: weapon aspects unlock alternate kits spent with Titan Blood between runs.",
+      "source": "https://www.ign.com/wikis/hades/How_to_Find_Duo_Boons"
+    },
+    {
+      "claim": "Skills BOM Mirror talents change base combat stats between runs.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Mirror_of_Night"
+    },
+    {
+      "claim": "Play-loop BOM: chamber clear \u2192 reward door \u2192 deeper Underworld rooms is the run structure.",
+      "source": "https://www.ign.com/wikis/hades/How_to_Find_Duo_Boons"
+    },
+    {
+      "claim": "UI BOM: boon rarity tiers and Pact of Punishment/Heat settings are exposed as readable mid-run choice inputs.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Boons"
+    },
+    {
+      "claim": "Packaging lesson 1 (labeled Inference): hub dialogue queue is the retention spine before biome expansion.",
+      "source": "https://gdconf.com/article/roguelikes-and-narrative-design-with-hades-creative-director-greg-kasavin-gdc-podcast-ep-16/"
+    },
+    {
+      "claim": "Packaging lesson 2: permanent power sits in House systems while boons remain run-temporary.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Mirror_of_Night"
+    },
+    {
+      "claim": "Anti-lesson modular dialogue: condition-keyed House lines, not a single death cutscene, carry the narrative tick.",
+      "source": "https://natalia-nazeem.medium.com/failure-is-death-and-death-is-progress-the-use-of-repetition-replayability-and-narrative-673cfa4e2e8"
+    },
+    {
+      "claim": "Anti-lesson strip all power to meta: run boons and hammers are lost on death so the run remains a decision space.",
+      "source": "https://web.archive.org/web/2024/https://hades.fandom.com/wiki/Boons"
     }
   ],
   "status": "draft"

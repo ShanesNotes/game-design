@@ -2,75 +2,174 @@
   "schema_version": "1.0.0",
   "id": "stardew-valley",
   "title": "Stardew Valley",
-  "edition_pinned": "Stardew Valley design-canonical single-player farm loop (ConcernedApe / Eric Barone; 1.0 2016 core — day energy, seasons, Community Center). Multiplayer and 1.5/1.6 content are extensions, not the pin.",
-  "genre_tags": ["farm-sim", "life-sim", "rpg-lite", "open-ended"],
+  "edition_pinned": "Stardew Valley 1.0 single-player farm loop (ConcernedApe / Eric Barone; 26 February 2016) \u2014 day energy, seasons, Community Center. Multiplayer (1.3) and 1.5/1.6 content are extensions, not the pin.",
+  "genre_tags": [
+    "farm-sim",
+    "life-sim",
+    "rpg-lite",
+    "open-ended"
+  ],
   "register_mapping": "world-first",
   "moat": "A shared daily energy+time budget forces tradeoffs across farm, mine, forage, fish, and town goals.",
   "loop_skeleton": {
-    "verbs": ["till-plant-water", "forage-mine-fish", "gift-talk", "sleep", "bundle-turn-in"],
+    "verbs": [
+      "till-plant-water",
+      "forage-mine-fish",
+      "gift-talk",
+      "sleep",
+      "bundle-turn-in"
+    ],
     "description": "Wake with full energy, spend the day on farm work and town/mine activities that drain energy and clock time, sleep to advance the calendar, and turn seasonal goods into Community Center bundles that unlock map systems."
   },
   "depth_mechanisms": [
     {
       "name": "energy-time day budget",
-      "mechanism": "Tools and actions spend energy; the clock advances toward sleep. Exhaustion and pass-out penalize the next day. Every activity (farm, mine, fish, social) competes for the same two meters.",
-      "falsifiable_claim": "If energy is infinite and the day never forces sleep, multi-activity tradeoffs vanish and second-session planning (what to plant vs mine) collapses to pure checklist execution."
+      "mechanism": "Tools and actions spend energy; the clock advances toward sleep. Exhaustion and pass-out penalize the next day. Farm, mine, fish, and social activities compete for the same energy and clock.",
+      "falsifiable_claim": "If energy is infinite and the day never forces sleep, multi-activity tradeoffs vanish and second-session planning (what to plant vs mine) becomes pure checklist execution."
     },
     {
       "name": "season crop window",
-      "mechanism": "Crops are legal only in listed seasons and need daily water until harvest; season rollover destroys out-of-season plants. The calendar is a fixed constraint on farm plans.",
-      "falsifiable_claim": "If crops grow in all seasons without calendar loss, first-year farm planning depth drops and players stop treating season transitions as decision points."
+      "mechanism": "Crops are legal only in listed seasons and need daily water until harvest; season rollover kills out-of-season plants. The calendar is a fixed constraint on farm plans.",
+      "falsifiable_claim": "If crops grow in all seasons without calendar loss, first-year farm planning stops treating season transitions as decision points."
     },
     {
       "name": "community center bundle graph",
-      "mechanism": "Bundles demand sets of seasonal and activity-gated items; completing rooms unlocks new areas and systems (e.g. minecarts, bridge). An alternate Joja cash path exists but the design-canonical long goal is bundle completion.",
-      "falsifiable_claim": "If bundles are removed and only gold income remains as long goal, second-session return motives shift entirely to money optimization and multi-skill collection drops."
+      "mechanism": "Bundles demand sets of seasonal and activity-gated items; completing rooms unlocks systems such as the greenhouse, minecarts, and bridge repair. An alternate Joja cash path exists, but the design-canonical long goal is bundle completion.",
+      "falsifiable_claim": "If bundles are removed and only gold income remains as long goal, second-session return motives shift to money optimization and multi-skill collection drops."
     }
   ],
-  "feel_signature": "Each tool swing spends energy and minutes on a shared day clock; success is a bed-save with crops watered and a bundle slot filled, not a boss HP bar.",
-  "second_session_answer": "Players return to water crops, hit the next mine floors, and finish the next bundle items before season end — goals that persist on the farm calendar.",
+  "feel_signature": "Each tool swing spends energy on a shared day clock; success is a bed-save with crops watered and a bundle slot filled, not a boss HP bar.",
+  "second_session_answer": "Players return to water crops, hit the next mine floors, and finish the next bundle items before season end \u2014 goals that persist on the farm calendar.",
   "packaging_lessons": [
-    "Ship day energy, seasons, and one long collection goal (bundles) before marriage or multiplayer.",
+    "Inference: ship day energy, seasons, and one long collection goal (bundles) before marriage or multiplayer.",
     "Make cooking a utility bonus path rather than pure profit so optimization does not erase exploration (Barone design intent)."
   ],
   "anti_lessons": [
-    "Do not copy a farm sim as infinite free time with no shared budget — without energy/day pressure the loop is a spreadsheet.",
+    "Do not copy a farm sim as infinite free time with no shared budget \u2014 without energy/day pressure the loop is a spreadsheet.",
     "Do not require spreadsheets for basic progress; if the only viable play is external optimizers, the day budget failed as a teaching system."
   ],
   "system_bom": [
-    { "system": "play-loop", "note": "day energy cycle is the master loop" },
-    { "system": "economy", "note": "crop/animal/forage sales fund tools and buildings" },
-    { "system": "crafting", "note": "machines and cooking convert raw goods into higher utility" },
-    { "system": "inventory", "note": "limited slots force what to carry into mines vs farm" },
-    { "system": "quests", "note": "bundles and help-wanted boards structure medium goals" },
-    { "system": "skills", "note": "farming/mining/foraging/fishing/combat level from use" },
-    { "system": "save-state", "note": "farm layout and calendar must persist across sessions" },
-    { "system": "multiplayer", "note": "optional later; design-canonical loop is single-player day budget" }
+    {
+      "system": "play-loop",
+      "note": "day energy cycle is the master loop that forces tradeoffs before sleep advances the calendar"
+    },
+    {
+      "system": "economy",
+      "note": "crop, animal, and forage sales fund tools and buildings that change tomorrow's work rate"
+    },
+    {
+      "system": "crafting",
+      "note": "machines and cooking convert raw goods into higher-value or buff items that feed the next day plan"
+    },
+    {
+      "system": "inventory",
+      "note": "limited slots force what to carry into mines versus what to leave for farm work"
+    },
+    {
+      "system": "quests",
+      "note": "bundles and help-wanted boards structure medium goals that compete with pure gold farming"
+    },
+    {
+      "system": "skills",
+      "note": "farming, mining, foraging, fishing, and combat levels from use and unlock tools and recipes that expand the day plan"
+    },
+    {
+      "system": "save-state",
+      "note": "farm layout and calendar must persist so multi-day crop and bundle plans remain intact across sessions"
+    }
   ],
   "citations": [
     {
-      "claim": "moat/energy-time: every action drains energy; depleted bar forces bed; next day repeats tasks — described as the core loop.",
+      "claim": "Edition pin: Stardew Valley 1.0 released 26 February 2016 as a single-player farm sim; multiplayer arrived later.",
+      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
+    },
+    {
+      "claim": "Moat and energy-time day budget: actions drain energy; depleted bar forces bed; next day repeats tasks \u2014 described as the core loop.",
       "source": "https://www.gq.com/story/stardew-valley-eric-barone-profile"
     },
     {
-      "claim": "depth_mechanisms.season crop window and open-ended farm management: seasonal seeds, daily water, harvest before next season; animals, skills, social.",
+      "claim": "Energy and pass-out: running out of energy or staying up too late causes the player to pass out with gold and energy penalties.",
+      "source": "https://stardewvalleywiki.com/Energy"
+    },
+    {
+      "claim": "Season crop window: crops are season-locked; planting and harvest windows are calendar-gated.",
+      "source": "https://stardewvalleywiki.com/Crops"
+    },
+    {
+      "claim": "Season rollover kills out-of-season crops; dead plants must be cleared.",
+      "source": "https://stardewvalleywiki.com/Crops"
+    },
+    {
+      "claim": "Community center bundle graph: bundles unlock areas and systems; Community Center vs Joja as long structure.",
       "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
     },
     {
-      "claim": "depth_mechanisms.community center bundle graph: bundles unlock areas; Community Center vs Joja as long structure.",
-      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
+      "claim": "Bundle rooms unlock greenhouse, minecarts, bridge, and other map systems.",
+      "source": "https://stardewvalleywiki.com/Bundles"
     },
     {
-      "claim": "packaging cooking intentionally not pure profit; bonuses aid exploration skills — Barone response to spreadsheet optimizers.",
-      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
+      "claim": "Joja cash alternate path replaces Community Center restoration with paid community development.",
+      "source": "https://stardewvalleywiki.com/JojaMart"
     },
     {
-      "claim": "feel_signature three-phase handoff (short goals, long goals, discovery) via mines and bundles.",
+      "claim": "Feel signature three-phase handoff (short goals, long goals, discovery) via mines and bundles.",
       "source": "https://kinglink-reviews.com/2020/02/23/how-stardew-valley-work-the-three-main-phases-of-farm-simulators/"
     },
     {
-      "claim": "system_bom farm + town systems as integrated day cycle.",
+      "claim": "Feel signature energy and day clock as the shared budget for tool work.",
       "source": "https://www.gq.com/story/stardew-valley-eric-barone-profile"
+    },
+    {
+      "claim": "Second-session answer: multi-day crops, mine floors, and bundles persist as calendar goals.",
+      "source": "https://stardewvalleywiki.com/Bundles"
+    },
+    {
+      "claim": "Play-loop BOM: day energy cycle forces activity tradeoffs before sleep.",
+      "source": "https://stardewvalleywiki.com/Energy"
+    },
+    {
+      "claim": "Economy BOM: selling goods funds tools, buildings, and upgrades that change work rate.",
+      "source": "https://stardewvalleywiki.com/Gold"
+    },
+    {
+      "claim": "Crafting BOM: artisan machines convert crops into higher-value goods; cooking grants buffs.",
+      "source": "https://stardewvalleywiki.com/Artisan_Goods"
+    },
+    {
+      "claim": "Cooking utility path and Barone response to pure profit optimizers (design intent).",
+      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
+    },
+    {
+      "claim": "Inventory BOM: limited inventory slots constrain what is carried into mines versus farm tasks.",
+      "source": "https://stardewvalleywiki.com/Inventory"
+    },
+    {
+      "claim": "Quests BOM: Help Wanted board quests structure medium gold and item goals.",
+      "source": "https://stardewvalleywiki.com/Quests"
+    },
+    {
+      "claim": "Skills BOM: five skills level from use and unlock recipes and profession bonuses.",
+      "source": "https://stardewvalleywiki.com/Skills"
+    },
+    {
+      "claim": "Save-state BOM: farm layout, crops, and calendar date persist in the save file across sessions.",
+      "source": "https://stardewvalleywiki.com/Saves"
+    },
+    {
+      "claim": "Packaging lesson 1 (labeled Inference): energy, seasons, and bundles are the core long loop before marriage or multiplayer extensions.",
+      "source": "https://www.gq.com/story/stardew-valley-eric-barone-profile"
+    },
+    {
+      "claim": "Packaging lesson 2: cooking as utility/buff path rather than pure profit.",
+      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
+    },
+    {
+      "claim": "Anti-lesson infinite free time: energy and day length create the shared budget.",
+      "source": "https://stardewvalleywiki.com/Energy"
+    },
+    {
+      "claim": "Anti-lesson spreadsheet-only play: Barone design notes reject pure profit cooking as the intended path.",
+      "source": "https://en.wikipedia.org/wiki/Stardew_Valley"
     }
   ],
   "status": "draft"

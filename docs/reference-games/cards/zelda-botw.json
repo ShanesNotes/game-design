@@ -2,73 +2,159 @@
   "schema_version": "1.0.0",
   "id": "zelda-botw",
   "title": "The Legend of Zelda: Breath of the Wild",
-  "edition_pinned": "The Legend of Zelda: Breath of the Wild (Nintendo Switch / Wii U, 2017) — not Tears of the Kingdom; chemistry+physics open-world rules as shipped at launch",
-  "genre_tags": ["open-world", "action-adventure", "physics-systems", "exploration"],
+  "edition_pinned": "The Legend of Zelda: Breath of the Wild (Nintendo Switch / Wii U, March 2017 launch) \u2014 chemistry+physics open-world rules as shipped; not Tears of the Kingdom.",
+  "genre_tags": [
+    "open-world",
+    "action-adventure",
+    "physics-systems",
+    "exploration"
+  ],
   "register_mapping": "world-first",
   "moat": "Shared chemistry+physics state rules let any object rewrite routes, combat, and puzzles without scripted solutions.",
   "loop_skeleton": {
-    "verbs": ["climb", "glider-route", "weapon-use", "element-apply", "cook", "shrine-clear"],
-    "description": "Survey terrain, commit stamina to a climb or glider path, apply weapons and elemental states to enemies or materials, cook or craft for the next push, clear a shrine or objective that refunds a new option into the open field."
+    "verbs": [
+      "climb",
+      "glider-route",
+      "weapon-use",
+      "element-apply",
+      "cook",
+      "shrine-clear"
+    ],
+    "description": "Survey terrain, spend stamina on climb or glider paths, apply weapons and elemental states to enemies or materials, cook consumables for the next push, clear a shrine or tower objective that refunds map options into the open field."
   },
   "depth_mechanisms": [
     {
       "name": "chemistry engine",
-      "mechanism": "A rule-based state calculator tracks material/element states (fire, ice, electricity, wind, water) so elements change material states and each other; materials do not change each other. The same rules drive puzzles, combat, and traversal.",
-      "falsifiable_claim": "If chemistry states are removed and only rigid scripted puzzle flags remain, shrine clear rates fall and players stop inventing off-script combat/route solutions after session one."
+      "mechanism": "A rule-based state calculator tracks element states (fire, ice, electricity, wind, water) so elements change material states and each other; materials do not change each other. The same rules drive puzzles, combat, and traversal.",
+      "falsifiable_claim": "If chemistry states are removed and only rigid scripted puzzle flags remain, players stop inventing off-script combat and route solutions after session one."
     },
     {
       "name": "weapon durability budget",
       "mechanism": "Weapons break after a finite number of hits, so inventory slots become temporary tools rather than permanent loadouts; the player must choose when to spend a high-damage weapon and where to restock from the field.",
-      "falsifiable_claim": "If durability is removed and strongest weapons never break, players stop picking up field weapons and combat diversity collapses to a fixed favorite loadout by session two."
+      "falsifiable_claim": "If durability is removed and strongest weapons never break, players stop picking up field weapons and combat converges on a fixed favorite loadout by session two."
     },
     {
       "name": "stamina-gated vertical traversal",
-      "mechanism": "Climb and glider use a shared stamina budget; nearly any surface is legal but height and weather punish over-commit, so route choice is a resource decision rather than a pathfinder unlock.",
-      "falsifiable_claim": "If stamina is infinite on climb/glider, average time-to-first-major-landmark drops and second-session route planning (rest/food/weather) becomes irrelevant."
+      "mechanism": "Climbing, gliding, swimming, and sprinting draw from one stamina wheel. Most climbable surfaces are legal until stamina empties; rain makes climbing slip and weather zones demand resistance food or gear, so route choice is a stamina and preparation decision rather than a pathfinder unlock.",
+      "falsifiable_claim": "If climb and glider costs no stamina, second-session route planning that budgets rest, food, and weather preparation stops mattering for major landmarks."
     }
   ],
-  "feel_signature": "Each commit spends a measurable resource (stamina, weapon HP, cook ingredients); success is a new route or state interaction the player composed, not a scripted set-piece completion.",
-  "second_session_answer": "Players return to restock weapons and food, then re-route through known chemistry interactions (e.g. metal+lightning, fire+grass) toward unexplored towers and shrines rather than to grind a skill tree.",
+  "feel_signature": "A climb, glider launch, or weapon swing spends a named resource (stamina or weapon durability); success is a player-composed route or element interaction, not a scripted set-piece completion.",
+  "second_session_answer": "Players return to restock weapons and food, then re-route through known chemistry interactions (metal+lightning, fire+grass) toward unexplored towers and shrines rather than to grind a skill tree.",
   "packaging_lessons": [
-    "Ship a small closed test bed of chemistry rules before open-world scale; the GDC panel treats chemistry as a pair to physics, not as decorative VFX.",
-    "Make the default tools (climb, glider, breakable weapons) work everywhere before adding special-case dungeon keys."
+    "Inference: ship a small closed test bed of chemistry and physics rules (Great Plateau style) before full open-world scale so rule consistency can be proven where failure is cheap.",
+    "Inference: make default tools (climb, glider, breakable weapons with field restock) legal across most of the map before adding special-case dungeon keys as the main gate."
   ],
   "anti_lessons": [
-    "Do not copy weapon durability without flooding the world with restock points and alternate tool types — durability alone without abundance only produces inventory anxiety.",
+    "Do not copy weapon durability without flooding the world with restock points and alternate tool types \u2014 durability alone without abundance only produces inventory anxiety.",
     "Do not treat open world as content volume; without consistent state rules, the map is a checklist of one-off scripts."
   ],
   "system_bom": [
-    { "system": "play-loop", "note": "climb/glider/combat/cook cycle must share the same material and stamina rules" },
-    { "system": "inventory", "note": "weapon/shield/bow slots are temporary budgets that force restock exploration" },
-    { "system": "crafting", "note": "cooking converts field ingredients into stamina and resistance consumables for the next route" },
-    { "system": "quests", "note": "shrines and towers gate new map options without requiring linear story order" },
-    { "system": "save-state", "note": "world material state and inventory must persist so chemistry experiments carry across sessions" },
-    { "system": "win-loss-death", "note": "death returns to last save/shrine; failure is lost inventory progress and route commit, not a genre-style game over screen" }
+    {
+      "system": "play-loop",
+      "note": "exploration, combat, and shrine solves share chemistry and physics; stamina gates climb/glide while cooking and gear feed the next route push"
+    },
+    {
+      "system": "inventory",
+      "note": "weapon, shield, and bow slots are temporary budgets that force field restock exploration"
+    },
+    {
+      "system": "crafting",
+      "note": "cooking converts field ingredients into stamina, hearts, and resistance consumables that fund the next climb or weather zone"
+    },
+    {
+      "system": "quests",
+      "note": "shrines grant Spirit Orbs for heart/stamina vessels; towers reveal map sectors and enable fast travel \u2014 both gate options without linear story order"
+    },
+    {
+      "system": "save-state",
+      "note": "durable inventory, quest flags, and map progress persist; transient object and chemistry states commonly reset on reload or area reload"
+    },
+    {
+      "system": "win-loss-death",
+      "note": "death reloads the last autosave or manual save; banked inventory and map progress remain, while uncommitted route time is lost"
+    }
   ],
   "citations": [
     {
-      "claim": "moat/chemistry: chemistry engine is a rule-based state calculator (elements change materials and each other; materials do not change each other) paired with physics.",
-      "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/ (Takuhiro Dohta, GDC 2017 coverage)"
+      "claim": "Moat and chemistry depth entry: chemistry is a rule-based state calculator (elements change materials and each other; materials do not change each other) paired with physics for player-authored solutions.",
+      "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/"
     },
     {
-      "claim": "depth_mechanisms.chemistry engine: GDC 2017 Breaking Conventions session covers physics+chemistry implementation for player-authored solutions.",
-      "source": "https://www.youtube.com/watch?v=QyMsF31NdNc (GDC: Breaking Conventions with The Legend of Zelda: Breath of the Wild)"
-    },
-    {
-      "claim": "depth_mechanisms.weapon durability budget: Fujibayashi/Aonuma describe breakable weapons as making swing decisions strategic (when/on whom to spend a weapon).",
-      "source": "https://www.zeldadungeon.net/breath-of-the-wilds-developers-talk-about-weapons-and-armor/ (Nintendo Power Podcast interview summary)"
-    },
-    {
-      "claim": "feel_signature / second_session: experimental solutions emerge from interconnected physics+chemistry rules rather than scripted paths.",
-      "source": "https://joshuabgad.medium.com/breath-of-the-wild-experimental-solutions-5ce0ec0ec9b7"
-    },
-    {
-      "claim": "packaging_lessons: chemistry framed as state calculator alongside Havok physics for consistent world lies.",
+      "claim": "Chemistry framed as state calculator alongside Havok physics for consistent world rules (GDC 2017 coverage).",
       "source": "https://www.thumbsticks.com/gdc-17-breath-of-the-wild-science-lies/"
     },
     {
-      "claim": "system_bom.inventory durability restock pressure as exploration driver.",
+      "claim": "Weapon durability budget: Fujibayashi and Aonuma describe breakable weapons as making swing decisions strategic (when and on whom to spend a weapon).",
+      "source": "https://www.zeldadungeon.net/breath-of-the-wilds-developers-talk-about-weapons-and-armor/"
+    },
+    {
+      "claim": "Inventory BOM: durability restock pressure drives exploration for replacement weapons.",
       "source": "https://www.siliconera.com/breath-of-the-wilds-durability-system-is-a-benefit-not-a-drawback/"
+    },
+    {
+      "claim": "Stamina vessel progression: Spirit Orbs from shrines trade for Stamina Vessels that expand the stamina wheel used for climbing and gliding.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Stamina_Vessel"
+    },
+    {
+      "claim": "Stamina upgrades fund longer climbs and glides; Spirit Orbs come from completing shrines.",
+      "source": "https://www.shacknews.com/article/99236/how-to-get-hearts-and-stamina-breath-of-the-wild"
+    },
+    {
+      "claim": "Feel signature experimental solutions emerge from interconnected physics and chemistry rules rather than scripted paths.",
+      "source": "https://joshuabgad.medium.com/breath-of-the-wild-experimental-solutions-5ce0ec0ec9b7"
+    },
+    {
+      "claim": "Second-session and chemistry combat/route reuse: fire, ice, electricity interactions and material states are the reusable problem-solving vocabulary.",
+      "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/"
+    },
+    {
+      "claim": "Cooking converts ingredients into food and elixirs that restore hearts/stamina and grant resistance buffs for weather and combat.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Cooking"
+    },
+    {
+      "claim": "Crafting BOM: cooking is the consumable path that funds stamina and resistance for the next route.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Cooking"
+    },
+    {
+      "claim": "Shrine function: completing Ancient Shrines awards Spirit Orbs spent at Goddess Statues for hearts or stamina.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Ancient_Shrine"
+    },
+    {
+      "claim": "Tower function: Sheikah Towers reveal map sectors and serve as vantage and fast-travel anchors once activated.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Sheikah_Tower"
+    },
+    {
+      "claim": "Quests BOM: shrine and tower systems gate map options and permanent stats without requiring linear story order.",
+      "source": "https://www.shacknews.com/article/99236/how-to-get-hearts-and-stamina-breath-of-the-wild"
+    },
+    {
+      "claim": "Save-state BOM: durable progression (inventory, map, quest flags) persists; the card deliberately does not claim full world material/chemistry persistence across reloads.",
+      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
+    },
+    {
+      "claim": "Win-loss-death BOM: death returns the player to the last save point with retained inventory and map progress.",
+      "source": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"
+    },
+    {
+      "claim": "Play-loop BOM: exploration and combat share chemistry/physics while stamina and cooking feed the next push (paired GDC chemistry+physics design).",
+      "source": "https://gamesbeat.com/the-legend-of-zelda-breath-of-the-wild-makes-chemistry-just-as-important-as-physics/"
+    },
+    {
+      "claim": "Packaging lesson 1 (labeled Inference): Great Plateau acts as a closed tutorial bed for climb, glider, chemistry, and shrine rules before Hyrule scale.",
+      "source": "https://web.archive.org/web/2024/https://zelda.fandom.com/wiki/Great_Plateau"
+    },
+    {
+      "claim": "Packaging lesson 2 (labeled Inference): default climb/glider and field weapons are world-legal tools before story dungeon keys become the main gate.",
+      "source": "https://www.thumbsticks.com/gdc-17-breath-of-the-wild-science-lies/"
+    },
+    {
+      "claim": "Anti-lesson durability without restock: designers and coverage treat abundant field weapons as the counterpart to breakage.",
+      "source": "https://www.zeldadungeon.net/breath-of-the-wilds-developers-talk-about-weapons-and-armor/"
+    },
+    {
+      "claim": "Anti-lesson open-world volume: GDC coverage stresses consistent chemistry/physics lies over one-off scripts.",
+      "source": "https://www.thumbsticks.com/gdc-17-breath-of-the-wild-science-lies/"
     }
   ],
   "status": "draft"
