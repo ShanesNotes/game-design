@@ -70,11 +70,9 @@ tracked they fail the check.
 | `.factory/prompts/attic/P12_IP_ORIGINALITY_AUDIT.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
 | `.factory/prompts/attic/P15_RELEASE_CANDIDATE.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
 | `.factory/prompts/attic/README.md` | culled | Attic default-culled (T04/SPEC §3.2); retired build-phase TGF v0.1 surface, not re-derived under DESIGN-RECORD §8. |
-| `.factory/prompts/P00_ORCHESTRATOR_ULTRAGOAL.md` | rewritten | Routes `intake` + `deepen` and manifest-first grill/yolo attention semantics, including yolo hard-stop behavior without weakening gates (ADR 0011/0012). |
 | `.factory/prompts/P01_SEED_COMPILE.md` | rewritten | Thesis compile remains the design entry gate before engine; MAY cite audited reference ids as contrast only — pigeonhole doctrine forbids reference-as-target (FUE W2-B). |
 
-| `.factory/prompts/P00_ORCHESTRATOR_ULTRAGOAL.md` | rewritten | Routes `intake` + `deepen`, auto-originated yolo runs, and G1 brief generation at ADVANCE before either yolo stop behavior (ADR 0011/0012). |
-| `.factory/prompts/P01_SEED_COMPILE.md` | reaffirmed | Thesis compile remains the design entry gate before engine (DESIGN-RECORD §3; no default engine). |
+| `.factory/prompts/P00_ORCHESTRATOR_ULTRAGOAL.md` | rewritten | Routes `intake` + `deepen`, grill/yolo attention semantics with yolo hard-stop, auto-originated yolo runs, and G1 brief generation at ADVANCE before either stop behavior (ADR 0011/0012). |
 | `.factory/prompts/P02_ENGINE_PROFILE.md` | reaffirmed | Engine decision phase remains; forge gate is export-time not decision-time (DESIGN-RECORD §3). |
 | `.factory/prompts/P07_DEPTH_RED_TEAM.md` | rewritten | Paper anti-boring / ADVANCE design-lock remains; audited reference cards supply depth_mechanisms/anti_lessons attack vectors (findings, not depth points) with SKIPPED when empty (FUE W2-B). |
 | `.factory/prompts/P13_EXISTING_PROJECT_RESCUE.md` | reaffirmed | Inherited-repo intake still valid; existing projects are evidence not destiny (doctrine + DESIGN-RECORD openness). |
