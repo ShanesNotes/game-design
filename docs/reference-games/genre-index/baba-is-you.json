@@ -30,9 +30,7 @@
   },
   "market_genres": {
     "primary": "puzzle",
-    "secondary": [
-      "strategy"
-    ]
+    "secondary": []
   },
   "moat": "Movable words rewrite level rules, producing many puzzle behaviors from a compact object-and-sentence grammar.",
   "scope_efficiency_hypothesis": "A few noun and property tokens generate the rules, goals, and exceptions of each level.",
@@ -51,18 +49,17 @@
       "source_tier": "primary-platform"
     },
     {
-      "claim": "Steam listed these storefront genres or main tags: Puzzle; Strategy.",
+      "claim": "Nintendo listed Puzzle as the game's genre.",
       "metric_type": "storefront_genres",
       "value_or_range": [
-        "Puzzle",
-        "Strategy"
+        "Puzzle"
       ],
       "class": "storefront-listed",
       "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
-      "platform": "Steam",
+      "platform": "Nintendo eShop",
       "territory": "United States",
       "observed_at": "2026-07-13",
-      "source": "https://store.steampowered.com/app/736260/?cc=us&l=english",
+      "source": "https://www.nintendo.com/us/store/products/baba-is-you-switch/",
       "source_tier": "primary-platform"
     }
   ]
