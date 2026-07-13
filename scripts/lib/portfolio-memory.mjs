@@ -192,7 +192,11 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
           let record = null;
           for (const file of files) {
             try {
-              const candidate = JSON.parse(fs.readFileSync(path.join(verdictDir, file), "utf8"));
+              const verdictFile = path.join(verdictDir, file);
+              if (!fs.realpathSync(verdictFile).startsWith(realGamesRootPrefix)) {
+                throw new Error("verdict path escapes games root");
+              }
+              const candidate = JSON.parse(fs.readFileSync(verdictFile, "utf8"));
               const errors = sealedVerdictErrors(candidate);
               if (errors.length) throw new Error(errors.join("; "));
               record = candidate;

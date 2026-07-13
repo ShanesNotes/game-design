@@ -253,3 +253,56 @@ test("portfolio digest skips a symlinked game directory that escapes games root"
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("portfolio digest rejects a nested verdicts symlink that escapes games root", (t) => {
+  const root = tmp();
+  const studio = path.join(root, "studio");
+  const work = path.join(root, "work");
+  const outside = path.join(root, "outside-verdicts");
+  try {
+    fs.mkdirSync(path.join(studio, "games", "real-game", "playtests"), { recursive: true });
+    fs.mkdirSync(work, { recursive: true });
+    fs.writeFileSync(path.join(studio, "DISCIPLINES.md"), "# fixture\n");
+    fs.writeFileSync(path.join(studio, "games", "INDEX.md"), `| game | lifecycle | origin | note |
+|---|---|---|---|
+| real-game | active | fixture | nested symlink escape |
+`);
+    writeJson(path.join(outside, "sealed.json"), {
+      schema_version: "1.0.0",
+      ts: "2026-07-12T12:00:00.000Z",
+      verdict: "done",
+      by: "nested-symlink-attacker",
+      game_commit: "outside",
+      manifest_digest: "outside",
+      lock_digest: "outside",
+      report: { digest: "outside", overall: "pass" }
+    });
+    try {
+      fs.symlinkSync(outside, path.join(studio, "games", "real-game", "playtests", "verdicts"), "dir");
+    } catch (error) {
+      if (["EPERM", "EACCES", "ENOSYS"].includes(error.code)) {
+        t.skip(`symlinks unavailable: ${error.code}`);
+        return;
+      }
+      throw error;
+    }
+
+    const result = spawnSync(process.execPath, [
+      path.join(REPO, "scripts/build-portfolio-digest.mjs"), "--seed-id", "current-seed"
+    ], {
+      cwd: work,
+      encoding: "utf8",
+      env: { ...process.env, STUDIO_ROOT: studio, GAME_DESIGN_ROOT: path.join(studio, "design") }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const digest = JSON.parse(fs.readFileSync(
+      path.join(work, ".tgf/seeds/current-seed/intake/portfolio-digest.json"), "utf8"
+    ));
+    const row = digest.games.find((r) => r.game_id === "real-game");
+    assert.ok(row, "real-game row present");
+    assert.equal(row.human_verdict.verdict, "UNKNOWN");
+    assert.ok(digest.skipped.some((r) => r.id === "real-game" && /escapes games root/.test(r.reason)));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
