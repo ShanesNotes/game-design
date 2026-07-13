@@ -36,7 +36,7 @@
   "second_session_answer": "The saved world contains unfinished builds, altered routes, stored materials, and machines whose next step depends on yesterday's placements.",
   "packaging_lessons": [
     "Ship mining, one recipe chain, block placement, a day-night threat, and save-state before adding bosses or dimensions.",
-    "Use one block representation across terrain, inventory, recipes, and placement so each new block can serve more than one loop verb.",
+    "Give gathered supplies roles in recipes, tools, building blocks, and placement so each supply can serve more than one loop verb.",
     "Expose automation as placeable world rules so production remains a spatial design problem."
   ],
   "anti_lessons": [
@@ -48,7 +48,7 @@
     { "system": "crafting", "note": "recipes convert expedition drops into tools, blocks, and circuit parts" },
     { "system": "inventory", "note": "slots make carried blocks compete with food, tools, and expedition loot" },
     { "system": "win-loss-death", "note": "health, hunger, mob attacks, and dropped inventory put built progress at risk" },
-    { "system": "save-state", "note": "block edits, containers, circuits, and player position preserve unfinished projects" },
+    { "system": "save-state", "note": "the returning player must receive the same saved world and its placed structures" },
     { "system": "progression", "note": "tool and station requirements gate which blocks and recipes can be reached" },
     { "system": "multiplayer", "note": "a server lets players alter the same saved world and divide project work" },
     { "system": "ui", "note": "inventory, recipe book, and crafting grids show inputs, missing supplies, and outputs" }
@@ -83,7 +83,7 @@
       "source": "https://www.minecraft.net/en-us/article/how-minecraft"
     },
     {
-      "claim": "Packaging lesson 2 is supported by supplies becoming building blocks, mining tools, armor, and crafting-station inputs.",
+      "claim": "Packaging lesson 2 is supported by gathered supplies becoming building blocks, mining tools, armor, and crafting-station inputs.",
       "source": "https://www.minecraft.net/en-us/article/how-craft"
     },
     {
@@ -101,6 +101,14 @@
     {
       "claim": "The progression BOM row relies on supplies and crafting stations determining which tools and recipes the player can produce.",
       "source": "https://www.minecraft.net/en-us/article/how-craft"
+    },
+    {
+      "claim": "Anti-lesson — material-count inference: the documented Survival loop joins collection, crafting, and placement, so material count without that conversion does not reproduce the mechanism.",
+      "source": "https://www.minecraft.net/en-us/article/how-minecraft"
+    },
+    {
+      "claim": "Anti-lesson — required-quest inference: the official guide presents building, exploration, crafting, and fighting as player-selected paths rather than one required project sequence.",
+      "source": "https://www.minecraft.net/en-us/article/how-minecraft"
     }
   ],
   "status": "draft"

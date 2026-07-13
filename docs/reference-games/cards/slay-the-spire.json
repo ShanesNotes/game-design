@@ -14,7 +14,7 @@
     {
       "name": "intent-priced turns",
       "mechanism": "Icons and numbers reveal each enemy's next action, so damage, block, setup, and potion use compete against a stated consequence.",
-      "falsifiable_claim": "If intent numbers are hidden, players cannot calculate block against incoming damage and card choice shifts from planning toward guessing."
+      "falsifiable_claim": "If intent numbers are hidden, matched players take more preventable damage from underblocking than players shown the same encounters with intent numbers."
     },
     {
       "name": "uncorrelated card offers",
@@ -24,7 +24,7 @@
     {
       "name": "route as resource forecast",
       "mechanism": "Branching paths let the player choose risk exposure against current health and deck needs before the next encounter.",
-      "falsifiable_claim": "If the map becomes a fixed corridor, health, gold, upgrade, and relic needs no longer compete at route choice and one planning layer disappears."
+      "falsifiable_claim": "If the map becomes a fixed corridor, players with different health and gold states traverse the same nodes on a matched seed instead of choosing different risk budgets."
     },
     {
       "name": "enemy portfolio tests",
@@ -34,7 +34,7 @@
     {
       "name": "cross-system combo assembly",
       "mechanism": "Cards, relics, upgrades, and potions alter draw, energy, scaling, and timing until a run-specific engine emerges.",
-      "falsifiable_claim": "If relics and upgrades only add damage, deck engines cease to change action order or resource flow and mastery reduces to value comparison."
+      "falsifiable_claim": "If relics and upgrades only add damage, logged turns where they change draw, energy, or action order fall to zero."
     }
   ],
   "feel_signature": "The intent number sets pressure; cards snap into a sequence; damage or block resolves; the player then accepts, skips, or upgrades a future draw.",
@@ -152,6 +152,18 @@
     {
       "claim": "BOM — UI: intent icons and numbers expose enemy action without inspection; card and deck information supports draw-consistency decisions.",
       "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d ; Anthony Giovannetti, PlayStation Blog, May 13, 2019: https://blog.playstation.com/2019/05/13/how-to-come-out-on-top-in-slay-the-spire-out-may-21-on-ps4/"
+    },
+    {
+      "claim": "Anti-lesson — surface-copy inference: the cited design accounts tie map, energy, relic, and intent surfaces to information and adaptation functions, so copying surfaces alone does not preserve those functions.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d ; Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+    },
+    {
+      "claim": "Anti-lesson — reward steering: the developer states that card offers do not react to cards already acquired and require adaptation.",
+      "source": "Nintendo interview with Anthony Giovannetti, August 8, 2019: https://www.nintendo.com/jp/topics/article/1f6d2f1e-b7ea-11e9-b641-063b7ac45a6d"
+    },
+    {
+      "claim": "Anti-lesson — card-volume inference: Mega Crit designed enemies to test different strategies, establishing encounter roles as the decision target for card variety.",
+      "source": "Joel Couture interview with Anthony Giovannetti, Game Developer, January 22, 2020: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
     }
   ],
   "status": "draft"

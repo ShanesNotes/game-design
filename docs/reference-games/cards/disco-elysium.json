@@ -57,7 +57,7 @@
     },
     {
       "system": "quests",
-      "note": "The murder case, side tasks, and political vision quests turn dialogue state into leads, returns, and consequences."
+      "note": "Thoughts can direct a return to a person with another topic, and political vision quests add dialogue routes."
     },
     {
       "system": "progression",
@@ -68,12 +68,8 @@
       "note": "Clothing and tools alter skills or enable interactions, letting the player change a check setup through carried objects."
     },
     {
-      "system": "save-state",
-      "note": "The game must persist dialogue variables, failed and reopened checks, tasks, time, skill ranks, equipment, health, morale, and Thought progress."
-    },
-    {
       "system": "win-loss-death",
-      "note": "Health and morale can end the investigation, while most failed checks continue into authored state rather than death."
+      "note": "Health can end the investigation, while failed dice outcomes can continue into authored scenes."
     }
   ],
   "citations": [
@@ -134,8 +130,16 @@
       "source": "Chris Priestman, ZA/UM, 'How to become a superstar detective in Disco Elysium – The Final Cut,' PlayStation Blog, https://blog.playstation.com/?p=347308"
     },
     {
-      "claim": "BOM — save-state and win-loss-death: Thoughts persist internalization time and slots; Physique grants health and can prevent death, while skill choices change available routes.",
-      "source": "ZA/UM, Thought Cabinet post, https://discoelysium.com/devblog/2019/09/30/introducing-the-thought-cabinet; ZA/UM build guide, https://blog.playstation.com/2021/03/29/what-kind-of-detective-to-become-in-disco-elysium-the-final-cut/"
+      "claim": "BOM — win-loss-death: Physique grants health and can prevent death, while authored failed dice outcomes continue into scenes.",
+      "source": "ZA/UM build guide, https://blog.playstation.com/2021/03/29/what-kind-of-detective-to-become-in-disco-elysium-the-final-cut/; ZA/UM Final Cut announcement, https://blog.playstation.com/2020/12/10/disco-elysium-the-final-cut-coming-to-ps4-and-ps5-in-2021/"
+    },
+    {
+      "claim": "Anti-lesson — text-volume inference: passive checks and skill-gated lines make delivery depend on the build, so equal delivery across builds does not reproduce the mechanism.",
+      "source": "ZA/UM, 'On skill checks': https://discoelysium.com/devblog/2016/09/19/on-skill-checks"
+    },
+    {
+      "claim": "Anti-lesson — high-skill interruption: ZA/UM describes skills as personalities that converse, interrupt, and offer ideas the player can voice or suppress.",
+      "source": "ZA/UM, 'On skill checks': https://discoelysium.com/devblog/2016/09/19/on-skill-checks"
     }
   ],
   "status": "draft"

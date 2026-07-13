@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "id": "diablo-2",
   "title": "Diablo II",
-  "edition_pinned": "PC, Lord of Destruction, patch 1.14d (2016). This pins the expansion's final legacy rules before Resurrected added Terror Zones and ladder runewords.",
+  "edition_pinned": "PC, Lord of Destruction 1.14d — pins the Classic Battle.net version Blizzard required in 2021, excluding Resurrected systems.",
   "genre_tags": ["action-rpg", "loot", "character-building", "multiplayer"],
   "register_mapping": "mechanics-first",
   "moat": "Item affix rolls, sockets, and skill-point commitments make each drop a build-routing decision.",
@@ -84,8 +84,8 @@
   ],
   "citations": [
     {
-      "claim": "Edition pin: patch 1.14d is the final PC legacy Lord of Destruction patch used by Blizzard's hosted updater.",
-      "source": "Blizzard legacy patch binary: https://ftp.blizzard.com/pub/diablo2/patches/PC/D2Patch_114d.exe"
+      "claim": "Edition pin: Blizzard support required Lord of Destruction 1.14d to connect to Classic Battle.net and supplied the PC patch link.",
+      "source": "Blizzard Legacy Games Tech Support, 'Diablo II (2000) Unable to identify version [2021]': https://us.forums.blizzard.com/en/blizzard/t/diablo-ii-2000-unable-to-identify-version-2021/17508"
     },
     {
       "claim": "Moat: item qualities, affixes, sockets, runes, sets, uniques, charms, crafted items, and cube recipes layer multiple decisions onto a drop.",
@@ -158,6 +158,10 @@
     {
       "claim": "Anti-lesson — respec support: patch-era skill documentation lists the Token of Absolution recipe from Hell act-boss essences.",
       "source": "Blizzard, The Arreat Summit, Basic Skill Information: https://classic.battle.net/diablo2exp/skills/basics.shtml"
+    },
+    {
+      "claim": "Anti-lesson — item volume inference: Blizzard documents ground labels, inventory limits, item comparison fields, and sell or discard paths; the factory must package those controls with drop volume.",
+      "source": "Blizzard, Diablo II manual, inventory and item sections: https://download.blizzard.com/pub/misc/Diablo%20II%20Manual.pdf"
     }
   ],
   "status": "draft"

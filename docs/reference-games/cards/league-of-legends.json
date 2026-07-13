@@ -41,7 +41,7 @@
   ],
   "anti_lessons": [
     "Do not copy the champion count; prove a composition change alters ward, purchase, and objective decisions first.",
-    "Do not use patch churn to conceal unreadable combat rules; each changed number needs a visible consequence in the match."
+    "Do not use patch churn when a player cannot identify which timer, cost, damage value, or reward changed after the patch."
   ],
   "system_bom": [
     {
@@ -54,7 +54,7 @@
     },
     {
       "system": "economy",
-      "note": "Units, champions, and structures pay experience; gold buys items; jungle monsters grant buffs; turret plates pay gold."
+      "note": "Enemy units and champions grant experience; gold buys items; jungle monsters grant buffs; turret plates grant gold."
     },
     {
       "system": "inventory",
@@ -127,12 +127,20 @@
       "source": "Riot Games, ‘League of Legends How to Play,’ sections Destroy the Base, Clear the Path, Take on the Jungle, and Power Up Your Champ, plus ‘Patch 12.22 Notes,’ Vision System Updates, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
     },
     {
-      "claim": "Economy and win-loss-death BOM: units, champions, and structures grant experience; gold buys items; jungle monsters grant team buffs; turret plates pay gold; nexus destruction wins.",
+      "claim": "Economy and win-loss-death BOM: enemy units and champions grant experience; gold buys items; jungle monsters grant team buffs; turret plates grant gold; nexus destruction wins.",
       "source": "Riot Games, ‘League of Legends How to Play,’ sections Destroy the Base, Take on the Jungle, and Power Up Your Champ, and ‘Patch 12.22 Notes,’ Turret Adjustments, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
     },
     {
       "claim": "Leveling and skills BOM: experience unlocks or strengthens champion abilities, ability and item order define champion play, and companion stacks change Smite thresholds.",
       "source": "Riot Games, ‘League of Legends How to Play,’ sections Power Up Your Champ and Unlock Your Abilities, and ‘Patch 12.22 Notes,’ Companion Progression and Summoner Spells, consulted 2026-07-12: https://www.leagueoflegends.com/en-us/how-to-play/ ; https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Anti-lesson — champion-count inference: Riot's composition, vision, purchase, and objective systems show the decision changes that must exist before roster size adds depth.",
+      "source": "Riot Games, 'Patch 12.22 Notes,' Recommended Pathing, Vision System Updates, Objective Planning, and Items: https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
+    },
+    {
+      "claim": "Anti-lesson — patch legibility: Riot's patch notes identify each changed timer, cost, damage value, and reward, providing the traceability the lesson requires.",
+      "source": "Riot Games, 'Patch 12.22 Notes': https://www.leagueoflegends.com/en-us/news/game-updates/patch-12-22-notes/"
     }
   ],
   "status": "draft"

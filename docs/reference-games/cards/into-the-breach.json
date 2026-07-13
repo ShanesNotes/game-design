@@ -32,7 +32,7 @@
       "falsifiable_claim": "Hold squad, pilot, weapons, island order, enemies, and objectives constant across two attempts: the number of state-dependent plan changes attributable to run setup becomes zero."
     }
   ],
-  "feel_signature": "See each pending impact, pause over a grid with no safe answer, then choose which unit, building, or objective absorbs the cost.",
+  "feel_signature": "See each pending impact, find that one unit, building, or objective must take damage or be abandoned, then choose which cost resolves.",
   "second_session_answer": "Return with another squad or island order; known rules produce different displacement chains, upgrade choices, and losses to accept.",
   "packaging_lessons": [
     "Ship one screen that exposes targets, attack types, movement, terrain, health, and Grid risk before adding a campaign layer.",
@@ -65,11 +65,11 @@
     },
     {
       "system": "meta-progression",
-      "note": "Squad and pilot unlocks change the rules brought into a later timeline rather than adding power to every attempt."
+      "note": "A pilot can cross into the next timeline, and Advanced Edition adds squads and pilot promotion skills to later attempts."
     },
     {
       "system": "save-state",
-      "note": "The run must persist Grid damage, island progress, pilots, weapons, reactor assignments, objectives, and unlock state."
+      "note": "Grid damage persists across missions, and one pilot can cross from a failed timeline into the next attempt."
     }
   ],
   "citations": [
@@ -124,6 +124,14 @@
     {
       "claim": "BOM — progression and meta-progression: runs find weapons and pilots; Advanced Edition expands squads and promotion skills.",
       "source": "Subset Games product page, https://subsetgames.com/itb.html; Advanced Edition announcement, https://subsetgames.com/itb_ae.html"
+    },
+    {
+      "claim": "Anti-lesson — telegraphing inference: the postmortem ties intent display to manipulation, collateral targets, and scarcity; markers without those constraints do not reproduce its combat decisions.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, slides 19–26: https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
+    },
+    {
+      "claim": "Anti-lesson — cut strategy layer: Subset reports removing a strategy layer after its systems added complexity without supporting the combat design.",
+      "source": "Matthew Davis, 'Into the Breach Design Postmortem,' GDC 2019, strategy-layer discussion: https://media.gdcvault.com/gdc2019/presentations/Into%20the%20Breach%20Postmortem%20Final.pdf"
     }
   ],
   "status": "draft"

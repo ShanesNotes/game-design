@@ -14,12 +14,12 @@
     {
       "name": "monument-gated workbenches",
       "mechanism": "Workbench tiers require fragments found through monument puzzles and events, pushing crafting progression into routes other players can contest.",
-      "falsifiable_claim": "If workbench gates can be completed inside the base, encounters at monuments no longer mediate the move into later crafting tiers."
+      "falsifiable_claim": "If workbench gates can be completed inside the base, pre-tier-three player encounters at gated monuments decrease against matched servers using monument fragments."
     },
     {
       "name": "base upkeep curve",
       "mechanism": "A tool cupboard consumes building resources, and the upkeep share rises with block count, so storage capacity and raid resistance carry recurring cost.",
-      "falsifiable_claim": "If added building blocks carry no recurring resource cost, the material decision between another wall and another excursion disappears after construction."
+      "falsifiable_claim": "If added building blocks carry no recurring resource cost, the share of gathering time spent replacing tool-cupboard upkeep falls to zero and median base block count rises."
     },
     {
       "name": "loot-to-research conversion",
@@ -29,7 +29,7 @@
     {
       "name": "wipe-bounded accumulation",
       "mechanism": "Server wipes remove map state on a schedule, converting base location, route knowledge, and progression speed into repeat-session decisions.",
-      "falsifiable_claim": "If servers never reset and decay cannot clear abandoned structures, later sessions converge on accumulated ownership instead of a new land-and-route race."
+      "falsifiable_claim": "If servers never reset and decay cannot clear abandoned structures, access to unclaimed build sites decreases with server age instead of returning after the monthly reset."
     }
   ],
   "feel_signature": "Footsteps or gunfire interrupt harvesting; the player chooses whether to expose carried loot, hide it in a maintained base, or spend it on a raid.",
@@ -50,9 +50,9 @@
     { "system": "progression", "note": "blueprints, scrap, fragments, research, and workbenches gate the wipe's equipment path" },
     { "system": "inventory", "note": "carried loot is exposed to death transfer until deposited or spent" },
     { "system": "win-loss-death", "note": "death transfers carried items and raiding can transfer stored resources" },
-    { "system": "economy", "note": "scrap, fragments, workbenches, and crafted equipment can be exchanged between players" },
+    { "system": "economy", "note": "fragments and workbenches can be exchanged between players" },
     { "system": "multiplayer", "note": "shared monuments, build sites, and bases make routes and ownership contestable" },
-    { "system": "save-state", "note": "server state preserves buildings, containers, ownership, decay, and blueprint progress until wipe rules remove them" }
+    { "system": "save-state", "note": "decay state survives server restarts, and scheduled wipes remove the procedural map state" }
   ],
   "citations": [
     {
@@ -124,8 +124,32 @@
       "source": "https://rust.facepunch.com/news/devblog-110"
     },
     {
+      "claim": "The save-state BOM row's scheduled reset relies on the documented monthly procedural-map wipe policy.",
+      "source": "https://rust.facepunch.com/news/devblog-72"
+    },
+    {
       "claim": "The raid portions of the loop and win-loss-death BOM row rely on building blocks being attackable with tool-specific wear and explosive charges.",
       "source": "https://rust.facepunch.com/news/devblog-46"
+    },
+    {
+      "claim": "Anti-lesson — full-loot premise: corpses and destroyed storage leave retrievable item containers after loss.",
+      "source": "https://rust.facepunch.com/news/devblog-166"
+    },
+    {
+      "claim": "Anti-lesson — full-loot recovery: blueprint research gives a found item an effect on later crafting access after the item is lost.",
+      "source": "https://rust.facepunch.com/news/devblog-180"
+    },
+    {
+      "claim": "Anti-lesson — full-loot routes: monument gates place progression recovery on routes that other players contest.",
+      "source": "https://rust.facepunch.com/news/meta-shift?category=devblog"
+    },
+    {
+      "claim": "Anti-lesson — full-loot storage: tool-cupboard upkeep makes the location and scale of stored protection a recurring resource choice.",
+      "source": "https://rust.facepunch.com/news/devblog-189"
+    },
+    {
+      "claim": "Anti-lesson — wipe inference: Facepunch documents wipes as shared-server resets, so the repeat-session race depends on players contesting the same map.",
+      "source": "https://rust.facepunch.com/news/devblog-72"
     }
   ],
   "status": "draft"

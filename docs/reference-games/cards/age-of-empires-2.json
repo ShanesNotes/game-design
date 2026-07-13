@@ -121,6 +121,14 @@
     {
       "claim": "Win-loss-death BOM: the stated match goal joins economy growth, research, military training, and defeat of rival empires.",
       "source": "World's Edge, ‘Getting Started with Age of Empires II: DE – PC,’ lesson 1, consulted 2026-07-12: https://www.ageofempires.com/learn-to-play/getting-started-aoe2/"
+    },
+    {
+      "claim": "Anti-lesson — civilization-count inference: the Learn to Play guide makes economy, age, and counter transitions the prerequisites for civilization branch differences.",
+      "source": "World's Edge, 'Civilizations & Game Modes,' lessons 3–5: https://www.ageofempires.com/learn-to-play/civilizations-game-modes-aoe2/"
+    },
+    {
+      "claim": "Anti-lesson — command-rate inference: the guide assigns match decisions to scouting, resource allocation, age timing, and counters in addition to command execution.",
+      "source": "World's Edge, 'Match Goals & Hotkeys,' lessons 1–3: https://www.ageofempires.com/learn-to-play/match-goals-aoe2/"
     }
   ],
   "status": "draft"
