@@ -1,7 +1,7 @@
 # Genre-index taxonomy v1
 
 **Version:** `1.0.0`  
-**Status:** frozen for the Tier-2 pilot
+**Status:** v1 RATIFIED (Shane, 2026-07-13) — frozen; changes require a new taxonomy version
 
 Rows declare `taxonomy_version: "1.0.0"`. Changing a value or a class boundary
 requires a new taxonomy version; pilot rows must not silently redefine this
