@@ -73,7 +73,7 @@ const ledgerRow = {
   phase: "intake",
   event: "run-initialized",
   status: "checkpointed",
-  lane: "solo",
+  lane: `design_lane:${JSON.stringify(manifest.design_lane)}`,
   actor: "init-game-run.mjs",
   attempt: 1,
   input_artifact_paths: [`${runRel}/GAME_SEED.md`],

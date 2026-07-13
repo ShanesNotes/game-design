@@ -217,11 +217,46 @@ function checkRun(seedId) {
     }
   }
 
+  const firstCrossing = rows.findIndex((row) => ["decompose", "handoff", "complete"].includes(row.phase));
+
+  // New runs bind the manifest's design lane to the run-initialized ledger row.
+  // Older rows use lane="solo" (or omit it), so they have no anchor and remain
+  // valid without migration. Only Shane can authorize a later exact lane value.
+  const lanePrefix = "design_lane:";
+  const laneFromRow = (row) => {
+    if (typeof row?.lane !== "string" || !row.lane.startsWith(lanePrefix)) return null;
+    try { return { value: JSON.parse(row.lane.slice(lanePrefix.length)) }; }
+    catch (error) { return { error: error.message }; }
+  };
+  const canonicalLane = (lane) => lane && typeof lane === "object"
+    ? JSON.stringify({ mode: lane.mode, stop_line: lane.stop_line, origination: lane.origination })
+    : null;
+  const initIndex = rows.findIndex((row) => row.event === "run-initialized");
+  const initLane = initIndex >= 0 ? laneFromRow(rows[initIndex]) : null;
+  if (initLane?.error) {
+    errors.push(`run-initialized design_lane anchor is invalid JSON: ${initLane.error}`);
+  } else if (initLane) {
+    const currentLane = canonicalLane(manifest.design_lane);
+    const anchoredLane = canonicalLane(initLane.value);
+    if (currentLane !== anchoredLane) {
+      const removesDesignLock = initLane.value?.stop_line === "design-lock"
+        && manifest.design_lane?.stop_line !== "design-lock";
+      const authorizationEnd = removesDesignLock && firstCrossing >= 0 ? firstCrossing : rows.length;
+      const authorized = currentLane !== null && rows.slice(initIndex + 1, authorizationEnd).some((row) => {
+        if (row.event !== "lane-changed" || row.status !== "passed" || row.actor !== "Shane") return false;
+        const stated = laneFromRow(row);
+        return stated && !stated.error && canonicalLane(stated.value) === currentLane;
+      });
+      if (!authorized) {
+        errors.push("manifest design_lane drifted from the run-initialized ledger anchor without a prior Shane-authored lane-changed row (event='lane-changed', status='passed') stating the current lane");
+      }
+    }
+  }
+
   // A yolo design-lock stop line parks immediately after the ADVANCE transition,
   // at engine-profile. Crossing into decomposition requires an explicit owner
   // release recorded before the first downstream ledger row; a later row cannot
   // retroactively legitimize crossing the hard stop.
-  const firstCrossing = rows.findIndex((row) => ["decompose", "handoff", "complete"].includes(row.phase));
   if (manifest.design_lane?.stop_line === "design-lock" && firstCrossing >= 0) {
     const released = firstCrossing > 0 && rows.slice(0, firstCrossing).some((row) =>
       row.phase === "engine-profile"

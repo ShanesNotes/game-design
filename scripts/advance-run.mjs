@@ -32,11 +32,20 @@ const lane = arg("lane");
 const note = arg("note");
 const resumeArtifact = arg("resume-artifact");
 const dryRun = hasFlag("dry-run");
+const setPairs = multi("set");
 
 if (!seedId || !to || !event) {
   fail('usage: --seed-id <id> --to <phase> --event <event> [--status] [--actor] [--lane] [--note] [--resume-artifact] [--set k=v] [--append k=v] [--dry-run]');
 }
 if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
+for (const pair of setPairs) {
+  const eq = pair.indexOf("=");
+  if (eq < 0) fail(`--set expects key=value, got "${pair}"`);
+  const key = pair.slice(0, eq);
+  if (key === "design_lane" || key.startsWith("design_lane.")) {
+    fail("design_lane is init-time immutable; to cross a design-lock stop, record the Shane-authored release row (event='stop-line-released', status='passed')");
+  }
+}
 
 const runDir = runDirFor(process.cwd(), seedId);
 const runRel = runRelFor(seedId);
@@ -83,10 +92,10 @@ next.resume_point = {
 };
 
 const coerce = (v) => { try { return JSON.parse(v); } catch { return v; } };
-for (const pair of multi("set")) {
+for (const pair of setPairs) {
   const eq = pair.indexOf("=");
-  if (eq < 0) fail(`--set expects key=value, got "${pair}"`);
-  next[pair.slice(0, eq)] = coerce(pair.slice(eq + 1));
+  const key = pair.slice(0, eq);
+  next[key] = coerce(pair.slice(eq + 1));
 }
 for (const pair of multi("append")) {
   const eq = pair.indexOf("=");

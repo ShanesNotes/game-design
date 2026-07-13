@@ -320,3 +320,86 @@ test("portfolio digest rejects a nested verdicts symlink that escapes games root
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("portfolio digest skips a proposal directory symlink that escapes games root", (t) => {
+  const root = tmp();
+  const studio = path.join(root, "studio");
+  const work = path.join(root, "work");
+  const outside = path.join(root, "outside-proposal");
+  try {
+    fs.mkdirSync(path.join(studio, "games", "_proposals"), { recursive: true });
+    fs.mkdirSync(work, { recursive: true });
+    writeThesis(path.join(outside, "GAME_THESIS.md"), { pitch: "escaped directory thesis" });
+    try {
+      fs.symlinkSync(outside, path.join(studio, "games", "_proposals", "evil-parked"), "dir");
+    } catch (error) {
+      if (["EPERM", "EACCES", "ENOSYS"].includes(error.code)) {
+        t.skip(`symlinks unavailable: ${error.code}`);
+        return;
+      }
+      throw error;
+    }
+
+    const result = spawnSync(process.execPath, [
+      path.join(REPO, "scripts/build-portfolio-digest.mjs"), "--seed-id", "current-seed"
+    ], {
+      cwd: work,
+      encoding: "utf8",
+      env: { ...process.env, STUDIO_ROOT: studio, GAME_DESIGN_ROOT: path.join(studio, "design") }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const digest = JSON.parse(fs.readFileSync(
+      path.join(work, ".tgf/seeds/current-seed/intake/portfolio-digest.json"), "utf8"
+    ));
+    assert.equal(digest.prior_theses.some((row) => row.seed_id === "evil-parked"), false);
+    assert.ok(digest.skipped.some((row) =>
+      row.source === "proposal-thesis"
+      && row.id === "evil-parked"
+      && /proposal directory escapes games root/.test(row.reason)
+    ));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("portfolio digest skips a proposal thesis symlink that escapes games root", (t) => {
+  const root = tmp();
+  const studio = path.join(root, "studio");
+  const work = path.join(root, "work");
+  const outside = path.join(root, "outside-thesis.md");
+  try {
+    const proposalDir = path.join(studio, "games", "_proposals", "nested");
+    fs.mkdirSync(proposalDir, { recursive: true });
+    fs.mkdirSync(work, { recursive: true });
+    writeThesis(outside, { pitch: "escaped file thesis" });
+    try {
+      fs.symlinkSync(outside, path.join(proposalDir, "GAME_THESIS.md"), "file");
+    } catch (error) {
+      if (["EPERM", "EACCES", "ENOSYS"].includes(error.code)) {
+        t.skip(`symlinks unavailable: ${error.code}`);
+        return;
+      }
+      throw error;
+    }
+
+    const result = spawnSync(process.execPath, [
+      path.join(REPO, "scripts/build-portfolio-digest.mjs"), "--seed-id", "current-seed"
+    ], {
+      cwd: work,
+      encoding: "utf8",
+      env: { ...process.env, STUDIO_ROOT: studio, GAME_DESIGN_ROOT: path.join(studio, "design") }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    const digest = JSON.parse(fs.readFileSync(
+      path.join(work, ".tgf/seeds/current-seed/intake/portfolio-digest.json"), "utf8"
+    ));
+    assert.equal(digest.prior_theses.some((row) => row.seed_id === "nested"), false);
+    assert.ok(digest.skipped.some((row) =>
+      row.source === "proposal-thesis"
+      && row.id === "nested"
+      && /proposal thesis escapes games root/.test(row.reason)
+    ));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

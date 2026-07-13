@@ -29,6 +29,7 @@ function markRunLegacy(dir, id) {
   const ledgerFile = path.join(runDir, "execution-ledger.jsonl");
   const rows = fs.readFileSync(ledgerFile, "utf8").trim().split("\n").map(JSON.parse);
   rows[0].phase = "toolchain";
+  rows[0].lane = "solo";
   rows[0].resume_point.phase = "toolchain";
   fs.writeFileSync(ledgerFile, rows.map(JSON.stringify).join("\n") + "\n");
 }
@@ -194,6 +195,7 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     const ledgerSchema = JSON.parse(fs.readFileSync(rel("schemas/execution-ledger-row.schema.json"), "utf8"));
     assert.deepEqual(validate(ledgerSchema, firstRow), []);
     assert.equal(firstRow.phase, "intake");
+    assert.equal(firstRow.lane, 'design_lane:{"mode":"grill","stop_line":"pack","origination":"user"}');
     const boot = fs.readFileSync(path.join(runDir, "README_AGENT_BOOT.md"), "utf8");
     const next = fs.readFileSync(path.join(runDir, "README_NEXT_ACTIONS.md"), "utf8");
     assert.match(boot, /portfolio-digest.*office-hours/is);
@@ -284,6 +286,66 @@ test("validate-artifacts --check run passes for a created run", () => {
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("advance-run refuses --set mutations of the init-time design lane", () => {
+  const dir = tmp();
+  const id = "selftest-lane-set";
+  try {
+    assert.equal(node("init-game-run.mjs", [
+      "--seed-id", id, "--seed", "x", "--mode", "yolo", "--stop", "design-lock"
+    ], { cwd: dir }).status, 0);
+    const manifestPath = path.join(dir, ".tgf", "seeds", id, "manifest.json");
+    const before = fs.readFileSync(manifestPath, "utf8");
+    const r = node("advance-run.mjs", [
+      "--seed-id", id, "--to", "blocked", "--event", "bypass", "--status", "passed",
+      "--set", 'design_lane={"mode":"yolo","stop_line":"pack","origination":"user"}'
+    ], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /design_lane is init-time immutable.*Shane-authored.*stop-line-released/);
+    assert.equal(fs.readFileSync(manifestPath, "utf8"), before);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts rejects deletion or unauthorized drift of the anchored design lane", () => {
+  const dir = tmp();
+  const id = "selftest-lane-anchor";
+  try {
+    assert.equal(node("init-game-run.mjs", [
+      "--seed-id", id, "--seed", "x", "--mode", "yolo", "--stop", "design-lock"
+    ], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const original = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+
+    const deleted = { ...original };
+    delete deleted.design_lane;
+    fs.writeFileSync(manifestPath, JSON.stringify(deleted, null, 2) + "\n");
+    let r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /design_lane drifted from the run-initialized ledger anchor/);
+
+    const changed = {
+      ...original,
+      design_lane: { mode: "yolo", stop_line: "pack", origination: "user" }
+    };
+    fs.writeFileSync(manifestPath, JSON.stringify(changed, null, 2) + "\n");
+    r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /design_lane drifted from the run-initialized ledger anchor/);
+
+    fs.appendFileSync(path.join(runDir, "execution-ledger.jsonl"), JSON.stringify({
+      ts: "2026-07-12T12:00:00.000Z",
+      seed_id: id,
+      phase: "intake",
+      event: "lane-changed",
+      status: "passed",
+      actor: "Shane",
+      lane: 'design_lane:{"mode":"yolo","stop_line":"pack","origination":"user"}'
+    }) + "\n");
+    r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("validate-artifacts enforces recorded question budgets by lane presence", () => {
   const dir = tmp();
   const question = { question: "Which direction?", recommended_default: "A", phase_asked: "intake" };
@@ -292,7 +354,13 @@ test("validate-artifacts enforces recorded question budgets by lane presence", (
       assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x", ...(mode ? ["--mode", mode] : [])], { cwd: dir }).status, 0);
       const manifestPath = path.join(dir, ".tgf", "seeds", id, "manifest.json");
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-      if (mode === null) delete manifest.design_lane;
+      if (mode === null) {
+        delete manifest.design_lane;
+        const ledgerPath = path.join(dir, ".tgf", "seeds", id, "execution-ledger.jsonl");
+        const rows = fs.readFileSync(ledgerPath, "utf8").trim().split("\n").map(JSON.parse);
+        rows[0].lane = "solo";
+        fs.writeFileSync(ledgerPath, rows.map(JSON.stringify).join("\n") + "\n");
+      }
       manifest.questions_asked = [question];
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
     }
@@ -734,6 +802,36 @@ test("validate-artifacts hard-stops yolo design-lock runs until Shane releases t
     fs.writeFileSync(ledgerPath, rows.map(JSON.stringify).join("\n") + "\n");
     r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stdout);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("validate-artifacts rejects a retroactive lane change that removes a design-lock stop", () => {
+  const dir = tmp();
+  const id = "selftest-retro-lane-change";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.design_lane = { mode: "yolo", stop_line: "pack", origination: "user" };
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const rows = fs.readFileSync(ledgerPath, "utf8").trim().split("\n").map(JSON.parse);
+    rows[0].lane = 'design_lane:{"mode":"yolo","stop_line":"design-lock","origination":"user"}';
+    rows.push({
+      ts: "2026-07-12T12:00:00.000Z",
+      seed_id: id,
+      phase: "decompose",
+      event: "lane-changed",
+      status: "passed",
+      actor: "Shane",
+      lane: 'design_lane:{"mode":"yolo","stop_line":"pack","origination":"user"}'
+    });
+    fs.writeFileSync(ledgerPath, rows.map(JSON.stringify).join("\n") + "\n");
+
+    const r = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /design_lane drifted from the run-initialized ledger anchor/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

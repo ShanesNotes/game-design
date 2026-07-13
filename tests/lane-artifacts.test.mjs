@@ -53,6 +53,7 @@ test("generate-g1-brief requires ADVANCE and renders a content-only taste brief"
     const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
     const firstRow = JSON.parse(fs.readFileSync(ledgerPath, "utf8").trim());
     firstRow.phase = "toolchain";
+    firstRow.lane = "solo";
     const laterRows = ["thesis", "design-review", "engine-profile"].map((phase) => ({
       ts: "2026-07-12T12:00:00.000Z", seed_id: id, phase,
       event: "test-advance", status: "checkpointed", actor: "test"

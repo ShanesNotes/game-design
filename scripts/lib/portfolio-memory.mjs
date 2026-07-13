@@ -20,15 +20,39 @@ export function isPortfolioRun(manifest) {
   return manifest?.factory_version === PORTFOLIO_FACTORY_VERSION;
 }
 
-export function enumeratePriorTheses(seedsRoot, seedId) {
+export function enumeratePriorTheses(seedsRoot, seedId, containment = null) {
   const priors = [];
   const skipped = [];
   if (!seedsRoot || !fs.existsSync(seedsRoot)) return { priors, skipped };
+  const realContainmentRoot = containment ? fs.realpathSync(containment.root) : null;
+  const containmentPrefix = realContainmentRoot ? `${realContainmentRoot}${path.sep}` : null;
   for (const priorId of fs.readdirSync(seedsRoot).sort()) {
     if (seedId && priorId === seedId) continue;
     const runDir = path.join(seedsRoot, priorId);
     const thesisPath = path.join(runDir, "GAME_THESIS.md");
     if (!fs.existsSync(thesisPath)) continue;
+    if (containmentPrefix) {
+      let realRunDir;
+      try { realRunDir = fs.realpathSync(runDir); }
+      catch (error) {
+        skipped.push({ seedId: priorId, error: `${containment.entry} directory is unreadable: ${error.message}` });
+        continue;
+      }
+      if (!realRunDir.startsWith(containmentPrefix)) {
+        skipped.push({ seedId: priorId, error: `${containment.entry} directory escapes ${containment.rootLabel}` });
+        continue;
+      }
+      let realThesisPath;
+      try { realThesisPath = fs.realpathSync(thesisPath); }
+      catch (error) {
+        skipped.push({ seedId: priorId, error: `${containment.entry} thesis is unreadable: ${error.message}` });
+        continue;
+      }
+      if (!realThesisPath.startsWith(containmentPrefix)) {
+        skipped.push({ seedId: priorId, error: `${containment.entry} thesis escapes ${containment.rootLabel}` });
+        continue;
+      }
+    }
     const { obj: thesis, error } = extractFencedJson(fs.readFileSync(thesisPath, "utf8"));
     if (error) {
       skipped.push({ seedId: priorId, error });
@@ -176,7 +200,11 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     skip("proposals", "games/_proposals is missing");
   } else {
     content.sources.push({ source: "proposals", status: "read" });
-    const enumeration = enumeratePriorTheses(proposalsRoot, null);
+    const enumeration = enumeratePriorTheses(proposalsRoot, null, {
+      root: gamesRoot,
+      rootLabel: "games root",
+      entry: "proposal"
+    });
     for (const row of enumeration.skipped) skip("proposal-thesis", row.error, row.seedId);
     for (const { seedId: proposalId, runDir, thesis } of enumeration.priors) {
       content.prior_theses.push(thesisRow(runDir, proposalId, thesis, true));
