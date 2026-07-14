@@ -355,6 +355,7 @@ Drops: none. Reserves unused. Mechanical ledger rows only.
 | `docs/reference-games/genre-index/unreal-tournament-99.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1999 arena FPS; Steam UT GOTY Action. |
 | `docs/reference-games/genre-index/rollercoaster-tycoon.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1999 management sim; Steam Deluxe Simulation/Strategy. |
 | `docs/reference-games/genre-index/tony-hawk-pro-skater.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1999 extreme sports; THPS 1+2 Sports. |
-| `docs/reference-games/genre-index/space-invaders.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1978 arcade; eShop Invincible Collection Action/Shooting. |
+| `docs/reference-games/genre-index/space-invaders.json` | culled | E2-01: cited Invincible Collection product node genre is Shooting-only; Shooting ∉ market vocab; replaced by quake-3-arena. |
+| `docs/reference-games/genre-index/quake-3-arena.json` | rewritten | E2-01 reserve swap for space-invaders; 1999 arena FPS; Steam app 2200 Action (verified). |
 | `docs/reference-games/genre-index/wolfenstein-3d.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1992 FPS root; Steam Action. |
 | `docs/reference-games/genre-index/worms-armageddon.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1999 turn-based multiplayer; Steam Strategy. |

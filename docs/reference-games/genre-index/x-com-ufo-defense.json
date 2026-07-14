@@ -16,8 +16,10 @@
       ]
     },
     "session_structure": {
-      "primary": "chapters",
-      "secondary": []
+      "primary": "continuous",
+      "secondary": [
+        "rounds"
+      ]
     },
     "progression_form": {
       "primary": "authored-campaign",

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "quake-3-arena",
+  "title": "Quake III Arena",
+  "edition_pinned": "Quake III Arena Steam app 2200 listing, observed 2026-07-13; row describes the 1999 id Software arena design.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "rounds",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "competitive",
+      "secondary": [
+        "solo"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Arena item timing, rail aim, and rocket-jump movement decide fights on fixed maps with no unlock ladder.",
+  "scope_efficiency_hypothesis": "One movement-and-weapon grammar recombines across duel and free-for-all maps without progression systems.",
+  "exemplar_rationale": "Defines pure competitive arena FPS: fixed kit, readable maps, and mechanical skill ceilings.",
+  "evidence": [
+    {
+      "claim": "Steam reported 4063 all-language, all-purchase user reviews for Quake III Arena.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 4063,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/2200?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Action.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=2200&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
