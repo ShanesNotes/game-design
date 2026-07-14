@@ -1,6 +1,7 @@
 # AGENTS.md — Operating game-design
 
-You are operating the **game-design** harness (spec-only; formerly tiny-game-factory),
+You are operating the **game-design** harness (docs also call it **the factory**;
+spec-only; formerly tiny-game-factory),
 not a game. Read `CONTEXT.md` first; it is the domain dictionary. This file is the
 operating procedure.
 

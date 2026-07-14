@@ -137,8 +137,9 @@ re-aimed per `docs/anti-boring-gate.md` § Design registers. The ≥16 total and
 nonzero-axes rule is applied by the depth red-team (P07), not by the schema,
 which only checks the axes are present and in range. Alongside depth, the
 thesis carries **feel** (`golden_moment`, `feel_targets`) and optionally a
-**design canon** pointer — attacked at P07 as findings, sliced at P18, stamped
-into the pack's guard-config; see `docs/feel-doctrine.md` (ADR 0009).
+**design canon** pointer (distinct from the reference-game canon in
+`docs/reference-games/CANON.md`) — attacked at P07 as findings, sliced at P18,
+stamped into the pack's guard-config; see `docs/feel-doctrine.md` (ADR 0010).
 
 ## Spec decomposition
 

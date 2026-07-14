@@ -1,3 +1,4 @@
+// Largest lifecycle suite; AC*/GB*/F*/T* prefixes are ticket-era acceptance-criteria IDs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -522,8 +523,39 @@ test("validate-artifacts --check run flags a missing required thesis path downst
 });
 
 test("run-gates --dry-run proves all guards gate", () => {
+  // Enforcing path for the no-game-code brake (`scope_brake`); see docs/hooks-and-guards.md.
   const r = node("run-gates.mjs", ["--dry-run"]);
   assert.equal(r.status, 0, r.stdout + r.stderr);
+});
+
+test("genre index is pull-only: never referenced by the seed/intake pipeline", () => {
+  // Complete run-artifact pipeline: content entrypoints/readers plus their content-bearing libraries.
+  const pipelineFiles = [
+    "scripts/generate-seed-brief.mjs",
+    "scripts/init-game-run.mjs",
+    "scripts/build-portfolio-digest.mjs",
+    "scripts/walk-game-idea.mjs",
+    "scripts/advance-run.mjs",
+    "scripts/summarize-run.mjs",
+    "scripts/generate-g1-brief.mjs",
+    "scripts/emit-local-issues.mjs",
+    "scripts/probe-spec-availability.mjs",
+    "scripts/package-spec.mjs",
+    "scripts/validate-artifacts.mjs",
+    "scripts/lib/run-state.mjs",
+    "scripts/lib/portfolio-memory.mjs",
+    "scripts/lib/spec-decomposition.mjs",
+    "scripts/lib/issue-format.mjs",
+    "scripts/lib/manifest-mapper.mjs"
+  ];
+  for (const file of pipelineFiles) {
+    const source = fs.readFileSync(rel(file), "utf8");
+    assert.doesNotMatch(
+      source,
+      /(?:genre[-_ ]?index|reference[-_ ]?games?)/i,
+      `${file} must not auto-inject the pull-only genre index`
+    );
+  }
 });
 
 test("advance-run performs a legal phase transition and keeps the run valid", () => {

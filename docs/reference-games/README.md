@@ -31,6 +31,23 @@ The genre index is a NAVIGATION surface for agents, PULL-ONLY:
 This directory remains substrate only. Pipeline hooks that activate the
 pull-only lookup or promotion path land separately.
 
+The absence of automatic pipeline use is enforced by the
+`genre index is pull-only: never referenced by the seed/intake pipeline` test in
+`tests/factory.test.mjs`.
+
+### Storefront-genre aliases
+
+The validator trims and lowercases each storefront genre, then performs an
+exact alias-table lookup. Matching is case-insensitive but deliberately never
+fuzzy: a false genre match is worse than a missing alias. Adding an alias changes
+the ratified vocabulary bridge and therefore requires Shane's ratification, at
+the same authority as a taxonomy change; it is never a worker convenience.
+
+Batch E2-01 records the precedent (see `docs/doctrine-audit-ledger.md`, Classics
+wave batch E2): when Space Invaders supplied only `Shooting`, outside the market
+vocabulary with no ratified alias, the row was reported, dropped, and swapped
+for Quake III Arena rather than gaining an alias.
+
 ### Ratifications & evidence reach
 
 - Taxonomy v1 + 20-row pilot: ratified (Shane, 2026-07-13).

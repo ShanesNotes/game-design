@@ -25,6 +25,7 @@ const CLASS_DEFINITIONS = {
   "time-long": "taxonomy-v1#development-time-months/time-long"
 };
 
+// Exact-only by design; alias additions require ratification; see docs/reference-games/README.md.
 const STOREFRONT_GENRE_ALIASES = new Map([
   ["action & adventure", "action"],
   ["fighting", "action"],

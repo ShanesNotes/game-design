@@ -8,7 +8,7 @@ Shared plumbing (the opaque-asset pattern, the evidence walker, argv/block/allow
 
 | Guard | Trigger | Block condition |
 |---|---|---|
-| `scope_brake` | pre-edit / pre-commit | Game code in the factory (`src`/`assets`/`packs`/`server`/`app`). |
+| `scope_brake` | pre-edit / pre-commit | Game code in the factory (`src`/`assets`/`packs`/`server`/`app`); enforcement proof: `tests/factory.test.mjs` → `run-gates --dry-run proves all guards gate`. |
 | `engine_migration_requires_adr` | pre-edit config | Engine/library migration without decision file. |
 | `mcp_mutation_must_emit_text` | post-MCP | MCP/editor mutation that emits opaque output with no diffable artifact alongside it. |
 

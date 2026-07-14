@@ -299,6 +299,7 @@ test("repo pilot validates, generates 20 rows, and demonstrates Tier-1 navigatio
     today: "2026-07-13"
   });
   assert.deepEqual(result.errors, [], result.errors.join("\n"));
+  // Minimum floor, not an exact pin: canon rows may grow past the pilot (relaxed in cc9090d).
   assert.ok(result.rows.length >= 20, result.rows.length);
   assert.ok(result.rows.filter((row) => row.card_ref).length >= 4);
   assert.equal(new Set(result.rows.map((row) => row.id)).size, result.rows.length);

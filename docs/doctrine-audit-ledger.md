@@ -13,6 +13,11 @@ SPEC §3.2.
 - **Base:** `8a32010f4ef3` (design `main` post-T03 rename)
 - **Date:** 2026-07-10
 
+That universe is exactly `git ls-files docs .factory/prompts schemas templates
+hooks`: `scripts/` and `tests/` are deliberately outside it. Code truth is
+carried by the test suite (186 tests at this slice's baseline), so validator
+and test changes rely on review convention rather than this audit gate.
+
 Dispositions are judgments against DESIGN-RECORD.md, not taste.
 Allowed disposition values: `reaffirmed` | `rewritten` | `culled`.
 Attic prompts default to culled. ADRs are never edited retroactively —
@@ -157,6 +162,10 @@ tests.
 Machine substrate only (schema, canon, validator, index). Pipeline cite hooks
 landed later in FUE W2-B; pigeonhole doctrine lives in
 `docs/reference-games/README.md`.
+
+Tier-2 work in this section is the **genre-index pilot**; **canon** is reserved
+for Tier-1 reference cards. Machine-readable rows below remain historical audit
+records and are not rewritten by this prose correction.
 
 | path | disposition | rationale |
 | --- | --- | --- |
