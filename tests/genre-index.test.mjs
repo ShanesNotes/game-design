@@ -135,6 +135,10 @@ test("every row still requires storefront genre evidence", () => {
 test("archived Role-Playing storefront evidence supports rpg membership", () => {
   const row = validRow({ market_genres: { primary: "rpg", secondary: [] } });
   row.evidence[1].value_or_range = ["Role-Playing"];
+  row.evidence[1].platform = "Nintendo Store (archived 3DS Virtual Console)";
+  row.evidence[1].source =
+    "https://web.archive.org/web/20170104032221/http://www.nintendo.com/games/detail/pokemon-red-version-3ds";
+  row.evidence[1].source_tier = "archival-secondary";
   const paths = tempCorpus([row]);
   try {
     const { errors } = validateGenreIndex(paths);
