@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "the-sims",
+  "title": "The Sims",
+  "edition_pinned": "The Sims Legacy Collection Steam app 3314060 listing, observed 2026-07-13; row describes the original 2000 Sims design the collection preserves.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "expression",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": [
+      "casual"
+    ]
+  },
+  "moat": "Need meters and object interactions turn household layout and daily schedules into open-ended life systems.",
+  "scope_efficiency_hypothesis": "One needs-and-objects model recombines into endless household stories without a campaign spine.",
+  "exemplar_rationale": "Shows expression-led simulation where player-authored drama emerges from meter and object rules.",
+  "evidence": [
+    {
+      "claim": "Steam reported 2389 all-language, all-purchase user reviews for The Sims Legacy Collection.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 2389,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/3314060?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Casual; Simulation.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Casual",
+        "Simulation"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=3314060&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "simcity-2000",
+  "title": "SimCity 2000",
+  "edition_pinned": "SimCity 2000 Special Edition GOG listing, observed 2026-07-13; row describes the 1993 SimCity 2000 design.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "optimization",
+      "secondary": [
+        "expression"
+      ]
+    },
+    "session_structure": {
+      "primary": "continuous",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "open-ended",
+      "secondary": []
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "simulation",
+    "secondary": []
+  },
+  "moat": "Zoning demand and budget feedback turn tile placement into cascading infrastructure bottlenecks.",
+  "scope_efficiency_hypothesis": "One zoning-and-services toolkit supports endless city layouts without authored mission gates.",
+  "exemplar_rationale": "Shows classic city-builder depth from systemic feedback rather than scripted scenarios.",
+  "evidence": [
+    {
+      "claim": "GOG product page genres field listed: Simulation; Building; Managerial.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Simulation",
+        "Building",
+        "Managerial"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "GOG",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://www.gog.com/en/game/simcity_2000_special_edition",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

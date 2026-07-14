@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "myst",
+  "title": "Myst",
+  "edition_pinned": "Myst: Masterpiece Edition Steam app 63660 listing, observed 2026-07-13; row describes the classic Myst design this remaster preserves.",
+  "design_shape": {
+    "register": {
+      "primary": "narrative-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": []
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "continuous"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "adventure",
+    "secondary": [
+      "casual"
+    ]
+  },
+  "moat": "Environmental clues and age-linking devices turn exploration into puzzle progress without combat verbs.",
+  "scope_efficiency_hypothesis": "One observation-and-linking structure recombines authored islands into a discovery campaign.",
+  "exemplar_rationale": "Shows narrative-first adventure depth carried by place and deduction rather than action systems.",
+  "evidence": [
+    {
+      "claim": "Steam reported 1072 all-language, all-purchase user reviews for Myst: Masterpiece Edition.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 1072,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/63660?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Adventure; Casual.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "Casual"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=63660&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

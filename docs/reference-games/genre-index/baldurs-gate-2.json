@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "baldurs-gate-2",
+  "title": "Baldur's Gate II",
+  "edition_pinned": "Baldur's Gate II: Enhanced Edition Steam app 257350 listing, observed 2026-07-13; row describes the 2000 BG2 design the EE preserves.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "expression",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "continuous"
+      ]
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "rpg",
+    "secondary": [
+      "adventure"
+    ]
+  },
+  "moat": "Party composition and spell preparation turn each encounter into a build-and-positioning plan.",
+  "scope_efficiency_hypothesis": "Shared D&D rules recombine across authored quests, strongholds, and companion reactivity.",
+  "exemplar_rationale": "Shows long-form CRPG depth from party builds meeting reactive authored content.",
+  "evidence": [
+    {
+      "claim": "Steam reported 10810 all-language, all-purchase user reviews for Baldur's Gate II: Enhanced Edition.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 10810,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/257350?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Adventure; RPG.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Adventure",
+        "RPG"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=257350&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

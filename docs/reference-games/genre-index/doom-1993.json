@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "doom-1993",
+  "title": "DOOM (1993)",
+  "edition_pinned": "DOOM + DOOM II Steam app 2280 re-release listing, observed 2026-07-13; row describes the 1993 DOOM design.",
+  "design_shape": {
+    "register": {
+      "primary": "mechanics-first",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "execution",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": [
+        "rounds"
+      ]
+    },
+    "progression_form": {
+      "primary": "fixed-kit",
+      "secondary": [
+        "authored-campaign"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": [
+        "competitive"
+      ]
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Limited ammo and enemy placement force movement, weapon swaps, and secret-hunting through authored maps.",
+  "scope_efficiency_hypothesis": "One moveset and weapon ladder recombine across maps via layout, secrets, and monster density.",
+  "exemplar_rationale": "Defines the fast FPS loop where spatial mastery and resource pressure carry a fixed kit.",
+  "evidence": [
+    {
+      "claim": "Steam reported 28513 all-language, all-purchase user reviews for the DOOM + DOOM II re-release.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 28513,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/2280?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Action.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=2280&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

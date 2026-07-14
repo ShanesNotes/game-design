@@ -311,3 +311,29 @@ Reserves unused. Mechanical ledger rows only.
 | `docs/reference-games/genre-index/donkey-kong-arcade.json` | rewritten | Sourced Tier-2 classics batch C row; 1981 arcade; live Arcade Archives Action. |
 | `docs/reference-games/genre-index/super-mario-kart.json` | rewritten | Sourced Tier-2 classics batch C row; SNES design; archived Wii U VC Racing. |
 | `docs/reference-games/genre-index/earthbound.json` | rewritten | Sourced Tier-2 classics batch C row; SNES design; archived Wii U VC Action. |
+## Classics wave batch D (2026-07-13) — PC/arcade/western classics genre-index
+
+Sixteen sourced Tier-2 rows under ratified taxonomy v1 and classics evidence doctrine
+(README ratifications; f857d6a). Steam/GOG live storefront genres; diablo-2 uses D2:R
+Infernal Edition listing with edition_pinned recording classic LoD design. Drops:
+starcraft, warcraft-3 (no honest storefront genre field on allowed platforms). Mechanical
+ledger rows only; disposition rewritten.
+
+| path | disposition | rationale |
+| --- | --- | --- |
+| `docs/reference-games/genre-index/diablo-2.json` | rewritten | Sourced Tier-2 classics batch D row for Diablo II (LoD via D2:R evidence) with Tier-1 card_ref. |
+| `docs/reference-games/genre-index/doom-1993.json` | rewritten | Sourced Tier-2 classics batch D row for DOOM (1993) under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/quake.json` | rewritten | Sourced Tier-2 classics batch D row for Quake under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/half-life.json` | rewritten | Sourced Tier-2 classics batch D row for Half-Life under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/half-life-2.json` | rewritten | Sourced Tier-2 classics batch D row for Half-Life 2 under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/portal.json` | rewritten | Sourced Tier-2 classics batch D row for Portal under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/baldurs-gate-2.json` | rewritten | Sourced Tier-2 classics batch D row for Baldur's Gate II under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/deus-ex.json` | rewritten | Sourced Tier-2 classics batch D row for Deus Ex under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/the-sims.json` | rewritten | Sourced Tier-2 classics batch D row for The Sims under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/simcity-2000.json` | rewritten | Sourced Tier-2 classics batch D row for SimCity 2000 (GOG storefront genres) under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/gta-san-andreas.json` | rewritten | Sourced Tier-2 classics batch D row for GTA: San Andreas under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/halo-combat-evolved.json` | rewritten | Sourced Tier-2 classics batch D row for Halo: CE (MCC listing evidence) under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/metal-gear-solid.json` | rewritten | Sourced Tier-2 classics batch D row for Metal Gear Solid under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/resident-evil-4.json` | rewritten | Sourced Tier-2 classics batch D row for Resident Evil 4 (2005) under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/pac-man.json` | rewritten | Sourced Tier-2 classics batch D row for PAC-MAN (Museum+ listing evidence) under ratified taxonomy v1. |
+| `docs/reference-games/genre-index/myst.json` | rewritten | Sourced Tier-2 classics batch D row for Myst under ratified taxonomy v1. |

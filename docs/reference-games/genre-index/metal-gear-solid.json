@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "metal-gear-solid",
+  "title": "Metal Gear Solid",
+  "edition_pinned": "METAL GEAR SOLID - Master Collection Version Steam app 2131630 listing, observed 2026-07-13; row describes the 1998 MGS design the collection preserves.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "discovery",
+      "secondary": [
+        "execution"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "fixed-kit"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Alert states and line-of-sight stealth tools make route choice and non-lethal options rewrite each map approach.",
+  "scope_efficiency_hypothesis": "One stealth toolkit and alert grammar recombine across authored facility maps and set-piece bosses.",
+  "exemplar_rationale": "Shows hybrid stealth depth when systemic detection meets cinematic campaign staging.",
+  "evidence": [
+    {
+      "claim": "Steam reported 5069 all-language, all-purchase user reviews for METAL GEAR SOLID - Master Collection Version.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 5069,
+      "class": "review-niche",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-niche",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/2131630?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Action.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=2131630&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "deus-ex",
+  "title": "Deus Ex",
+  "edition_pinned": "Deus Ex: Game of the Year Edition Steam app 6910 listing, observed 2026-07-13; row describes the 2000 design.",
+  "design_shape": {
+    "register": {
+      "primary": "hybrid",
+      "secondary": []
+    },
+    "loop_class": {
+      "primary": "expression",
+      "secondary": [
+        "optimization"
+      ]
+    },
+    "session_structure": {
+      "primary": "chapters",
+      "secondary": []
+    },
+    "progression_form": {
+      "primary": "authored-campaign",
+      "secondary": [
+        "persistent-unlocks"
+      ]
+    },
+    "player_count": {
+      "primary": "solo",
+      "secondary": []
+    }
+  },
+  "market_genres": {
+    "primary": "action",
+    "secondary": []
+  },
+  "moat": "Skill and augment choices open alternate stealth, combat, and dialogue routes through the same mission spaces.",
+  "scope_efficiency_hypothesis": "One hub-and-mission structure multiplies paths via character investment rather than new verbs each level.",
+  "exemplar_rationale": "Demonstrates hybrid immersive-sim depth where player expression rewrites mission solutions.",
+  "evidence": [
+    {
+      "claim": "Steam reported 15497 all-language, all-purchase user reviews for Deus Ex: Game of the Year Edition.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 15497,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/6910?json=1&language=all&purchase_type=all&num_per_page=0",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam appdetails genres field listed: Action.",
+      "metric_type": "storefront_genres",
+      "value_or_range": [
+        "Action"
+      ],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=6910&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}
