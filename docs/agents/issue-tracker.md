@@ -10,7 +10,9 @@ definitions see `CONTEXT.md`; for issue states see `triage-labels.md`.
 
 Issues and slices are **local markdown files**, not remote GitHub/Linear/Jira
 issues. Factory-level work lives under `.tgf/issues/`; ad-hoc or pre-triage notes
-may live under `.scratch/`. Per-seed run artifacts stay under
+may live under `.scratch/`. Both sinks are git-untracked today (`.tgf/` via
+`.gitignore`; `.scratch/` by convention), so local issues are machine-local
+records, not version-controlled artifacts. Per-seed run artifacts stay under
 `.tgf/seeds/{seed-id}/` (ADR 0003) and are **not** issues.
 
 **Generic issue/PRD/QA skills MUST NOT publish to any remote tracker by default.**
