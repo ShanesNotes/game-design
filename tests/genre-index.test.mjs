@@ -175,14 +175,16 @@ test("an unaliased storefront genre still fails market membership validation", (
 });
 
 test("storefront genre aliases require an exact case-insensitive match", () => {
-  const row = validRow({ market_genres: { primary: "rpg", secondary: [] } });
-  row.evidence[1].value_or_range = ["role-playing games"];
-  const paths = tempCorpus([row]);
-  try {
-    const { errors } = validateGenreIndex(paths);
-    assert.ok(errors.some((error) => /market genre 'rpg'.*absent/.test(error)), errors.join("\n"));
-  } finally {
-    fs.rmSync(paths.root, { recursive: true, force: true });
+  for (const nearMiss of ["role-playing games", "role playing"]) {
+    const row = validRow({ market_genres: { primary: "rpg", secondary: [] } });
+    row.evidence[1].value_or_range = [nearMiss];
+    const paths = tempCorpus([row]);
+    try {
+      const { errors } = validateGenreIndex(paths);
+      assert.ok(errors.some((error) => /market genre 'rpg'.*absent/.test(error)), `${nearMiss}: ${errors.join("\n")}`);
+    } finally {
+      fs.rmSync(paths.root, { recursive: true, force: true });
+    }
   }
 });
 
