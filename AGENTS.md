@@ -18,7 +18,8 @@ operating procedure.
    artifact — the pivot), 0007 (register-aware design-lock), 0008 (world-first
    register, seam slices, BRIEF.md input seam), 0010 (feel doctrine under studio
    terms; supersedes culled 0009), 0011 (portfolio at the front door — intake
-   default entry, distinctness, depth evidence/provenance).
+   default entry, distinctness, depth evidence/provenance), 0012 (design lanes —
+   manifest design_lane: mode/stop_line/origination).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 

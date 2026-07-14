@@ -56,7 +56,7 @@ Agents communicate by files, not chat:
 | `scripts/verify-local-tools.mjs` | Probes tools via real commands (grouped by category); refreshes a generated block in the toolchain ledger. Memory is never proof. |
 | `scripts/summarize-run.mjs` | Evidence-first run summary from manifest + ledger (crash-safe). |
 | `scripts/emit-local-issues.mjs` | The only renderer of `issues/`: turns a valid `SPEC.md` into `.tgf/seeds/{seed-id}/issues/*.md`, one issue per slice with pack-relative evidence links; dry-run by default (`--write`/`--force`). |
-| `scripts/package-spec.mjs` | Exports the spec pack (`npm run spec:package`): assembles `templates/spec-pack/` + run artifacts into `/home/ark/tgf-games/{seed-id}` (or `--to`); dry-run by default, gated by run validation and the leakage scan. |
+| `scripts/package-spec.mjs` | Exports the spec pack (`npm run spec:package`): assembles `templates/spec-pack/` + run artifacts into `$STUDIO_ROOT/games/{seed-id}` (or `--to`); dry-run by default, gated by run validation and the leakage scan. |
 | `scripts/lib/validate-json-schema.mjs` | ~90-line dependency-free JSON-schema subset validator. |
 | `scripts/lib/run-state.mjs` | Deep module for one seed run: paths, owned files, manifest/ledger read + schema validation, path policy, symlink guard, the phase state machine (legal transitions + phase-gated artifacts), and embedded-`json`-block extraction/validation for markdown artifacts (thesis, engine decision, spec). |
 | `scripts/lib/factory-contract.mjs` | Single source of truth for the contract surface: phases, skills, schemas, hooks, fixtures, prompt count, gate thresholds. |
@@ -75,7 +75,7 @@ as the one accepted dev dependency is the documented escape hatch.
 
 ## Schemas (`schemas/`)
 
-`asset-provenance` · `depth-vector` · `engine-profile-decision` · `execution-ledger-row` · `game-thesis` · `module-card` · `playtest-report` · `seed-manifest` · `spec-decomposition`.
+`asset-provenance` · `depth-vector` · `engine-profile-decision` · `execution-ledger-row` · `game-thesis` · `genre-index-row` · `intake-grill` · `module-card` · `playtest-report` · `portfolio-digest` · `reference-card` · `seed-manifest` · `spec-decomposition`.
 Each declares `$schema`/`title`/`type`. Core schemas have fixtures in
 `examples/fixtures/`; thesis, engine-profile, and spec use embedded-json checks on
 real runs. `playtest-report`, `asset-provenance`, and `depth-vector` also ship

@@ -95,6 +95,7 @@ See `CONTEXT.md`.
 ```
 AGENTS.md CONTEXT.md DESIGN.md README.md CLAUDE.md factory.config.toml package.json
 docs/            adr/; agents/; anti-boring gate, doctrine, engine matrix, ledgers
+docs/reference-games/  Tier-1 cards + Tier-2 genre index
 .factory/prompts active task contracts (P00–P02, P07, P13–P14, P16–P19); retired build prompts in attic/
 .codex/skills/   10 project-local skill wrappers (`tgf-*` ids kept for compatibility)
 schemas/         JSON schemas (manifest, thesis, depth, spec-decomposition, ...)
@@ -102,6 +103,7 @@ hooks/           factory guards (build-time guards ship in templates/spec-pack/g
 scripts/         advance-run · emit-local-issues · init-game-run · lint · package-spec · …
 templates/       run/ (seed-run state) · spec-pack/ (the exported pack skeleton)
 examples/        fixtures/ (schema fixtures) · seeds/
+tests/           186-test suite
 ```
 
 ## Documentation
@@ -117,6 +119,7 @@ examples/        fixtures/ (schema fixtures) · seeds/
 - `docs/doctrine.md` — non-negotiable doctrine and phase model.
 - `docs/engine-matrix.md` — engine candidates and the no-default-engine policy.
 - `docs/game-dev-bridge.md` — the spec-pack handoff (into forge / co-dev).
+- `docs/reference-games/` — README (pull-only doctrine), CANON.md, TAXONOMY.md.
 
 ## Status
 

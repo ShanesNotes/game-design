@@ -47,20 +47,20 @@ Before promoting any `PROBE` item:
 
 ## Local probe results (generated)
 
-_Probed 2026-06-07T01:56:30.202Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
+_Probed 2026-07-14T01:45:31.168Z by `scripts/verify-local-tools.mjs`; generated — do not hand-edit._
 
 | Category | Probe | Available | First line |
 |---|---|---|---|
-| base | `node --version` | yes | v22.22.2 |
+| base | `node --version` | yes | v22.23.1 |
 | base | `npm --version` | yes | 11.13.0 |
 | base | `pnpm --version` | yes | 10.33.0 |
 | base | `git --version` | yes | git version 2.43.0 |
-| builder | `claude --version` | yes | 2.1.168 (Claude Code) |
-| builder | `codex --version` | yes | codex-cli 0.137.0 |
-| builder | `omx --version` | yes | oh-my-codex v0.18.9 |
+| builder | `claude --version` | yes | 2.1.208 (Claude Code) |
+| builder | `codex --version` | yes | codex-cli 0.144.3 |
+| builder | `omx --version` | yes | oh-my-codex v0.18.15 |
 | builder | `grok-build --version` | no (PROBE) |  |
-| harness | `npx playwright --version` | yes | Version 1.60.0 |
-| engine | `godot --version` | yes | 4.6.2.stable.mono.official.71f334935 |
+| harness | `npx playwright --version` | yes | Version 1.61.1 |
+| engine | `godot --version` | yes | 4.7.stable.official.5b4e0cb0f |
 | engine | `godot4 --version` | no (PROBE) |  |
 | engine | `cargo --version` | yes | cargo 1.95.0 (f2d3ce0bd 2026-03-21) |
 

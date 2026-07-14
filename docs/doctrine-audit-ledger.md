@@ -219,7 +219,7 @@ landed later in FUE W2-B; pigeonhole doctrine lives in
 ## FUE cards batch Grok (2026-07-12) — draft research cards (8/16)
 
 Eight draft research cards for the Shane-ratified canon. Status remains
-`draft` (cross-audit later). Mechanical universe rows only.
+`draft` (cross-audit later). (Since ratified: 6 repaired cards, commit fe49f81, 2026-07-13; all cards now `audited`.) Mechanical universe rows only.
 
 | path | disposition | rationale |
 | --- | --- | --- |
@@ -363,7 +363,7 @@ Ten sourced Tier-2 rows under ratified taxonomy v1 + classics evidence doctrine
 (README ratifications). Live Steam GENRE fields (or Nintendo eShop for Space Invaders
 Invincible Collection). Memberships subset of fetched storefront strings under current
 validator (no alias table). Disposition `rewritten` for new paths (ledger convention).
-Drops: none. Reserves unused. Mechanical ledger rows only.
+Drops: space-invaders (E2-01: Shooting-only genre). Reserves used: quake-3-arena. Mechanical ledger rows only.
 
 | path | disposition | rationale |
 | --- | --- | --- |
