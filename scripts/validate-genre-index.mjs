@@ -178,6 +178,8 @@ export function validateGenreIndex({
     if (seenTitles.has(normalizedTitle)) errors.push(`${file}: duplicate normalized title '${row.title.trim()}'`);
     seenTitles.add(normalizedTitle);
 
+    // Not redundant with the schema's maxLength: the subset validator (validate-json-schema.mjs)
+    // does not implement maxLength, so this is the only live enforcement of the 120-char moat rule.
     if (row.moat.length > 120) errors.push(`${file}: moat must be at most 120 characters`);
     for (const facet of DESIGN_FACETS) {
       errors.push(...membershipErrors(row.design_shape[facet], `${file}: ${facet}`));

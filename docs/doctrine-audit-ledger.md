@@ -387,3 +387,14 @@ Drops: space-invaders (E2-01: Shooting-only genre). Reserves used: quake-3-arena
 | `docs/reference-games/genre-index/quake-3-arena.json` | rewritten | E2-01 reserve swap for space-invaders; 1999 arena FPS; Steam app 2200 Action (verified). |
 | `docs/reference-games/genre-index/wolfenstein-3d.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1992 FPS root; Steam Action. |
 | `docs/reference-games/genre-index/worms-armageddon.json` | rewritten | Sourced Tier-2 classics batch E2 row; 1999 turn-based multiplayer; Steam Strategy. |
+
+## Housekeeping follow-up (2026-07-14) — durability promotion
+
+Shane approved the housekeeping/legibility proposals; the standing Tier-2
+expansion contract was promoted out of `.scratch/orchestrate/fue/` (untracked
+run ephemera) into docs/ for git durability. Content unchanged apart from the
+provenance header; the `.scratch` copy is frozen with a pointer.
+
+| path | disposition | rationale |
+| --- | --- | --- |
+| `docs/reference-games/EXPANSION-DISPOSITION.md` | rewritten | Standing two-tier expansion contract (trinity council 2026-07-12) promoted from untracked .scratch for durability; Shane-approved 2026-07-14. |

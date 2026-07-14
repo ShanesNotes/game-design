@@ -50,7 +50,11 @@ for Quake III Arena rather than gaining an alias.
 
 ### Ratifications & evidence reach
 
-- Taxonomy v1 + 20-row pilot: ratified (Shane, 2026-07-13).
+Standing expansion contract (two-tier structure, evidence law, floors):
+`EXPANSION-DISPOSITION.md` (this directory).
+
+- Taxonomy v1 + 20-row pilot: ratified (Shane, 2026-07-13) — the canonical
+  taxonomy status line lives in `TAXONOMY.md`; this list is the index.
 - Fill-to-floors corpus (71 rows): ratified (Shane, 2026-07-13).
 - Classics doctrine (Shane, 2026-07-13): the classic canon (8/16-bit era
   onward) belongs in the index. Steam was an evidence hint, never a boundary:

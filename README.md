@@ -28,6 +28,7 @@ export folder; `--to` always wins over the default.
 ```bash
 # From this repo (design/)
 npm run verify     # lint + artifact validation + guard dry-run + tests
+# npm ci also works: package-lock.json is kept on purpose despite zero deps
 
 # Initialize durable run state for a seed (creates ONLY .tgf/seeds/{seed-id}):
 node scripts/init-game-run.mjs --seed-id tiny-asteroid-gardening \
