@@ -9,6 +9,11 @@
     "chosen_loop_id": { "type": "string" },
     "summary": { "type": "string" },
     "out_of_scope": { "type": "array", "items": { "type": "string" } },
+    "asset_source_policy": {
+      "type": "string",
+      "description": "Design taste gate for art sourcing. local = purchased library only; imagine = Grok Imagine for generatable 2D sprites (other kinds still library); combo = library first, then authorized Imagine on miss. Default when omitted: local.",
+      "enum": ["local", "imagine", "combo"]
+    },
     "asset_requests": {
       "type": "array",
       "items": {

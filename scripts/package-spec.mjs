@@ -198,12 +198,16 @@ if (!isGodot) {
     );
   }
   pendingManifest = mapResult.manifest;
-  // Full-manifest revision (SPEC §6-B): v1.1.0 + parent_digest; no delta language.
+  // Full-manifest revision (SPEC §6-B): parent_digest; no delta language.
+  // When the export already claimed v1.2.0 (e.g. asset_source_policy), keep it —
+  // only bump plain 1.0.0 originals up to the revision floor.
   if (isRevision) {
-    pendingManifest.schema_version = REVISION_SCHEMA_VERSION;
+    const needsPolicyFloor = pendingManifest.asset_source_policy != null;
+    const revVersion = needsPolicyFloor ? "1.2.0" : REVISION_SCHEMA_VERSION;
+    pendingManifest.schema_version = revVersion;
     pendingManifest.parent_digest = parentDigest;
-    // Intake requires schema_version === pins.contracts_version; revision is always 1.1.0.
-    pendingManifest.pins.contracts_version = REVISION_SCHEMA_VERSION;
+    // Intake requires schema_version === pins.contracts_version.
+    pendingManifest.pins.contracts_version = revVersion;
   }
 }
 

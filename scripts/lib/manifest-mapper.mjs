@@ -15,6 +15,7 @@
 //   engine                        ← engine decision (status=accepted, profile/version fields)
 //   asset_requests, lore_refs,
 //   verify_plan, capabilities     ← spec authored sections (P18)
+//   asset_source_policy           ← spec (optional; default local on export)
 //   ext.disciplines               ← spec.ext.disciplines (optional; validated enum)
 //   pins                          ← computed (caller)
 //   schema_version, game_id,
@@ -289,6 +290,16 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
   // --- authored SPEC sections (new in T06 / P18) ---
   if (!Array.isArray(spec.asset_requests)) missing.push("spec.asset_requests");
   if (!Array.isArray(spec.lore_refs)) missing.push("spec.lore_refs");
+  // asset_source_policy optional; when present must be one of the design enum.
+  // Forge-manifest v1.2.0 is required to claim the field (contracts Evolution).
+  const ASSET_SOURCE_POLICIES = new Set(["local", "imagine", "combo"]);
+  const hasAssetSourcePolicy = ASSET_SOURCE_POLICIES.has(spec.asset_source_policy);
+  if (
+    spec.asset_source_policy !== undefined &&
+    !hasAssetSourcePolicy
+  ) {
+    missing.push("spec.asset_source_policy");
+  }
   if (!isPlainObject(spec.capabilities)) {
     missing.push("spec.capabilities");
   } else {
@@ -349,8 +360,10 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
     return { ok: false, missing: [...new Set(missing)], manifest: null, errors };
   }
 
+  // asset_source_policy is a v1.2.0 field; omit when unset (forge defaults to local).
+  const schemaVersion = hasAssetSourcePolicy ? "1.2.0" : FORGE_MANIFEST_SCHEMA_VERSION;
   const manifest = {
-    schema_version: FORGE_MANIFEST_SCHEMA_VERSION,
+    schema_version: schemaVersion,
     game_id: meta.game_id,
     seed_id: meta.seed_id,
     producer: { name: meta.producer.name, version: meta.producer.version },
@@ -387,7 +400,8 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
       load_budget_s: spec.verify_plan.load_budget_s
     },
     pins: {
-      contracts_version: pins.contracts_version,
+      // Intake requires schema_version === pins.contracts_version.
+      contracts_version: hasAssetSourcePolicy ? "1.2.0" : pins.contracts_version,
       assets_index: pins.assets_index,
       lore_index: pins.lore_index,
       forge_template: pins.forge_template
@@ -403,6 +417,9 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
         : {})
     }
   };
+  if (hasAssetSourcePolicy) {
+    manifest.asset_source_policy = spec.asset_source_policy;
+  }
 
   return { ok: true, missing: [], manifest, errors };
 }

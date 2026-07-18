@@ -620,7 +620,9 @@ test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh p
     assert.equal(pins.ok, true, (pins.missing || []).join(", "));
     assert.equal(mf.pins.assets_index, pins.pins.assets_index);
     assert.equal(mf.pins.lore_index, pins.pins.lore_index);
-    assert.equal(mf.pins.contracts_version, pins.pins.contracts_version);
+    // Revision floor pins contracts_version to schema_version (intake equality),
+    // not the schema enum tip (may be ahead, e.g. 1.2.0 after Imagine).
+    assert.equal(mf.pins.contracts_version, "1.1.0");
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
 
     assert.match(r.stdout, /revision: schema_version 1\.1\.0 parent_digest/);
@@ -708,4 +710,40 @@ test("F05b: P18/P19 name the revision path", () => {
   assert.match(p19, /REVISION EXPORT/i);
   assert.match(p19, /--revise-of|revise-of/);
   assert.match(p19, /parent_digest/);
+});
+
+test("asset_source_policy omitted by default; present values require v1.2.0", () => {
+  const { thesis, spec, engine, pins, meta } = baseMapInputs();
+  const absent = { ...spec };
+  delete absent.asset_source_policy;
+  const r0 = mapForgeManifest({ thesis, spec: absent, engine, pins, meta });
+  assert.equal(r0.ok, true, (r0.missing || []).join(", "));
+  assert.equal(r0.manifest.asset_source_policy, undefined);
+  assert.equal(r0.manifest.schema_version, "1.0.0");
+  assert.deepEqual(validate(loadContractsSchema(), r0.manifest), []);
+
+  for (const policy of ["local", "imagine", "combo"]) {
+    const r = mapForgeManifest({
+      thesis,
+      spec: { ...spec, asset_source_policy: policy },
+      engine,
+      pins,
+      meta
+    });
+    assert.equal(r.ok, true, `${policy}: ${(r.missing || []).join(", ")}`);
+    assert.equal(r.manifest.asset_source_policy, policy);
+    assert.equal(r.manifest.schema_version, "1.2.0");
+    assert.equal(r.manifest.pins.contracts_version, "1.2.0");
+    assert.deepEqual(validate(loadContractsSchema(), r.manifest), []);
+  }
+
+  const bad = mapForgeManifest({
+    thesis,
+    spec: { ...spec, asset_source_policy: "purchased-only" },
+    engine,
+    pins,
+    meta
+  });
+  assert.equal(bad.ok, false);
+  assert.ok(bad.missing.includes("spec.asset_source_policy"), bad.missing.join(", "));
 });

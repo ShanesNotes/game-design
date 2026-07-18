@@ -157,6 +157,20 @@ asset library reached from design via forge-manifest `asset_requests` and the
 P18 availability probe (`npm run spec:probe`); that seam does not relax the
 code-native-before-fun-lock pack rule.
 
+### Asset source policy (design-authored)
+
+Spec field **`asset_source_policy`** (exported onto the forge-manifest) is the
+user/design taste gate for *where* art may come from after fun-lock:
+
+| Value | Meaning |
+|-------|---------|
+| **`local`** (default) | Purchased library only. Catalog miss → open sourcing / purchase. **No** Grok Imagine. |
+| **`imagine`** | Prefer Grok Imagine for generatable 2D (`kind: sprite`). Other kinds (model/animation/audio) still use the library. Landings under `games/<id>/generated/imagine/`. |
+| **`combo`** | Library first; on catalog miss for sprites, authorized Imagine landings may fill the lock. |
+
+Agents do not invent the policy — it is set in the decomposition/spec (human or
+seed decision). Forge honors it; silent generate under `local` is a bug.
+
 ## Human taste gates
 
 - **G1** — pre-decompose design taste: is the design-locked thesis worth
