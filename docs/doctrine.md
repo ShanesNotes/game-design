@@ -176,6 +176,27 @@ seed→spec walkthrough names the same decision at the decompose step
 (`scripts/walk-game-idea.mjs` next-action for `decompose`). Agents do not invent
 the policy. Forge honors it; silent generate under `local` is a bug.
 
+### Derive block (request-local Blender recipes)
+
+Per-request optional **`derive`** on `asset_requests[]` authorizes a
+**deterministic Blender recipe** over a purchased-pack base (forge-manifest
+**1.3.0**). Orthogonal to `asset_source_policy` (sprites / Imagine only).
+
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `base.pack_id` | yes | Purchased library pack (recipe input — not the resolution) |
+| `base.name` | yes | Model stem inside that pack |
+| `recipe` | yes | Registry id, e.g. `blender-derive/palette-remap@1` (assets `_tools/derive/`) |
+| `params` | no | Design-owned recipe parameters (e.g. `{ "palette": { "Armor": "#4a7c59" } }`) |
+
+**Presence = authorization** (Shane 2026-07-19). No separate human “generate”
+gate for derive. Remaining human gates: recipe code review, promotion into the
+shared library, purchases, ship veto. Landings live under
+`games/<id>/generated/derived/<request_id>/` with license marker
+`cc0-derivative-studio`. Forge resolves derive-bearing requests only from that
+landing; missing/invalid → honest `unresolved[]`. Export floors contract claims
+to **1.3.0** when any request carries `derive` (base and revision packs).
+
 ## Human taste gates
 
 - **G1** — pre-decompose design taste: is the design-locked thesis worth

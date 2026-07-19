@@ -16,7 +16,9 @@ import {
   computePins,
   FORGE_GATE_TOKEN,
   BUILD_DISCIPLINES,
-  validateSpecDisciplines
+  validateSpecDisciplines,
+  ASSET_SOURCE_POLICY_SCHEMA_VERSION,
+  DERIVE_SCHEMA_VERSION
 } from "../scripts/lib/manifest-mapper.mjs";
 import {
   resolveAssetsRoot,
@@ -755,10 +757,16 @@ test("asset_source_policy omitted by default; present values floor to v1.2.0", (
   assert.ok(bad.missing.includes("spec.asset_source_policy"), bad.missing.join(", "));
 });
 
-/** Replicate forge/src/intake.mjs validateContractVersion equality gate (read-only). */
+/** Replicate forge/src/intake.mjs validateContractVersion equality gate (read-only).
+ *  Allowlist tracks forge intake + live contracts tip (not a frozen literal set). */
 function forgeIntakeContractVersionOk(manifest, { revise = false } = {}) {
-  const CONTRACT_VERSIONS = new Set(["1.0.0", "1.1.0", "1.2.0"]);
-  const REVISION_CONTRACT_VERSIONS = new Set(["1.1.0", "1.2.0"]);
+  const tip = contractsVersion(REPO);
+  const CONTRACT_VERSIONS = new Set(["1.0.0", "1.1.0", "1.2.0", "1.3.0"]);
+  const REVISION_CONTRACT_VERSIONS = new Set(["1.1.0", "1.2.0", "1.3.0"]);
+  if (tip) {
+    CONTRACT_VERSIONS.add(tip);
+    REVISION_CONTRACT_VERSIONS.add(tip);
+  }
   const schemaVersion = manifest.schema_version;
   const contractsVersionPin = manifest.pins?.contracts_version;
   if (
@@ -770,6 +778,25 @@ function forgeIntakeContractVersionOk(manifest, { revise = false } = {}) {
     return false;
   }
   return true;
+}
+
+/** Minimal asset_request with a valid derive block (forge-manifest 1.3.0 shape). */
+function deriveRequest(overrides = {}) {
+  return {
+    request_id: "hero-recolor",
+    role: "hero model palette-remapped",
+    kind: "model",
+    pack_id: "quaternius-ultimate-animated-character",
+    name: "Knight",
+    constraints: {},
+    substitution_policy: "block",
+    derive: {
+      base: { pack_id: "quaternius-ultimate-animated-character", name: "Knight" },
+      recipe: "blender-derive/palette-remap@1",
+      params: { palette: { Armor: "#4a7c59" } }
+    },
+    ...overrides
+  };
 }
 
 test("DES-A: every export path keeps schema_version === pins.contracts_version", () => {
@@ -834,5 +861,128 @@ test("DES-A live round-trip: package-spec base export passes forge intake contra
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
+  const { thesis, engine, pins, meta } = baseMapInputs();
+  const tipPins = { ...pins, contracts_version: contractsVersion(REPO) || DERIVE_SCHEMA_VERSION };
+  const plainReq = {
+    request_id: "crate",
+    role: "prop",
+    kind: "model",
+    query: "wooden crate",
+    constraints: {},
+    substitution_policy: "allow"
+  };
+  const withDerive = deriveRequest();
+
+  // no-derive, no-policy → tip claim; invariant holds
+  const noPolicySpec = {
+    ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8")),
+    asset_requests: [plainReq]
+  };
+  delete noPolicySpec.asset_source_policy;
+  const rTip = mapForgeManifest({ thesis, spec: noPolicySpec, engine, pins: tipPins, meta });
+  assert.equal(rTip.ok, true, (rTip.missing || []).join(", "));
+  assert.equal(rTip.manifest.schema_version, tipPins.contracts_version);
+  assert.equal(rTip.manifest.schema_version, rTip.manifest.pins.contracts_version);
+  assert.equal(rTip.manifest.asset_requests[0].derive, undefined);
+  assert.ok(forgeIntakeContractVersionOk(rTip.manifest));
+  assert.deepEqual(validate(loadContractsSchema(), rTip.manifest), []);
+
+  // policy-only → 1.2.0 floor
+  const rPolicy = mapForgeManifest({
+    thesis,
+    spec: { ...noPolicySpec, asset_source_policy: "local", asset_requests: [plainReq] },
+    engine,
+    pins: tipPins,
+    meta
+  });
+  assert.equal(rPolicy.ok, true, (rPolicy.missing || []).join(", "));
+  assert.equal(rPolicy.manifest.schema_version, ASSET_SOURCE_POLICY_SCHEMA_VERSION);
+  assert.equal(rPolicy.manifest.pins.contracts_version, ASSET_SOURCE_POLICY_SCHEMA_VERSION);
+  assert.equal(rPolicy.manifest.schema_version, rPolicy.manifest.pins.contracts_version);
+  assert.ok(forgeIntakeContractVersionOk(rPolicy.manifest));
+  assert.deepEqual(validate(loadContractsSchema(), rPolicy.manifest), []);
+
+  // derive only → 1.3.0 + passthrough
+  const rDerive = mapForgeManifest({
+    thesis,
+    spec: { ...noPolicySpec, asset_requests: [withDerive] },
+    engine,
+    pins: tipPins,
+    meta
+  });
+  assert.equal(rDerive.ok, true, (rDerive.missing || []).join(", "));
+  assert.equal(rDerive.manifest.schema_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rDerive.manifest.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rDerive.manifest.schema_version, rDerive.manifest.pins.contracts_version);
+  assert.deepEqual(rDerive.manifest.asset_requests[0].derive, withDerive.derive);
+  assert.ok(forgeIntakeContractVersionOk(rDerive.manifest));
+  assert.deepEqual(validate(loadContractsSchema(), rDerive.manifest), []);
+
+  // derive + policy → still 1.3.0 (max floor wins)
+  const rBoth = mapForgeManifest({
+    thesis,
+    spec: {
+      ...noPolicySpec,
+      asset_source_policy: "combo",
+      asset_requests: [plainReq, withDerive]
+    },
+    engine,
+    pins: tipPins,
+    meta
+  });
+  assert.equal(rBoth.ok, true, (rBoth.missing || []).join(", "));
+  assert.equal(rBoth.manifest.asset_source_policy, "combo");
+  assert.equal(rBoth.manifest.schema_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rBoth.manifest.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rBoth.manifest.schema_version, rBoth.manifest.pins.contracts_version);
+  assert.deepEqual(rBoth.manifest.asset_requests[1].derive, withDerive.derive);
+  assert.ok(forgeIntakeContractVersionOk(rBoth.manifest));
+  assert.deepEqual(validate(loadContractsSchema(), rBoth.manifest), []);
+});
+
+test("derive: revision export with derive block claims 1.3.0 (both fields) + intake ok", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-revision-derive";
+  const { gameDir, parentDigest } = fixtureGameDir();
+  const withDerive = deriveRequest();
+  try {
+    completeReadyRun(dir, id, {
+      profile: GODOT_PROFILE,
+      specOverrides: {
+        asset_requests: [withDerive]
+      }
+    });
+
+    const r = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--to", target, "--write", "--revise-of", gameDir],
+      { cwd: dir }
+    );
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    const mfPath = path.join(target, "forge-manifest.json");
+    assert.ok(fs.existsSync(mfPath), "revision pack must contain forge-manifest.json");
+    const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+
+    assert.equal(mf.schema_version, DERIVE_SCHEMA_VERSION);
+    assert.equal(mf.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+    assert.equal(mf.schema_version, mf.pins.contracts_version);
+    assert.equal(mf.parent_digest, parentDigest);
+    assert.deepEqual(mf.asset_requests[0].derive, withDerive.derive);
+    assert.ok(
+      forgeIntakeContractVersionOk(mf, { revise: true }),
+      `forge revision intake would reject: schema=${mf.schema_version} pins=${mf.pins.contracts_version}`
+    );
+    assert.deepEqual(validate(loadContractsSchema(), mf), []);
+    assert.match(r.stdout, new RegExp(`revision: schema_version ${DERIVE_SCHEMA_VERSION} parent_digest`));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
   }
 });

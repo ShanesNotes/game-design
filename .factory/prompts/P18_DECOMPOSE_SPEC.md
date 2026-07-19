@@ -94,8 +94,29 @@ SLICING RULES:
     forge ignores Imagine landings even if present.
   - `asset_requests[]` — semantic asset needs
     `{request_id, role, kind ∈ sprite|model|animation|audio, query and/or
-    {pack_id,name}, constraints, substitution_policy ∈ allow|report|block}`.
+    {pack_id,name}, constraints, substitution_policy ∈ allow|report|block,
+    optional derive}`.
     Never resolved filesystem paths.
+    - **Optional `derive` block** (forge-manifest **1.3.0**; orthogonal to
+      `asset_source_policy` which is the Imagine/sprite axis only):
+      ```json
+      "derive": {
+        "base": { "pack_id": "<purchased pack_id>", "name": "<model stem>" },
+        "recipe": "blender-derive/palette-remap@1",
+        "params": { "palette": { "Armor": "#4a7c59" } }
+      }
+      ```
+      Shape: required `base` (`pack_id` + `name`) + `recipe` (string); optional
+      `params` (object). Recipe ids come from the assets library registry
+      (`_tools/derive/` README) — D1 ships `blender-derive/palette-remap@1`.
+      Params are design-owned (palette maps, etc.). **Presence of the block IS
+      authorization** (Shane 2026-07-19): no separate human generate gate for
+      derive. Human gates remain recipe code review, promotion into the shared
+      library, purchases, and ship veto. Forge resolves a request WITH `derive`
+      only from `games/<id>/generated/derived/<request_id>/` (catalog base is
+      recipe input, never the resolution). Export floors `schema_version` and
+      `pins.contracts_version` to **1.3.0** when any request carries `derive`
+      (plain and revision paths).
   - `lore_refs[]` — `{motif_id, affordance_claim, required: false}` (v1 always false).
     Resolve each `motif_id` from sibling `lore/` (or `<STUDIO_ROOT>/lore`): from
     that repo root run `python3 _tools/find_lore.py find "<free text>"`; take
@@ -142,12 +163,15 @@ REVISION AUTHORING (post-complete; export-surface only — not a new phase):
 When a completed seed needs a design change (Shane, or a mission whose prompt
 explicitly authorizes it — same governance class as verdict `done`), re-author
 only the SPEC surface: slices + forge-authoring sections (`asset_source_policy`,
-`asset_requests`, `lore_refs`, `capabilities`, `verify_plan`, optional
-`ext.disciplines`).
+`asset_requests` including optional per-request `derive`, `lore_refs`,
+`capabilities`, `verify_plan`, optional `ext.disciplines`).
 Re-render issues. Do not reopen thesis/engine unless the change requires it.
 Revisions may retire never-dispatched slices; built slices stay immutable
-(forge intake enforces). Export via P19's revision path (`--revise-of`), not
-plain `package-spec` — `complete` stays absorbing for plain packs (SPEC §6-B).
+(forge intake enforces). Revisions may change `asset_requests` (add/remove
+`derive`, retarget bases) — that is why the revision export can claim **1.3.0**
+when any request carries `derive`. Export via P19's revision path
+(`--revise-of`), not plain `package-spec` — `complete` stays absorbing for plain
+packs (SPEC §6-B).
 
 VERIFY (completion is evidence, not prose):
 1. `node scripts/validate-artifacts.mjs --check spec --seed-id <id>` passes.

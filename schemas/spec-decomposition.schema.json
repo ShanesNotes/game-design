@@ -27,6 +27,25 @@
           "query": { "type": "string" },
           "pack_id": { "type": "string" },
           "name": { "type": "string" },
+          "derive": {
+            "type": "object",
+            "description": "Request-local authorization to derive a game-local model from a purchased-pack base through a reviewed recipe (forge-manifest 1.3.0). Presence = authorization (Shane 2026-07-19). Recipe ids from assets _tools/derive/ registry.",
+            "additionalProperties": false,
+            "required": ["base", "recipe"],
+            "properties": {
+              "base": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["pack_id", "name"],
+                "properties": {
+                  "pack_id": { "type": "string", "minLength": 1 },
+                  "name": { "type": "string", "minLength": 1 }
+                }
+              },
+              "recipe": { "type": "string", "minLength": 1 },
+              "params": { "type": "object" }
+            }
+          },
           "constraints": {
             "type": "object",
             "additionalProperties": false,

@@ -16,6 +16,7 @@
 //   asset_requests, lore_refs,
 //   verify_plan, capabilities     ← spec authored sections (P18)
 //   asset_source_policy           ← spec (optional; default local on export)
+//   asset_requests[].derive       ← spec (optional; floors claim to 1.3.0)
 //   ext.disciplines               ← spec.ext.disciplines (optional; validated enum)
 //   pins                          ← computed (caller)
 //   schema_version, game_id,
@@ -26,6 +27,8 @@ import crypto from "node:crypto";
 export const GODOT_PROFILE = "godot-4";
 /** Floor when asset_source_policy is present (field introduced in forge-manifest 1.2.0). */
 export const ASSET_SOURCE_POLICY_SCHEMA_VERSION = "1.2.0";
+/** Floor when any asset_request carries derive (field introduced in forge-manifest 1.3.0). */
+export const DERIVE_SCHEMA_VERSION = "1.3.0";
 export const FORGE_GATE_TOKEN = "FORGE-GATE:ENGINE";
 
 /** Build-phase discipline enum (SPEC game-build §2 / DISCIPLINES.md owners subset). */
@@ -363,11 +366,16 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
 
   // Base exports claim the contracts version they were built against
   // (pins.contracts_version = contractsVersion() tip from package-spec).
-  // Policy field is v1.2.0-additive: when present, floor both claims to 1.2.0.
+  // Feature floors (max wins): derive → 1.3.0; asset_source_policy → 1.2.0.
   // INVARIANT (forge intake): schema_version === pins.contracts_version.
-  const contractClaim = hasAssetSourcePolicy
-    ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
-    : pins.contracts_version;
+  const hasDerive =
+    Array.isArray(spec.asset_requests) &&
+    spec.asset_requests.some((r) => isPlainObject(r) && isPlainObject(r.derive));
+  const contractClaim = hasDerive
+    ? DERIVE_SCHEMA_VERSION
+    : hasAssetSourcePolicy
+      ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
+      : pins.contracts_version;
   const manifest = {
     schema_version: contractClaim,
     game_id: meta.game_id,

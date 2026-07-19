@@ -33,7 +33,9 @@ import {
   forgeGateLine,
   mapForgeManifest,
   computePins,
-  computePackDigest
+  computePackDigest,
+  ASSET_SOURCE_POLICY_SCHEMA_VERSION,
+  DERIVE_SCHEMA_VERSION
 } from "./lib/manifest-mapper.mjs";
 import {
   resolveAssetsRoot,
@@ -199,11 +201,22 @@ if (!isGodot) {
   }
   pendingManifest = mapResult.manifest;
   // Full-manifest revision (SPEC §6-B): parent_digest; no delta language.
-  // When the export already claimed v1.2.0 (e.g. asset_source_policy), keep it —
-  // only bump plain 1.0.0 originals up to the revision floor.
+  // Version-floor ladder (same value on schema_version and pins.contracts_version):
+  //   any request carries derive → 1.3.0
+  //   else asset_source_policy present → 1.2.0
+  //   else REVISION_SCHEMA_VERSION (1.1.0 parent_digest floor)
   if (isRevision) {
+    const hasDerive =
+      Array.isArray(pendingManifest.asset_requests) &&
+      pendingManifest.asset_requests.some(
+        (r) => r !== null && typeof r === "object" && !Array.isArray(r) && r.derive != null
+      );
     const needsPolicyFloor = pendingManifest.asset_source_policy != null;
-    const revVersion = needsPolicyFloor ? "1.2.0" : REVISION_SCHEMA_VERSION;
+    const revVersion = hasDerive
+      ? DERIVE_SCHEMA_VERSION
+      : needsPolicyFloor
+        ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
+        : REVISION_SCHEMA_VERSION;
     pendingManifest.schema_version = revVersion;
     pendingManifest.parent_digest = parentDigest;
     // Intake requires schema_version === pins.contracts_version.
@@ -353,7 +366,9 @@ try {
   if (pendingManifest) {
     console.log(`[package-spec] forge-manifest.json emitted (engine ${GODOT_PROFILE})`);
     if (isRevision) {
-      console.log(`[package-spec] revision: schema_version ${REVISION_SCHEMA_VERSION} parent_digest ${parentDigest}`);
+      console.log(
+        `[package-spec] revision: schema_version ${pendingManifest.schema_version} parent_digest ${parentDigest}`
+      );
     }
   }
   console.log(`[package-spec] next: open ${target} in a fresh session and follow its AGENTS.md`);
