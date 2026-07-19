@@ -51,6 +51,13 @@ test("validate uniqueItems treats JSON-equal objects equal despite key order", (
   assert.ok(errs.some((e) => /uniqueItems|duplicate/.test(e)), errs.join("\n"));
 });
 
+test("validate uniqueItems keeps __proto__ keys and array/object shapes distinct", () => {
+  const protoPair = JSON.parse('[{"__proto__":{"x":1}},{}]');
+  assert.deepEqual(validate({ type: "array", uniqueItems: true }, protoPair), []);
+  const shapePair = [{ a: 1 }, [["a", 1]]];
+  assert.deepEqual(validate({ type: "array", uniqueItems: true }, shapePair), []);
+});
+
 test("live schemas exercise maxLength, minLength, uniqueItems", () => {
   const genreSchema = JSON.parse(fs.readFileSync(rel("schemas/genre-index-row.schema.json"), "utf8"));
   const row = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-genre-index-row.json"), "utf8"));

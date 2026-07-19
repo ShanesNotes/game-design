@@ -1328,6 +1328,21 @@ test("materializeExact does not write through pre-existing symlink or hardlink d
   }
 });
 
+test("materializeExact refuses a symlinked target root without writing outside", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-linkroot-"));
+  try {
+    const outside = path.join(root, "outside");
+    const target = path.join(root, "target");
+    fs.mkdirSync(outside);
+    fs.symlinkSync(outside, target);
+    assert.throws(() => runSpecPackHandoff({
+      target, write: true, force: true, log() {},
+      fillStaging(s) { fs.writeFileSync(path.join(s, "README.md"), "PACK"); }
+    }), /target must be a real directory/);
+    assert.equal(fs.existsSync(path.join(outside, "README.md")), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test("materializeExact --force resolves file-vs-directory path conflicts fully", () => {
   // Stale FILE named "issues" where the pack needs issues/ must be replaced;
   // full success preferred (entire pack set present, no partial overwrite fail).

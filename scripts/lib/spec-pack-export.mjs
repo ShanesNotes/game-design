@@ -101,6 +101,13 @@ function listFilesNoFollow(dir, acc = []) {
  * Returns the sorted relative file list of the target after write.
  */
 export function materializeExact(staging, target, packFiles) {
+  // Confinement starts at the root: a symlinked target would route every
+  // "confined" write outside the tree the receipt certifies.
+  let rootStat = null;
+  try { rootStat = fs.lstatSync(target); } catch { /* absent is fine */ }
+  if (rootStat && !rootStat.isDirectory()) {
+    throw new Error(`target must be a real directory, not a ${rootStat.isSymbolicLink() ? "symlink" : "non-directory"}: ${target}`);
+  }
   fs.mkdirSync(target, { recursive: true });
   const want = new Set(packFiles);
   for (const rel of packFiles) {

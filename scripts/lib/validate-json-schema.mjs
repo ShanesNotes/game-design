@@ -27,13 +27,12 @@ function matchType(expected, data) {
 
 /** Recursive key-sort so JSON.stringify equality ignores object property order. */
 function canonicalize(value) {
-  if (Array.isArray(value)) return value.map(canonicalize);
+  // Tagged shapes keep arrays and objects from ever encoding identically, and
+  // sorted [key, value] pairs (never a rebuilt object) survive keys like
+  // "__proto__" that assignment onto a plain object would silently drop.
+  if (Array.isArray(value)) return ["arr", ...value.map(canonicalize)];
   if (value !== null && typeof value === "object") {
-    const out = {};
-    for (const key of Object.keys(value).sort()) {
-      out[key] = canonicalize(value[key]);
-    }
-    return out;
+    return ["obj", ...Object.keys(value).sort().map((key) => [key, canonicalize(value[key])])];
   }
   return value;
 }
