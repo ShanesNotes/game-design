@@ -25,6 +25,19 @@ function matchType(expected, data) {
   }
 }
 
+/** Recursive key-sort so JSON.stringify equality ignores object property order. */
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value !== null && typeof value === "object") {
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      out[key] = canonicalize(value[key]);
+    }
+    return out;
+  }
+  return value;
+}
+
 export function validate(schema, data, path = "$") {
   const errors = [];
   if (!schema || typeof schema !== "object") return errors;
@@ -45,11 +58,13 @@ export function validate(schema, data, path = "$") {
   }
 
   if (typeof data === "string") {
-    if (schema.minLength !== undefined && data.length < schema.minLength) {
-      errors.push(`${path}: string length ${data.length} < minLength ${schema.minLength}`);
+    // Draft 2020-12 measures length in Unicode code points, not UTF-16 units.
+    const len = [...data].length;
+    if (schema.minLength !== undefined && len < schema.minLength) {
+      errors.push(`${path}: string length ${len} < minLength ${schema.minLength}`);
     }
-    if (schema.maxLength !== undefined && data.length > schema.maxLength) {
-      errors.push(`${path}: string length ${data.length} > maxLength ${schema.maxLength}`);
+    if (schema.maxLength !== undefined && len > schema.maxLength) {
+      errors.push(`${path}: string length ${len} > maxLength ${schema.maxLength}`);
     }
   }
 
@@ -69,7 +84,8 @@ export function validate(schema, data, path = "$") {
     if (schema.uniqueItems === true) {
       const seen = new Set();
       for (const item of data) {
-        const key = JSON.stringify(item);
+        // Canonicalize so object key order does not mask JSON equality.
+        const key = JSON.stringify(canonicalize(item));
         if (seen.has(key)) {
           errors.push(`${path}: duplicate items (uniqueItems)`);
           break;

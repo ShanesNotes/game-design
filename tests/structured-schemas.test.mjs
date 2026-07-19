@@ -27,9 +27,27 @@ test("validate enforces minLength (fire and pass)", () => {
   assert.ok(errs.some((e) => /minLength/.test(e)), errs.join("\n"));
 });
 
+test("validate minLength/maxLength count Unicode code points (astral plane)", () => {
+  // 😀 is one code point, two UTF-16 code units. Draft 2020-12 uses code points.
+  assert.equal([..."😀"].length, 1);
+  assert.equal("😀".length, 2);
+  const errs = validate({ type: "string", minLength: 2, maxLength: 1 }, "😀");
+  assert.ok(errs.some((e) => /minLength/.test(e)), `expected minLength, got: ${errs.join("\n")}`);
+  assert.ok(!errs.some((e) => /maxLength/.test(e)), `must not fire maxLength for 1 code point: ${errs.join("\n")}`);
+  assert.deepEqual(validate({ type: "string", minLength: 1, maxLength: 1 }, "😀"), []);
+});
+
 test("validate enforces uniqueItems (fire and pass)", () => {
   assert.deepEqual(validate({ type: "array", uniqueItems: true }, ["a", "b"]), []);
   const errs = validate({ type: "array", uniqueItems: true }, ["a", "a"]);
+  assert.ok(errs.some((e) => /uniqueItems|duplicate/.test(e)), errs.join("\n"));
+});
+
+test("validate uniqueItems treats JSON-equal objects equal despite key order", () => {
+  const errs = validate(
+    { type: "array", uniqueItems: true },
+    [{ outer: { a: 1, b: [2, 3] } }, { outer: { b: [2, 3], a: 1 } }]
+  );
   assert.ok(errs.some((e) => /uniqueItems|duplicate/.test(e)), errs.join("\n"));
 });
 
