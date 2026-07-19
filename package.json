@@ -15,6 +15,7 @@
     "spec:probe": "node scripts/probe-spec-availability.mjs",
     "spec:package": "node scripts/package-spec.mjs",
     "spec:revise": "node scripts/package-spec.mjs",
+    "assets:recommend": "node scripts/recommend-assets.mjs",
     "gates": "node scripts/run-gates.mjs --dry-run",
     "validate": "node scripts/validate-artifacts.mjs --check all",
     "validate:reference-cards": "node scripts/validate-reference-cards.mjs",
