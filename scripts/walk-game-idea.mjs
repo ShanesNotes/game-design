@@ -7,7 +7,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  runDirFor, runRelFor, readManifest, readLedger, readEmbeddedArtifact,
+  runDirFor, runRelFor, openRun, readEmbeddedArtifact,
   validateLedgerRow, isValidSeedId, resolveRunPath, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
 import { ARTIFACT_KINDS } from "./lib/factory-contract.mjs";
@@ -38,20 +38,17 @@ if (!fs.existsSync(path.join(runDir, "manifest.json"))) {
   if (r.status !== 0) fail(`init failed:\n${r.stderr || r.stdout}`);
 }
 
-let manifest;
-try { manifest = readManifest(runDir, seedId, process.cwd()); }
-catch (e) { fail(`manifest rejected: ${e.message}`); }
-if (!manifest) fail(`no run at ${runRel}`);
-
-let ledger;
-try { ledger = readLedger(runDir, seedId, process.cwd()); }
-catch (e) { fail(`ledger rejected: ${e.message}`); }
-const { rows, parseErrors } = ledger;
-if (parseErrors.length) fail(`ledger invalid:\n  ${parseErrors.join("\n  ")}`);
-rows.forEach((row, i) => {
-  const errors = validateLedgerRow(row);
-  if (errors.length) fail(`ledger row ${i + 1} invalid:\n  ${errors.join("\n  ")}`);
-});
+let run;
+try { run = openRun(process.cwd(), seedId); }
+catch (e) {
+  if (e.code === "RUN_NOT_FOUND") fail(`no run at ${runRel}`);
+  if (e.code === "MANIFEST_REJECTED") fail(`manifest rejected: ${e.message}`);
+  if (["LEDGER_REJECTED", "LEDGER_INVALID"].includes(e.code)) {
+    fail(`ledger invalid:\n  ${(e.errors || [e.message]).join("\n  ")}`);
+  }
+  fail(`run invalid:\n  ${(e.errors || [e.message]).join("\n  ")}`);
+}
+const { manifest, ledgerRows: rows } = run;
 const seedPathRel = manifest.seed_path || `${runRel}/GAME_SEED.md`;
 let seedPath;
 try { seedPath = resolveRunPath(process.cwd(), seedId, seedPathRel, "seed_path"); }
@@ -161,7 +158,7 @@ lines.push(`- run state: ${runRel}`);
 lines.push(`- seed: ${seedText}`);
 lines.push(`- thesis: ${manifest.game_thesis_path || "(not compiled)"}`);
 lines.push(`- engine ADR: ${manifest.engine_decision_path || "(not decided)"}`);
-lines.push(`- ledger rows: ${rows.length}${parseErrors.length ? ` (${parseErrors.length} parse warning(s))` : ""}`);
+lines.push(`- ledger rows: ${rows.length}`);
 lines.push("");
 lines.push("## Architectural decision ladder");
 lines.push("");

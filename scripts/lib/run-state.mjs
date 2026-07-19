@@ -9,15 +9,18 @@
 // policy that keeps a run pointed inside its sandbox, the symlink write-through guard,
 // and the phase state machine derived from docs/doctrine.md §"Phase model".
 //
-// Dependency-free (Node built-ins + the local JSON-schema validator) by design —
-// except studio-paths for path-registry pack root discovery.
+// Dependency-free outside local policy modules: studio-paths discovers the pack
+// root and portfolio-memory enforces the intake evidence gate on advancement.
 import fs from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { validate } from "./validate-json-schema.mjs";
 import { findStudioRoot } from "./studio-paths.mjs";
+import { isPortfolioRun, readIntakeEvidence } from "./portfolio-memory.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const RUN_TRANSACTION_FILE = "run-state-transaction.json";
 
 // --- Identity & paths ---
 
@@ -146,6 +149,33 @@ export function appendRunFileSync(cwd, seedId, runPath, contents) {
   }
 }
 
+// Complete-file replacement for paired run truth. The temp file is fully written
+// before rename, so neither the manifest nor ledger can be left partially written.
+function replaceRunFileSync(cwd, seedId, runPath, contents) {
+  const file = resolveRunPath(cwd, seedId, runPath, runPath);
+  const temp = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}.${randomUUID()}.tmp`);
+  let fd;
+  try {
+    fd = openNoFollow(temp, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL);
+    fs.writeFileSync(fd, contents);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+    fs.renameSync(temp, file);
+  } catch (error) {
+    if (error.code === "ELOOP") throw new Error(`${runPath} must not be a symlink`);
+    throw error;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+    if (fs.existsSync(temp)) fs.unlinkSync(temp);
+  }
+}
+
+function removeRunFileSync(cwd, seedId, runPath) {
+  const file = resolveRunPath(cwd, seedId, runPath, runPath);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
 // The subdirectories every run dir carries. The initializer creates them and the
 // symlink guard inspects them — one list so the two cannot drift.
 export const RUN_DIRS = ["decisions", "reviews", "issues"];
@@ -236,7 +266,23 @@ export function validateEmbeddedJson(filePath, schemaName) {
 
 // --- Reading (crash-safe: a malformed file is reported, never thrown to the caller) ---
 
+function assertNoPendingRunTransaction(runDir, cwd) {
+  const transactionFile = path.join(runDir, RUN_TRANSACTION_FILE);
+  if (!fs.existsSync(transactionFile)) return;
+  const reject = (message) => {
+    const error = new Error(message);
+    error.code = "RUN_REPAIR_REQUIRED";
+    throw error;
+  };
+  try { readFileNoFollow(transactionFile, cwd); }
+  catch (error) {
+    reject(`pending run-state transaction requires repair but its note is unreadable: ${error.message}`);
+  }
+  reject(`pending run-state transaction requires repair: ${path.relative(cwd, transactionFile)}`);
+}
+
 export function readManifest(runDir, seedId = null, cwd = process.cwd()) {
+  assertNoPendingRunTransaction(runDir, cwd);
   const p = path.join(runDir, "manifest.json");
   if (!fs.existsSync(p)) return null;
   const manifest = JSON.parse(readFileNoFollow(p, cwd));
@@ -265,6 +311,93 @@ export function readLedger(runDir, seedId = null, cwd = process.cwd()) {
     catch { parseErrors.push(`execution-ledger.jsonl line ${i + 1}: not valid JSON`); }
   });
   return { rows, parseErrors };
+}
+
+export class RunStateError extends Error {
+  constructor(message, code = "RUN_INVALID", errors = []) {
+    super(message);
+    this.name = "RunStateError";
+    this.code = code;
+    this.errors = errors;
+  }
+}
+
+// Open one coherent view of a run. Callers receive validated manifest + ledger
+// truth and common derivations together, or one rejection containing every
+// structural/reconciliation error found in that snapshot.
+export function openRun(cwd, seedId) {
+  if (!isValidSeedId(seedId)) {
+    throw new RunStateError(`invalid --seed-id: ${seedId}`, "INVALID_SEED_ID");
+  }
+  const runDir = runDirFor(cwd, seedId);
+  const runRel = runRelFor(seedId);
+  let manifest;
+  try { manifest = readManifest(runDir, seedId, cwd); }
+  catch (error) {
+    throw new RunStateError(error.message, error.code || "MANIFEST_REJECTED", [error.message]);
+  }
+  if (!manifest) {
+    throw new RunStateError(`no run at ${runRel}`, "RUN_NOT_FOUND");
+  }
+
+  let ledger;
+  try { ledger = readLedger(runDir, seedId, cwd); }
+  catch (error) {
+    throw new RunStateError(error.message, "LEDGER_REJECTED", [error.message]);
+  }
+  const manifestErrors = [
+    ...validateManifest(manifest).map((error) => `manifest ${error}`),
+    ...manifestPathPolicyErrors(manifest, seedId, cwd),
+    ...phaseArtifactConstraintErrors(manifest),
+    ...questionBudgetErrors(manifest),
+    ...deepenAttemptErrors(manifest)
+  ];
+  if (manifest.external_side_effects_allowed !== false) {
+    manifestErrors.push("external_side_effects_allowed must be false");
+  }
+  const ledgerErrors = ledger.parseErrors.map((error) => `ledger ${error}`);
+  ledger.rows.forEach((row, index) => {
+    validateLedgerRow(row).forEach((error) => ledgerErrors.push(`ledger row ${index + 1} ${error}`));
+  });
+  if (!ledger.rows.length) ledgerErrors.push("execution-ledger.jsonl missing or empty");
+  ledgerTransitionErrors(ledger.rows).forEach((error) => ledgerErrors.push(error));
+
+  const reconciliationErrors = designLaneConsistencyErrors(manifest, ledger.rows);
+  const latestEvent = ledger.rows[ledger.rows.length - 1] || null;
+  if (latestEvent?.phase !== undefined && latestEvent.phase !== manifest.current_phase) {
+    reconciliationErrors.push(`manifest current_phase '${manifest.current_phase}' != latest ledger phase '${latestEvent.phase}'`);
+  }
+  const errors = [...manifestErrors, ...ledgerErrors, ...reconciliationErrors];
+  if (errors.length) {
+    const code = manifestErrors.length === 0 && reconciliationErrors.length === 0
+      ? "LEDGER_INVALID"
+      : "RUN_INVALID";
+    throw new RunStateError(errors.join("\n"), code, errors);
+  }
+
+  const revisionRows = ledger.rows.filter(
+    (row) => row.event === "spec-pack-revision-exported" && row.status === "passed"
+  );
+  const exportStatus = {
+    kind: manifest.spec_pack_path ? "default" : (revisionRows.length ? "revision" : "none"),
+    revision_count: revisionRows.length,
+    path: manifest.spec_pack_path || null
+  };
+  return {
+    cwd,
+    seedId,
+    runDir,
+    runRel,
+    manifest,
+    ledgerRows: ledger.rows,
+    latestEvent,
+    exportStatus,
+    phase: {
+      current: manifest.current_phase,
+      terminal: TERMINAL_PHASES.includes(manifest.current_phase),
+      legal_next: legalNextPhases(manifest.current_phase)
+    }
+  };
 }
 
 // --- Path policy ---
@@ -426,4 +559,188 @@ export function deepenAttemptErrors(manifest) {
     return [`deepen_attempt_count=${n} exceeds the 2-attempt limit (the loop should be killed)`];
   }
   return [];
+}
+
+// ADR 0012: the manifest lane is anchored in the initialization row. Only an
+// owner-authored row can change it, and neither a lane change nor a stop-line
+// release can retroactively authorize the first downstream crossing.
+export function designLaneConsistencyErrors(manifest, ledgerRows) {
+  const errors = [];
+  const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
+  const firstCrossing = rows.findIndex((row) => ["decompose", "handoff", "complete"].includes(row?.phase));
+  const lanePrefix = "design_lane:";
+  const laneFromRow = (row) => {
+    if (typeof row?.lane !== "string" || !row.lane.startsWith(lanePrefix)) return null;
+    try { return { value: JSON.parse(row.lane.slice(lanePrefix.length)) }; }
+    catch (error) { return { error: error.message }; }
+  };
+  const canonicalLane = (lane) => lane && typeof lane === "object"
+    ? JSON.stringify({ mode: lane.mode, stop_line: lane.stop_line, origination: lane.origination })
+    : null;
+  const initIndex = rows.findIndex((row) => row?.event === "run-initialized");
+  const initLane = initIndex >= 0 ? laneFromRow(rows[initIndex]) : null;
+  if (initLane?.error) {
+    errors.push(`run-initialized design_lane anchor is invalid JSON: ${initLane.error}`);
+  } else if (initLane) {
+    const currentLane = canonicalLane(manifest?.design_lane);
+    const anchoredLane = canonicalLane(initLane.value);
+    if (currentLane !== anchoredLane) {
+      const removesDesignLock = initLane.value?.stop_line === "design-lock"
+        && manifest?.design_lane?.stop_line !== "design-lock";
+      const authorizationEnd = removesDesignLock && firstCrossing >= 0 ? firstCrossing : rows.length;
+      const authorized = currentLane !== null && rows.slice(initIndex + 1, authorizationEnd).some((row) => {
+        if (row.event !== "lane-changed" || row.status !== "passed" || row.actor !== "Shane") return false;
+        const stated = laneFromRow(row);
+        return stated && !stated.error && canonicalLane(stated.value) === currentLane;
+      });
+      if (!authorized) {
+        errors.push("manifest design_lane drifted from the run-initialized ledger anchor without a prior Shane-authored lane-changed row (event='lane-changed', status='passed') stating the current lane");
+      }
+    }
+  }
+
+  if (manifest?.design_lane?.stop_line === "design-lock" && firstCrossing >= 0) {
+    const released = firstCrossing > 0 && rows.slice(0, firstCrossing).some((row) =>
+      row.phase === "engine-profile"
+      && row.event === "stop-line-released"
+      && row.status === "passed"
+      && row.actor === "Shane"
+    );
+    if (!released) {
+      errors.push("design_lane.stop_line 'design-lock' forbids progress past engine-profile without a prior Shane-authored ledger row (event='stop-line-released', status='passed')");
+    }
+  }
+  return errors;
+}
+
+// Advance validated run truth from domain intent. A durable transaction note is
+// written first, then ledger and manifest are replaced. A failed manifest write
+// restores exact ledger bytes; if rollback cannot complete, future opens reject
+// the run until the note is used to repair it.
+export function advanceRun(cwd, seedId, intent, options = {}) {
+  const run = openRun(cwd, seedId);
+  const {
+    to,
+    event,
+    status = "checkpointed",
+    actor = "agent",
+    lane = null,
+    note = null,
+    resumeArtifact = null,
+    updates = {},
+    dryRun = false
+  } = intent || {};
+  const from = run.manifest.current_phase;
+  if (!to || !event) throw new RunStateError("advance intent requires to and event", "INVALID_INTENT");
+  if (!isLegalTransition(from, to)) {
+    throw new RunStateError(
+      `illegal transition ${from} -> ${to}. legal next: ${legalNextPhases(from).join(", ") || "(none — terminal)"}`,
+      "ILLEGAL_TRANSITION"
+    );
+  }
+  if (from === "intake" && to === "toolchain" && isPortfolioRun(run.manifest)) {
+    const intakeErrors = readIntakeEvidence(run.runDir, seedId).errors;
+    if (intakeErrors.length) {
+      throw new RunStateError(`intake evidence invalid:\n  ${intakeErrors.join("\n  ")}`, "INTAKE_INVALID", intakeErrors);
+    }
+  }
+
+  const now = options.now ?? new Date().toISOString();
+  const iso = typeof now === "function" ? now() : now;
+  const ledgerRow = { ts: iso, seed_id: seedId, phase: to, event, status, actor };
+  if (lane) ledgerRow.lane = lane;
+
+  const next = JSON.parse(JSON.stringify(run.manifest));
+  next.current_phase = to;
+  if (to === "deepen" && from !== "deepen") {
+    next.deepen_attempt_count = Number(run.manifest.deepen_attempt_count || 0) + 1;
+  }
+  next.last_verified_at = iso;
+  next.resume_point = {
+    phase: to,
+    artifact_path: resumeArtifact || run.manifest.resume_point?.artifact_path || `${run.runRel}/manifest.json`,
+    reason: note || `advanced ${from} -> ${to} (${event})`
+  };
+  for (const [key, value] of updates.set || []) next[key] = value;
+  for (const [key, value] of updates.append || []) {
+    if (!Array.isArray(next[key])) next[key] = [];
+    next[key].push(value);
+  }
+
+  const rowErrors = validateLedgerRow(ledgerRow);
+  if (rowErrors.length) {
+    throw new RunStateError(`ledger row invalid:\n  ${rowErrors.join("\n  ")}`, "LEDGER_ROW_INVALID", rowErrors);
+  }
+  const manifestErrors = [
+    ...validateManifest(next).map((error) => `manifest ${error}`),
+    ...manifestPathPolicyErrors(next, seedId, cwd),
+    ...phaseArtifactConstraintErrors(next),
+    ...questionBudgetErrors(next),
+    ...deepenAttemptErrors(next),
+    ...designLaneConsistencyErrors(next, [...run.ledgerRows, ledgerRow])
+  ];
+  if (manifestErrors.length) {
+    throw new RunStateError(
+      `resulting manifest invalid:\n  ${manifestErrors.join("\n  ")}`,
+      "RESULT_INVALID",
+      manifestErrors
+    );
+  }
+
+  const receipt = {
+    ok: true,
+    mode: dryRun ? "dry-run" : "write",
+    from,
+    to,
+    ledger_row: ledgerRow,
+    manifest_after: next
+  };
+  if (dryRun) return receipt;
+
+  const manifestRel = `${run.runRel}/manifest.json`;
+  const ledgerRel = `${run.runRel}/execution-ledger.jsonl`;
+  const ledgerFile = resolveRunPath(cwd, seedId, ledgerRel, ledgerRel);
+  resolveRunPath(cwd, seedId, manifestRel, manifestRel);
+  const ledgerBefore = readFileNoFollow(ledgerFile, cwd);
+  const separator = ledgerBefore && !ledgerBefore.endsWith("\n") ? "\n" : "";
+  const ledgerAfter = `${ledgerBefore}${separator}${JSON.stringify(ledgerRow)}\n`;
+  const transactionRel = `${run.runRel}/${RUN_TRANSACTION_FILE}`;
+  replaceRunFileSync(cwd, seedId, transactionRel, `${JSON.stringify({
+    schema_version: "1.0.0",
+    seed_id: seedId,
+    manifest_path: manifestRel,
+    ledger_path: ledgerRel,
+    manifest_before: run.manifest,
+    manifest_after: next,
+    ledger_before: ledgerBefore,
+    ledger_after: ledgerAfter
+  }, null, 2)}\n`);
+  const defaults = {
+    writeLedger: (contents) => replaceRunFileSync(cwd, seedId, ledgerRel, contents),
+    writeManifest: (contents) => replaceRunFileSync(cwd, seedId, manifestRel, contents),
+    restoreLedger: (contents) => replaceRunFileSync(cwd, seedId, ledgerRel, contents)
+  };
+  const persistence = { ...defaults, ...(options.persistence || {}) };
+  persistence.writeLedger(ledgerAfter);
+  try {
+    persistence.writeManifest(`${JSON.stringify(next, null, 2)}\n`);
+  } catch (error) {
+    try { persistence.restoreLedger(ledgerBefore); }
+    catch (rollbackError) {
+      throw new RunStateError(
+        `${error.message}; ledger rollback failed: ${rollbackError.message}`,
+        "PERSISTENCE_ROLLBACK_FAILED"
+      );
+    }
+    try { removeRunFileSync(cwd, seedId, transactionRel); }
+    catch (cleanupError) {
+      throw new RunStateError(
+        `${error.message}; transaction cleanup failed: ${cleanupError.message}`,
+        "PERSISTENCE_CLEANUP_FAILED"
+      );
+    }
+    throw error;
+  }
+  removeRunFileSync(cwd, seedId, transactionRel);
+  return receipt;
 }
