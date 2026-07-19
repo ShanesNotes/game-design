@@ -251,6 +251,9 @@ test("AC2: godot-4 export emits schema-valid forge-manifest with real pin SHAs",
     assert.equal(mf.pins.assets_index, assetsSha);
     assert.equal(mf.pins.lore_index, loreSha);
     assert.equal(mf.pins.contracts_version, contractsVersion(REPO));
+    // DES-A: base export must claim coherent contract pins (forge intake equality).
+    assert.equal(mf.schema_version, mf.pins.contracts_version);
+    assert.equal(mf.schema_version, contractsVersion(REPO));
     assert.equal(mf.engine.profile, GODOT_PROFILE);
     assert.equal(mf.thesis.register, "mechanics-first");
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
@@ -623,6 +626,7 @@ test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh p
     // Revision floor pins contracts_version to schema_version (intake equality),
     // not the schema enum tip (may be ahead, e.g. 1.2.0 after Imagine).
     assert.equal(mf.pins.contracts_version, "1.1.0");
+    assert.equal(mf.schema_version, mf.pins.contracts_version);
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
 
     assert.match(r.stdout, /revision: schema_version 1\.1\.0 parent_digest/);
@@ -712,14 +716,16 @@ test("F05b: P18/P19 name the revision path", () => {
   assert.match(p19, /parent_digest/);
 });
 
-test("asset_source_policy omitted by default; present values require v1.2.0", () => {
+test("asset_source_policy omitted by default; present values floor to v1.2.0", () => {
   const { thesis, spec, engine, pins, meta } = baseMapInputs();
   const absent = { ...spec };
   delete absent.asset_source_policy;
   const r0 = mapForgeManifest({ thesis, spec: absent, engine, pins, meta });
   assert.equal(r0.ok, true, (r0.missing || []).join(", "));
   assert.equal(r0.manifest.asset_source_policy, undefined);
-  assert.equal(r0.manifest.schema_version, "1.0.0");
+  // Base without policy claims pins.contracts_version (built-against), not a dead 1.0.0 literal.
+  assert.equal(r0.manifest.schema_version, pins.contracts_version);
+  assert.equal(r0.manifest.schema_version, r0.manifest.pins.contracts_version);
   assert.deepEqual(validate(loadContractsSchema(), r0.manifest), []);
 
   for (const policy of ["local", "imagine", "combo"]) {
@@ -734,6 +740,7 @@ test("asset_source_policy omitted by default; present values require v1.2.0", ()
     assert.equal(r.manifest.asset_source_policy, policy);
     assert.equal(r.manifest.schema_version, "1.2.0");
     assert.equal(r.manifest.pins.contracts_version, "1.2.0");
+    assert.equal(r.manifest.schema_version, r.manifest.pins.contracts_version);
     assert.deepEqual(validate(loadContractsSchema(), r.manifest), []);
   }
 
@@ -746,4 +753,86 @@ test("asset_source_policy omitted by default; present values require v1.2.0", ()
   });
   assert.equal(bad.ok, false);
   assert.ok(bad.missing.includes("spec.asset_source_policy"), bad.missing.join(", "));
+});
+
+/** Replicate forge/src/intake.mjs validateContractVersion equality gate (read-only). */
+function forgeIntakeContractVersionOk(manifest, { revise = false } = {}) {
+  const CONTRACT_VERSIONS = new Set(["1.0.0", "1.1.0", "1.2.0"]);
+  const REVISION_CONTRACT_VERSIONS = new Set(["1.1.0", "1.2.0"]);
+  const schemaVersion = manifest.schema_version;
+  const contractsVersionPin = manifest.pins?.contracts_version;
+  if (
+    !CONTRACT_VERSIONS.has(schemaVersion) ||
+    !CONTRACT_VERSIONS.has(contractsVersionPin) ||
+    schemaVersion !== contractsVersionPin ||
+    (revise && !REVISION_CONTRACT_VERSIONS.has(schemaVersion))
+  ) {
+    return false;
+  }
+  return true;
+}
+
+test("DES-A: every export path keeps schema_version === pins.contracts_version", () => {
+  // Unit mapper: default-local base (pins tip or fixture pin) + policy present.
+  const { thesis, spec, engine, pins, meta } = baseMapInputs({
+    // pins from baseMapInputs is 1.0.0 — still must be coherent after map
+  });
+  const noPolicy = { ...spec };
+  delete noPolicy.asset_source_policy;
+  const rLocal = mapForgeManifest({ thesis, spec: noPolicy, engine, pins, meta });
+  assert.equal(rLocal.ok, true, (rLocal.missing || []).join(", "));
+  assert.equal(rLocal.manifest.schema_version, rLocal.manifest.pins.contracts_version);
+  assert.ok(forgeIntakeContractVersionOk(rLocal.manifest));
+
+  const tipPins = { ...pins, contracts_version: contractsVersion(REPO) || "1.2.0" };
+  const rTip = mapForgeManifest({ thesis, spec: noPolicy, engine, pins: tipPins, meta });
+  assert.equal(rTip.ok, true, (rTip.missing || []).join(", "));
+  assert.equal(rTip.manifest.schema_version, tipPins.contracts_version);
+  assert.equal(rTip.manifest.schema_version, rTip.manifest.pins.contracts_version);
+  assert.ok(forgeIntakeContractVersionOk(rTip.manifest));
+
+  for (const policy of ["local", "imagine", "combo"]) {
+    const r = mapForgeManifest({
+      thesis,
+      spec: { ...spec, asset_source_policy: policy },
+      engine,
+      pins: tipPins,
+      meta
+    });
+    assert.equal(r.ok, true, policy);
+    assert.equal(r.manifest.schema_version, r.manifest.pins.contracts_version);
+    assert.ok(forgeIntakeContractVersionOk(r.manifest));
+  }
+});
+
+test("DES-A live round-trip: package-spec base export passes forge intake contract check", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-des-a-intake";
+  try {
+    decomposeReadyRun(dir, id, { profile: GODOT_PROFILE });
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    const mfPath = path.join(target, "forge-manifest.json");
+    assert.ok(fs.existsSync(mfPath));
+    const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
+
+    // Policy-less fixture: both must equal contracts tip; intake equality holds.
+    assert.equal(mf.asset_source_policy, undefined);
+    assert.equal(mf.schema_version, mf.pins.contracts_version);
+    assert.equal(mf.schema_version, contractsVersion(REPO));
+    assert.ok(
+      forgeIntakeContractVersionOk(mf),
+      `forge intake would reject: schema=${mf.schema_version} pins=${mf.pins.contracts_version}`
+    );
+    console.log(
+      `[DES-A proof] schema_version=${mf.schema_version} pins.contracts_version=${mf.pins.contracts_version} forgeIntakeContractVersionOk=true`
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
 });

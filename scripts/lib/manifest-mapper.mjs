@@ -24,7 +24,8 @@ import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 
 export const GODOT_PROFILE = "godot-4";
-export const FORGE_MANIFEST_SCHEMA_VERSION = "1.0.0";
+/** Floor when asset_source_policy is present (field introduced in forge-manifest 1.2.0). */
+export const ASSET_SOURCE_POLICY_SCHEMA_VERSION = "1.2.0";
 export const FORGE_GATE_TOKEN = "FORGE-GATE:ENGINE";
 
 /** Build-phase discipline enum (SPEC game-build §2 / DISCIPLINES.md owners subset). */
@@ -360,10 +361,15 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
     return { ok: false, missing: [...new Set(missing)], manifest: null, errors };
   }
 
-  // asset_source_policy is a v1.2.0 field; omit when unset (forge defaults to local).
-  const schemaVersion = hasAssetSourcePolicy ? "1.2.0" : FORGE_MANIFEST_SCHEMA_VERSION;
+  // Base exports claim the contracts version they were built against
+  // (pins.contracts_version = contractsVersion() tip from package-spec).
+  // Policy field is v1.2.0-additive: when present, floor both claims to 1.2.0.
+  // INVARIANT (forge intake): schema_version === pins.contracts_version.
+  const contractClaim = hasAssetSourcePolicy
+    ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
+    : pins.contracts_version;
   const manifest = {
-    schema_version: schemaVersion,
+    schema_version: contractClaim,
     game_id: meta.game_id,
     seed_id: meta.seed_id,
     producer: { name: meta.producer.name, version: meta.producer.version },
@@ -401,7 +407,7 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
     },
     pins: {
       // Intake requires schema_version === pins.contracts_version.
-      contracts_version: hasAssetSourcePolicy ? "1.2.0" : pins.contracts_version,
+      contracts_version: contractClaim,
       assets_index: pins.assets_index,
       lore_index: pins.lore_index,
       forge_template: pins.forge_template
