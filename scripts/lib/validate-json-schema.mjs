@@ -1,8 +1,8 @@
 // Minimal JSON Schema validator — supports the draft-2020-12 subset used by TGF schemas.
 // Intentionally tiny and dependency-free. Supports: type (incl. integer/number/array/null
 // and arrays of types), enum, pattern, required, properties, additionalProperties:false,
-// items, minItems, minimum, maximum, and if/then/else. Returns an array of error
-// strings ([] means valid).
+// items, minItems, uniqueItems, minLength, maxLength, minimum, maximum, and if/then/else.
+// Returns an array of error strings ([] means valid).
 // This is NOT a general-purpose validator; it covers exactly what schemas/*.json use.
 
 function jsType(v) {
@@ -25,6 +25,18 @@ function matchType(expected, data) {
   }
 }
 
+/** Recursive key-sort so JSON.stringify equality ignores object property order. */
+function canonicalize(value) {
+  // Tagged shapes keep arrays and objects from ever encoding identically, and
+  // sorted [key, value] pairs (never a rebuilt object) survive keys like
+  // "__proto__" that assignment onto a plain object would silently drop.
+  if (Array.isArray(value)) return ["arr", ...value.map(canonicalize)];
+  if (value !== null && typeof value === "object") {
+    return ["obj", ...Object.keys(value).sort().map((key) => [key, canonicalize(value[key])])];
+  }
+  return value;
+}
+
 export function validate(schema, data, path = "$") {
   const errors = [];
   if (!schema || typeof schema !== "object") return errors;
@@ -44,6 +56,17 @@ export function validate(schema, data, path = "$") {
     errors.push(`${path}: ${JSON.stringify(data)} does not match pattern ${schema.pattern}`);
   }
 
+  if (typeof data === "string") {
+    // Draft 2020-12 measures length in Unicode code points, not UTF-16 units.
+    const len = [...data].length;
+    if (schema.minLength !== undefined && len < schema.minLength) {
+      errors.push(`${path}: string length ${len} < minLength ${schema.minLength}`);
+    }
+    if (schema.maxLength !== undefined && len > schema.maxLength) {
+      errors.push(`${path}: string length ${len} > maxLength ${schema.maxLength}`);
+    }
+  }
+
   if (typeof data === "number") {
     if (schema.minimum !== undefined && data < schema.minimum) {
       errors.push(`${path}: ${data} < minimum ${schema.minimum}`);
@@ -56,6 +79,18 @@ export function validate(schema, data, path = "$") {
   if (Array.isArray(data)) {
     if (schema.minItems !== undefined && data.length < schema.minItems) {
       errors.push(`${path}: array length ${data.length} < minItems ${schema.minItems}`);
+    }
+    if (schema.uniqueItems === true) {
+      const seen = new Set();
+      for (const item of data) {
+        // Canonicalize so object key order does not mask JSON equality.
+        const key = JSON.stringify(canonicalize(item));
+        if (seen.has(key)) {
+          errors.push(`${path}: duplicate items (uniqueItems)`);
+          break;
+        }
+        seen.add(key);
+      }
     }
     if (schema.items) {
       data.forEach((item, i) => errors.push(...validate(schema.items, item, `${path}[${i}]`)));

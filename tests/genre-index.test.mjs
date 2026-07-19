@@ -188,9 +188,24 @@ test("storefront genre aliases require an exact case-insensitive match", () => {
   }
 });
 
-test("semantic checks enforce membership uniqueness, moat length, and evidence classes", () => {
+test("schema enforces moat maxLength and secondary uniqueItems", () => {
   const row = validRow({ moat: "x".repeat(121) });
-  row.design_shape.loop_class.secondary = ["optimization", "optimization"];
+  row.design_shape.loop_class.secondary = ["discovery", "discovery"];
+  const paths = tempCorpus([row]);
+  try {
+    fs.writeFileSync(paths.indexPath, "sentinel\n");
+    const { errors } = validateGenreIndex(paths);
+    assert.ok(errors.some((e) => /moat.*120|moat.*maxLength/.test(e)), errors.join("\n"));
+    assert.ok(errors.some((e) => /loop_class.*duplicate|loop_class.*uniqueItems/.test(e)), errors.join("\n"));
+    assert.equal(fs.readFileSync(paths.indexPath, "utf8"), "sentinel\n");
+  } finally {
+    fs.rmSync(paths.root, { recursive: true, force: true });
+  }
+});
+
+test("semantic checks enforce membership, evidence classes, and market genres", () => {
+  const row = validRow();
+  row.design_shape.loop_class.secondary = ["optimization"]; // primary is also optimization
   row.evidence[0].class = "review-breakout";
   row.evidence[0].class_definition = "taxonomy-v1#steam-user-reviews/review-breakout";
   row.evidence[1].value_or_range = ["Strategy"];
@@ -198,9 +213,7 @@ test("semantic checks enforce membership uniqueness, moat length, and evidence c
   try {
     fs.writeFileSync(paths.indexPath, "sentinel\n");
     const { errors } = validateGenreIndex(paths);
-    assert.ok(errors.some((e) => /moat.*120/.test(e)), errors.join("\n"));
     assert.ok(errors.some((e) => /loop_class.*primary.*secondary/.test(e)), errors.join("\n"));
-    assert.ok(errors.some((e) => /loop_class.*duplicate/.test(e)), errors.join("\n"));
     assert.ok(errors.some((e) => /expected class 'review-established'/.test(e)), errors.join("\n"));
     assert.ok(errors.some((e) => /market genre 'puzzle'.*absent/.test(e)), errors.join("\n"));
     assert.equal(fs.readFileSync(paths.indexPath, "utf8"), "sentinel\n");

@@ -9,9 +9,17 @@ import {
   depthVectorConsistencyErrors, playtestConsistencyErrors,
   feelTargetRequiredForAdvanceErrors, FEEL_TARGET_REQUIRED_FOR_ADVANCE
 } from "../scripts/lib/anti-boring-gate.mjs";
+import { designLockEvidenceErrors } from "../scripts/lib/design-lock-evidence.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
+
+function thesis(overrides = {}) {
+  return {
+    ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-game-thesis.json"), "utf8")),
+    ...overrides
+  };
+}
 
 const goodDV = {
   scores: {
@@ -140,4 +148,70 @@ test("feel-target-required-for-ADVANCE: empty thesis cannot ADVANCE", () => {
     feel_targets: [{ id: "x", statement: "s", metric: "m", budget: 1, unit: "ms" }]
   }, "ADVANCE"), []);
   assert.ok(feelTargetRequiredForAdvanceErrors(null, "ADVANCE").some((e) => e.includes(FEEL_TARGET_REQUIRED_FOR_ADVANCE)));
+});
+
+test("designLockEvidenceErrors accepts a nested, schema-valid passing vector", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-design-lock-"));
+  try {
+    const reviewsDir = path.join(dir, "reviews");
+    fs.mkdirSync(path.join(reviewsDir, "panel"), { recursive: true });
+    const vector = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-depth-vector.json"), "utf8"));
+    fs.writeFileSync(path.join(reviewsDir, "panel", "depth-vector.json"), JSON.stringify(vector));
+    assert.deepEqual(designLockEvidenceErrors({
+      reviewsDir, thesis: thesis(), manifest: { factory_version: "0.1.0" },
+      requirePassing: true, phase: "engine-profile", cwd: dir
+    }), []);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("designLockEvidenceErrors reports missing evidence, register disagreement, and feel failure", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-design-lock-"));
+  try {
+    const reviewsDir = path.join(dir, "reviews");
+    assert.match(designLockEvidenceErrors({
+      reviewsDir, thesis: thesis(), manifest: { factory_version: "0.1.0" },
+      requirePassing: true, phase: "engine-profile", cwd: dir
+    }).join("\n"), /no gate-passing depth vector/);
+    fs.mkdirSync(reviewsDir, { recursive: true });
+    const vector = {
+      ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-depth-vector.json"), "utf8")),
+      register: "narrative-first"
+    };
+    fs.writeFileSync(path.join(reviewsDir, "depth-vector.json"), JSON.stringify(vector));
+    const errors = designLockEvidenceErrors({
+      reviewsDir, thesis: thesis({ feel_targets: [] }), manifest: { factory_version: "0.1.0" },
+      requirePassing: true, phase: "engine-profile", cwd: dir
+    });
+    assert.match(errors.join("\n"), /register 'narrative-first' contradicts thesis design_register 'mechanics-first'/);
+    assert.match(errors.join("\n"), /no gate-passing depth vector/);
+
+    delete vector.register;
+    fs.writeFileSync(path.join(reviewsDir, "depth-vector.json"), JSON.stringify(vector));
+    const feelErrors = designLockEvidenceErrors({
+      reviewsDir, thesis: thesis({ feel_targets: [] }), manifest: { factory_version: "0.1.0" },
+      requirePassing: true, phase: "engine-profile", cwd: dir
+    });
+    assert.match(feelErrors.join("\n"), new RegExp(FEEL_TARGET_REQUIRED_FOR_ADVANCE));
+    assert.match(feelErrors.join("\n"), /no gate-passing depth vector/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("designLockEvidenceErrors rejects symlinked review evidence", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-design-lock-"));
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-design-lock-outside-"));
+  try {
+    const reviewsDir = path.join(dir, "reviews");
+    fs.mkdirSync(reviewsDir, { recursive: true });
+    fs.writeFileSync(path.join(outside, "depth-vector.json"), fs.readFileSync(rel("examples/fixtures/minimal-depth-vector.json")));
+    fs.symlinkSync(path.join(outside, "depth-vector.json"), path.join(reviewsDir, "depth-vector.json"));
+    const errors = designLockEvidenceErrors({
+      reviewsDir, thesis: thesis(), manifest: { factory_version: "0.1.0" },
+      requirePassing: true, phase: "engine-profile", cwd: dir
+    });
+    assert.match(errors.join("\n"), /reviews depth vector must not be a symlink/);
+    assert.match(errors.join("\n"), /no gate-passing depth vector/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
 });

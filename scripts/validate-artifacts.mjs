@@ -12,6 +12,7 @@ import { validate } from "./lib/validate-json-schema.mjs";
 import { forgeManifestSchemaPath } from "./lib/studio-paths.mjs";
 import * as runState from "./lib/run-state.mjs";
 import * as gate from "./lib/anti-boring-gate.mjs";
+import { designLockEvidenceErrors } from "./lib/design-lock-evidence.mjs";
 import { specConsistencyErrors } from "./lib/spec-decomposition.mjs";
 import { leakageErrors } from "./lib/leakage.mjs";
 import { frontMatterAccessors } from "./lib/issue-format.mjs";
@@ -19,7 +20,7 @@ import { arg } from "./lib/argv.mjs";
 import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, ARTIFACT_KINDS, FIXTURE_SCHEMA, PROMPTS } from "./lib/factory-contract.mjs";
 import { auditErrors, parseAuditLedger, AUDIT_UNIVERSE_PATHS } from "./lib/doctrine-audit.mjs";
 import {
-  depthVectorPortfolioErrors, isPortfolioRun, readIntakeEvidence, thesisDistinctnessErrors
+  isPortfolioRun, readIntakeEvidence, thesisDistinctnessErrors
 } from "./lib/portfolio-memory.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -217,57 +218,7 @@ function checkRun(seedId) {
     }
   }
 
-  const firstCrossing = rows.findIndex((row) => ["decompose", "handoff", "complete"].includes(row.phase));
-
-  // New runs bind the manifest's design lane to the run-initialized ledger row.
-  // Older rows use lane="solo" (or omit it), so they have no anchor and remain
-  // valid without migration. Only Shane can authorize a later exact lane value.
-  const lanePrefix = "design_lane:";
-  const laneFromRow = (row) => {
-    if (typeof row?.lane !== "string" || !row.lane.startsWith(lanePrefix)) return null;
-    try { return { value: JSON.parse(row.lane.slice(lanePrefix.length)) }; }
-    catch (error) { return { error: error.message }; }
-  };
-  const canonicalLane = (lane) => lane && typeof lane === "object"
-    ? JSON.stringify({ mode: lane.mode, stop_line: lane.stop_line, origination: lane.origination })
-    : null;
-  const initIndex = rows.findIndex((row) => row.event === "run-initialized");
-  const initLane = initIndex >= 0 ? laneFromRow(rows[initIndex]) : null;
-  if (initLane?.error) {
-    errors.push(`run-initialized design_lane anchor is invalid JSON: ${initLane.error}`);
-  } else if (initLane) {
-    const currentLane = canonicalLane(manifest.design_lane);
-    const anchoredLane = canonicalLane(initLane.value);
-    if (currentLane !== anchoredLane) {
-      const removesDesignLock = initLane.value?.stop_line === "design-lock"
-        && manifest.design_lane?.stop_line !== "design-lock";
-      const authorizationEnd = removesDesignLock && firstCrossing >= 0 ? firstCrossing : rows.length;
-      const authorized = currentLane !== null && rows.slice(initIndex + 1, authorizationEnd).some((row) => {
-        if (row.event !== "lane-changed" || row.status !== "passed" || row.actor !== "Shane") return false;
-        const stated = laneFromRow(row);
-        return stated && !stated.error && canonicalLane(stated.value) === currentLane;
-      });
-      if (!authorized) {
-        errors.push("manifest design_lane drifted from the run-initialized ledger anchor without a prior Shane-authored lane-changed row (event='lane-changed', status='passed') stating the current lane");
-      }
-    }
-  }
-
-  // A yolo design-lock stop line parks immediately after the ADVANCE transition,
-  // at engine-profile. Crossing into decomposition requires an explicit owner
-  // release recorded before the first downstream ledger row; a later row cannot
-  // retroactively legitimize crossing the hard stop.
-  if (manifest.design_lane?.stop_line === "design-lock" && firstCrossing >= 0) {
-    const released = firstCrossing > 0 && rows.slice(0, firstCrossing).some((row) =>
-      row.phase === "engine-profile"
-      && row.event === "stop-line-released"
-      && row.status === "passed"
-      && row.actor === "Shane"
-    );
-    if (!released) {
-      errors.push("design_lane.stop_line 'design-lock' forbids progress past engine-profile without a prior Shane-authored ledger row (event='stop-line-released', status='passed')");
-    }
-  }
+  runState.designLaneConsistencyErrors(manifest, rows).forEach((error) => errors.push(error));
 
   let portfolioDigest = null;
   if (isPortfolioRun(manifest) && rows.some((row) => row.phase === "toolchain")) {
@@ -291,65 +242,16 @@ function checkRun(seedId) {
     errors.push(`spec pack folder exists before thesis+engine+spec: ${runState.specPackRootFor(seedId)}`);
   }
 
-  // Design-lock (and beyond) is evidence-gated: completion is evidence, not prose. A
-  // run cannot be past design-review without a gate-passing depth vector in its
-  // reviews/ — verdict ADVANCE that actually clears the gate (>=16/24, required axes
-  // nonzero). Gate POLICY lives here (the checker), not in the schema (ADR 0005).
   const requiresPassingVector = runState.DESIGN_LOCKED_PHASES.includes(manifest.current_phase);
-  if (requiresPassingVector || isPortfolioRun(manifest)) {
-    const dvFiles = [];
-    (function walk(d) {
-      if (!fs.existsSync(d)) return;
-      if (fs.lstatSync(d).isSymbolicLink()) {
-        errors.push(`reviews path must not be a symlink: ${path.relative(process.cwd(), d)}`);
-        return;
-      }
-      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-        const p = path.join(d, e.name);
-        if (e.isDirectory()) walk(p);
-        else if (e.name === "depth-vector.json") {
-          if (fs.lstatSync(p).isSymbolicLink()) errors.push(`reviews depth vector must not be a symlink: ${path.relative(process.cwd(), p)}`);
-          else dvFiles.push(p);
-        }
-      }
-    })(path.join(runDir, "reviews"));
-    let passing = false;
-    for (const f of dvFiles) {
-      let dv;
-      try { dv = JSON.parse(fs.readFileSync(f, "utf8")); }
-      catch { errors.push(`reviews depth vector not parseable JSON: ${path.relative(process.cwd(), f)}`); continue; }
-      const vectorSchema = JSON.parse(fs.readFileSync(rel("schemas/depth-vector.schema.json"), "utf8"));
-      const vectorErrors = validate(vectorSchema, dv);
-      vectorErrors.forEach((error) => errors.push(`reviews depth vector ${error}: ${path.relative(process.cwd(), f)}`));
-      if (isPortfolioRun(manifest)) {
-        const verdictPath = path.join(runDir, "reviews", "ANTI_BORING_VERDICT.md");
-        const verdictText = fs.existsSync(verdictPath) ? fs.readFileSync(verdictPath, "utf8") : "";
-        depthVectorPortfolioErrors(dv, thesisObj, portfolioDigest, verdictText)
-          .forEach((error) => { vectorErrors.push(error); errors.push(`${error}: ${path.relative(process.cwd(), f)}`); });
-      }
-      if (dv.verdict === "ADVANCE" && vectorErrors.length === 0 && gate.depthVectorConsistencyErrors(dv).length === 0) {
-        // Register-aware design-lock (ADR 0007): a gate-passing vector must be
-        // judged in the register the thesis declared, not one it picked itself.
-        const dvRegister = dv.register ?? "mechanics-first";
-        const thesisRegister = thesisObj?.design_register ?? "mechanics-first";
-        if (dvRegister !== thesisRegister) {
-          errors.push(`reviews depth vector register '${dvRegister}' contradicts thesis design_register '${thesisRegister}': ${path.relative(process.cwd(), f)}`);
-        } else {
-          // feel-target-required-for-ADVANCE (SPEC §3.3 / ADR 0005): schema
-          // permits empty feel_targets; ADVANCE does not.
-          const feelErrs = gate.feelTargetRequiredForAdvanceErrors(thesisObj, dv.verdict);
-          if (feelErrs.length) {
-            feelErrs.forEach((e) => errors.push(`${e}: ${path.relative(process.cwd(), f)}`));
-          } else {
-            passing = true;
-          }
-        }
-      }
-    }
-    if (requiresPassingVector && !passing) {
-      errors.push(`current_phase '${manifest.current_phase}' is past design-review but reviews/ has no gate-passing depth vector (design-lock: verdict ADVANCE, total >=16, required axes nonzero)`);
-    }
-  }
+  designLockEvidenceErrors({
+    reviewsDir: path.join(runDir, "reviews"),
+    thesis: thesisObj,
+    manifest,
+    portfolioDigest,
+    requirePassing: requiresPassingVector,
+    phase: manifest.current_phase,
+    cwd: process.cwd()
+  }).forEach((error) => errors.push(error));
   return errors;
 }
 

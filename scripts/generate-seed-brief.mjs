@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { arg, hasFlag } from "./lib/argv.mjs";
 import { DESIGN_REGISTERS } from "./lib/factory-contract.mjs";
-import { buildPortfolioDigestContent } from "./lib/portfolio-memory.mjs";
+import { openPortfolio } from "./lib/portfolio-memory.mjs";
 import { isValidSeedId } from "./lib/run-state.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -20,7 +20,7 @@ if (requestedSeedId && !isValidSeedId(requestedSeedId)) {
   fail(`--seed-id must be a kebab id (got "${requestedSeedId}")`);
 }
 
-const digest = buildPortfolioDigestContent(requestedSeedId || "auto-seed", process.cwd());
+const digest = openPortfolio(process.cwd()).buildDigestContent(requestedSeedId || "auto-seed");
 const registerCounts = new Map(DESIGN_REGISTERS.map((register) => [register, 0]));
 const verbCounts = new Map();
 

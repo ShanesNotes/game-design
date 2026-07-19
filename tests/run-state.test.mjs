@@ -16,6 +16,12 @@ function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "tgf-rs-"));
 }
 
+function initializedRun(dir, id) {
+  const result = node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir });
+  assert.equal(result.status, 0, result.stderr);
+  return rs.runDirFor(dir, id);
+}
+
 test("isValidSeedId accepts kebab ids and rejects junk", () => {
   assert.ok(rs.isValidSeedId("tiny-asteroid-gardening"));
   assert.ok(rs.isValidSeedId("a1"));
@@ -169,6 +175,171 @@ test("deepenAttemptErrors enforces the 2-attempt deepen cap", () => {
   assert.deepEqual(rs.deepenAttemptErrors({ current_phase: "killed", deepen_attempt_count: 3 }), []);
 });
 
+test("designLaneConsistencyErrors accepts an anchored lane and a prior owner-authorized change", () => {
+  const anchored = { mode: "yolo", stop_line: "design-lock", origination: "user" };
+  const changed = { mode: "yolo", stop_line: "pack", origination: "user" };
+  const lane = (value) => `design_lane:${JSON.stringify(value)}`;
+  assert.deepEqual(rs.designLaneConsistencyErrors({ design_lane: anchored }, [
+    { event: "run-initialized", lane: lane(anchored) }
+  ]), []);
+  assert.deepEqual(rs.designLaneConsistencyErrors({ design_lane: changed }, [
+    { event: "run-initialized", lane: lane(anchored) },
+    { event: "lane-changed", status: "passed", actor: "Shane", lane: lane(changed) },
+    { phase: "decompose", event: "phase-advance" }
+  ]), []);
+});
+
+test("designLaneConsistencyErrors rejects malformed anchors and unauthorized or retroactive changes", () => {
+  const anchored = { mode: "yolo", stop_line: "design-lock", origination: "user" };
+  const changed = { mode: "yolo", stop_line: "pack", origination: "user" };
+  const lane = (value) => `design_lane:${JSON.stringify(value)}`;
+  assert.match(rs.designLaneConsistencyErrors({ design_lane: anchored }, [
+    { event: "run-initialized", lane: "design_lane:{bad" }
+  ]).join("\n"), /anchor is invalid JSON/);
+  assert.match(rs.designLaneConsistencyErrors({ design_lane: changed }, [
+    { event: "run-initialized", lane: lane(anchored) },
+    { event: "lane-changed", status: "passed", actor: "agent", lane: lane(changed) }
+  ]).join("\n"), /drifted from the run-initialized ledger anchor/);
+  assert.match(rs.designLaneConsistencyErrors({ design_lane: changed }, [
+    { event: "run-initialized", lane: lane(anchored) },
+    { phase: "decompose", event: "phase-advance" },
+    { event: "lane-changed", status: "passed", actor: "Shane", lane: lane(changed) }
+  ]).join("\n"), /drifted from the run-initialized ledger anchor/);
+});
+
+test("designLaneConsistencyErrors requires a Shane release before the first downstream crossing", () => {
+  const manifest = { design_lane: { mode: "yolo", stop_line: "design-lock", origination: "user" } };
+  const rows = [
+    { phase: "engine-profile", event: "phase-advance", status: "passed", actor: "agent" },
+    { phase: "decompose", event: "phase-advance", status: "passed", actor: "agent" }
+  ];
+  assert.match(rs.designLaneConsistencyErrors(manifest, rows).join("\n"), /forbids progress past engine-profile/);
+  assert.deepEqual(rs.designLaneConsistencyErrors(manifest, [
+    rows[0],
+    { phase: "engine-profile", event: "stop-line-released", status: "passed", actor: "Shane" },
+    rows[1]
+  ]), []);
+  assert.match(rs.designLaneConsistencyErrors(manifest, [
+    ...rows,
+    { phase: "engine-profile", event: "stop-line-released", status: "passed", actor: "Shane" }
+  ]).join("\n"), /forbids progress past engine-profile/);
+});
+
+test("openRun returns one validated snapshot with derived ledger and export truth", () => {
+  const dir = tmp();
+  const id = "rs-open";
+  try {
+    initializedRun(dir, id);
+    const run = rs.openRun(dir, id);
+    assert.equal(run.manifest.current_phase, "intake");
+    assert.equal(run.ledgerRows.length, 1);
+    assert.equal(run.latestEvent.event, "run-initialized");
+    assert.deepEqual(run.phase, {
+      current: "intake",
+      terminal: false,
+      legal_next: ["toolchain", "blocked", "failed", "killed"]
+    });
+    assert.deepEqual(run.exportStatus, { kind: "none", revision_count: 0, path: null });
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("openRun rejects manifest/ledger disagreement as a single run error", () => {
+  const dir = tmp();
+  const id = "rs-open-mismatch";
+  try {
+    const runDir = initializedRun(dir, id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.current_phase = "toolchain";
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+    assert.throws(() => rs.openRun(dir, id), /current_phase 'toolchain' != latest ledger phase 'intake'/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advanceRun rolls back the ledger when manifest persistence fails", () => {
+  const dir = tmp();
+  const id = "rs-advance-rollback";
+  try {
+    const runDir = initializedRun(dir, id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const manifestBefore = fs.readFileSync(manifestPath, "utf8");
+    const ledgerBefore = fs.readFileSync(ledgerPath, "utf8");
+    assert.throws(() => rs.advanceRun(dir, id, {
+      to: "blocked", event: "injected-failure", status: "blocked", actor: "test"
+    }, {
+      now: "2026-07-19T12:00:00.000Z",
+      persistence: { writeManifest() { throw new Error("injected manifest failure"); } }
+    }), /injected manifest failure/);
+    assert.equal(fs.readFileSync(manifestPath, "utf8"), manifestBefore);
+    assert.equal(fs.readFileSync(ledgerPath, "utf8"), ledgerBefore);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advanceRun clears the transaction note when ledger persistence fails", () => {
+  const dir = tmp();
+  const id = "rs-advance-ledger-fail";
+  try {
+    const runDir = initializedRun(dir, id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const manifestBefore = fs.readFileSync(manifestPath, "utf8");
+    const ledgerBefore = fs.readFileSync(ledgerPath, "utf8");
+    assert.throws(() => rs.advanceRun(dir, id, {
+      to: "blocked", event: "injected-failure", status: "blocked", actor: "test"
+    }, {
+      now: "2026-07-19T12:00:00.000Z",
+      persistence: { writeLedger() { throw new Error("injected ledger failure"); } }
+    }), /injected ledger failure/);
+    assert.equal(fs.readFileSync(manifestPath, "utf8"), manifestBefore);
+    assert.equal(fs.readFileSync(ledgerPath, "utf8"), ledgerBefore);
+    assert.equal(fs.existsSync(path.join(runDir, "run-state-transaction.json")), false);
+    rs.openRun(dir, id); // untouched run must stay openable
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advanceRun preserves a valid ledger that lacks a trailing newline", () => {
+  const dir = tmp();
+  const id = "rs-advance-no-newline";
+  try {
+    const runDir = initializedRun(dir, id);
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    fs.writeFileSync(ledgerPath, fs.readFileSync(ledgerPath, "utf8").trimEnd());
+    rs.advanceRun(dir, id, {
+      to: "blocked", event: "operator-blocked", status: "blocked", actor: "test"
+    }, { now: "2026-07-19T12:00:00.000Z" });
+    const run = rs.openRun(dir, id);
+    assert.equal(run.ledgerRows.length, 2);
+    assert.equal(run.latestEvent.event, "operator-blocked");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("advanceRun leaves durable repair evidence when manifest write and ledger rollback fail", () => {
+  const dir = tmp();
+  const id = "rs-advance-repair";
+  try {
+    initializedRun(dir, id);
+    assert.throws(() => rs.advanceRun(dir, id, {
+      to: "intake", event: "same-phase-checkpoint", status: "checkpointed", actor: "test"
+    }, {
+      now: "2026-07-19T12:00:00.000Z",
+      persistence: {
+        writeManifest() { throw new Error("injected manifest failure"); },
+        restoreLedger() { throw new Error("injected rollback failure"); }
+      }
+    }), /ledger rollback failed/);
+    assert.throws(() => rs.openRun(dir, id), /pending run-state transaction requires repair/);
+    const transactionPath = path.join(dir, ".tgf", "seeds", id, "run-state-transaction.json");
+    const transaction = JSON.parse(fs.readFileSync(transactionPath, "utf8"));
+    assert.equal(transaction.manifest_before.current_phase, "intake");
+    assert.equal(transaction.manifest_after.resume_point.reason, "advanced intake -> intake (same-phase-checkpoint)");
+    assert.match(transaction.ledger_before, /run-initialized/);
+    const validation = node("validate-artifacts.mjs", ["--check", "run", "--seed-id", id], { cwd: dir });
+    assert.equal(validation.status, 1, validation.stdout + validation.stderr);
+    assert.match(validation.stdout, /pending run-state transaction requires repair/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("readLedger is crash-safe: a malformed line is skipped and reported", () => {
   const dir = tmp();
   try {
@@ -203,12 +374,28 @@ test("summarize-run reports revision exports instead of '(none — not exported)
   const id = "rs-summary-revision";
   try {
     assert.equal(node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    const manifestPath = path.join(runDir, "manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.current_phase = "complete";
+    manifest.game_thesis_path = `.tgf/seeds/${id}/GAME_THESIS.md`;
+    manifest.engine_decision_path = `.tgf/seeds/${id}/decisions/0001-engine-profile.md`;
+    manifest.spec_path = `.tgf/seeds/${id}/SPEC.md`;
+    manifest.resume_point = {
+      phase: "complete", artifact_path: `.tgf/seeds/${id}/SPEC.md`, reason: "revision exported"
+    };
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
     const ledgerPath = path.join(dir, ".tgf", "seeds", id, "execution-ledger.jsonl");
-    const row = {
+    const phaseRows = ["toolchain", "thesis", "design-review", "engine-profile", "decompose", "handoff", "complete"]
+      .map((phase) => ({
+        ts: new Date().toISOString(), seed_id: id, phase,
+        event: "phase-advance", status: "passed", actor: "test"
+      }));
+    const revisionRow = {
       ts: new Date().toISOString(), seed_id: id, phase: "complete",
       event: "spec-pack-revision-exported", status: "passed", actor: "package-spec.mjs"
     };
-    fs.appendFileSync(ledgerPath, JSON.stringify(row) + "\n");
+    fs.appendFileSync(ledgerPath, [...phaseRows, revisionRow].map(JSON.stringify).join("\n") + "\n");
     const r = node("summarize-run.mjs", ["--seed-id", id], { cwd: dir });
     assert.equal(r.status, 0, r.stderr);
     assert.doesNotMatch(r.stdout, /\(none — not exported\)/);

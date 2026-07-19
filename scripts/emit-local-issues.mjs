@@ -2,11 +2,10 @@
 // Render a seed's SPEC.md decomposition into local markdown issues — one issue per
 // slice, written inside the seed run (.tgf/seeds/{id}/issues/). Deterministic
 // renderer only: the slicing judgment lives in SPEC.md (P18_DECOMPOSE_SPEC), the
-// shape lives in schemas/spec-decomposition, and this script just materializes it.
-// Dry-run by default: it prints issue content and writes only when --write is
-// explicit. Refuses before thesis + engine ADR + SPEC.md all exist and validate.
+// shape lives in schemas/spec-decomposition, and this module just materializes it.
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   runDirFor, runRelFor, readManifest, readEmbeddedArtifact,
   isValidSeedId, resolveRunPath, writeRunFileSync
@@ -16,50 +15,6 @@ import { frontMatterAccessors } from "./lib/issue-format.mjs";
 import { arg, hasFlag } from "./lib/argv.mjs";
 import { ARTIFACT_KINDS } from "./lib/factory-contract.mjs";
 
-function fail(msg) { console.error(`[emit-local-issues] ERROR: ${msg}`); process.exit(1); }
-
-const seedId = arg("seed-id");
-const write = hasFlag("write");
-const force = hasFlag("force");
-
-if (!seedId) fail("usage: --seed-id <id> [--write] [--force]");
-if (!isValidSeedId(seedId)) fail(`invalid --seed-id: ${seedId}`);
-
-const runDir = runDirFor(process.cwd(), seedId);
-const runRel = runRelFor(seedId);
-let manifest;
-try { manifest = readManifest(runDir, seedId, process.cwd()); }
-catch (e) { fail(`manifest rejected: ${e.message}`); }
-if (!manifest) fail(`no run at ${runRel}`);
-if (!manifest.game_thesis_path) fail("refusing to emit issues before GAME_THESIS.md exists");
-if (!manifest.engine_decision_path) fail("refusing to emit issues before an engine decision exists");
-if (!manifest.spec_path) fail("refusing to emit issues before SPEC.md exists (run the decompose phase first)");
-
-const artifacts = {};
-for (const [kind, { manifestKey, schemaName }] of Object.entries(ARTIFACT_KINDS)) {
-  let file;
-  try { file = resolveRunPath(process.cwd(), seedId, manifest[manifestKey], manifestKey); }
-  catch (e) { fail(e.message); }
-  const { obj, errors } = readEmbeddedArtifact(file, schemaName);
-  if (errors.length) fail(`${kind} artifact invalid:\n  ${errors.join("\n  ")}`);
-  artifacts[kind] = obj;
-}
-const { thesis, engine, spec } = artifacts;
-if (engine.status !== "accepted") {
-  fail(`engine decision must be accepted before emitting issues, got ${engine.status}`);
-}
-if (engine.seed_id !== seedId) {
-  fail(`engine decision seed_id '${engine.seed_id}' does not match --seed-id '${seedId}'`);
-}
-if (spec.seed_id !== seedId) {
-  fail(`spec seed_id '${spec.seed_id}' does not match --seed-id '${seedId}'`);
-}
-const specErrors = specConsistencyErrors(spec, thesis);
-if (specErrors.length) fail(`spec decomposition inconsistent:\n  ${specErrors.join("\n  ")}`);
-
-// The local issue tracker uses a deliberately tiny YAML-front-matter subset.
-// Keep generated scalars one physical line so schema-valid spec prose cannot
-// accidentally inject a second front-matter delimiter (`---`) or truncate lists.
 function frontMatterScalar(value) {
   const normalized = String(value ?? "")
     .replace(/[\r\n\u2028\u2029]+/g, " ")
@@ -68,12 +23,9 @@ function frontMatterScalar(value) {
     .trim();
   return normalized || "(empty)";
 }
-const quoted = (s) => `'${frontMatterScalar(s).replaceAll("'", "''")}'`;
+const quoted = (value) => `'${frontMatterScalar(value).replaceAll("'", "''")}'`;
 const yamlList = (items) => items.length ? items.map((item) => `  - ${quoted(item)}`).join("\n") : "";
 
-// Structured acceptance (SPEC §3.3): kind + statement + check must all be
-// visible per criterion. Front-matter stays the single-line list subset
-// (docs/agents/issue-tracker.md); body restates structured rows for scanners.
 function formatAcceptanceLine(item) {
   if (item && typeof item === "object" && !Array.isArray(item)) {
     const kind = frontMatterScalar(item.kind);
@@ -84,11 +36,9 @@ function formatAcceptanceLine(item) {
   return frontMatterScalar(item);
 }
 
-// Evidence links are pack-relative (resolvable from the run dir AND from an
-// exported spec pack), never .tgf paths — those would be leakage in the pack.
 const EVIDENCE = ["SPEC.md", "GAME_THESIS.md", "decisions/0001-engine-profile.md"];
 
-function issueMarkdown(slice) {
+function issueMarkdown(slice, engine, spec) {
   const blocked = (slice.depends_on || []).length > 0;
   const state = blocked ? "needs-info" : "ready-for-agent";
   const afk = blocked ? "needs-human" : "ready-for-agent";
@@ -113,13 +63,11 @@ function issueMarkdown(slice) {
     ? [
         "",
         "Acceptance criteria (structured):",
-        ...(slice.acceptance || []).map((a) => {
-          if (a && typeof a === "object" && !Array.isArray(a)) {
-            // Collapse newlines so a criterion cannot inject a YAML --- delimiter
-            // into the issue body (generatedIssueErrors rejects extra ---).
-            return `- kind: ${frontMatterScalar(a.kind)}\n  statement: ${frontMatterScalar(a.statement)}\n  check: ${frontMatterScalar(a.check)}`;
+        ...(slice.acceptance || []).map((item) => {
+          if (item && typeof item === "object" && !Array.isArray(item)) {
+            return `- kind: ${frontMatterScalar(item.kind)}\n  statement: ${frontMatterScalar(item.statement)}\n  check: ${frontMatterScalar(item.check)}`;
           }
-          return `- ${formatAcceptanceLine(a)}`;
+          return `- ${formatAcceptanceLine(item)}`;
         })
       ].join("\n")
     : null;
@@ -132,7 +80,7 @@ function issueMarkdown(slice) {
       : null,
     acceptanceBody,
     (slice.evidence_requirements || []).length
-      ? `\nEvidence this slice must produce:\n${slice.evidence_requirements.map((e) => `- ${e}`).join("\n")}`
+      ? `\nEvidence this slice must produce:\n${slice.evidence_requirements.map((item) => `- ${item}`).join("\n")}`
       : null,
     blocked
       ? `\nBlocked on: ${slice.depends_on.join(", ")}. Move to ready-for-agent once their evidence exists.`
@@ -144,26 +92,22 @@ function issueMarkdown(slice) {
   return `${front}\n\n${body.trim()}\n`;
 }
 
-const slices = [...spec.slices].sort((a, b) => a.order - b.order);
-const issues = slices.map((slice) => ({ id: slice.id, md: issueMarkdown(slice) }));
-
-function generatedIssueErrors({ id, md }) {
+function generatedIssueErrors({ id, content }) {
   const errors = [];
-  const lines = md.split("\n");
+  const lines = content.split("\n");
   if (lines[0] !== "---") return [`${id}: missing opening YAML front matter delimiter`];
   const closing = lines.indexOf("---", 1);
   if (closing < 0) return [`${id}: missing closing YAML front matter delimiter`];
-  const extraDelimiter = lines.indexOf("---", closing + 1);
-  if (extraDelimiter >= 0) {
+  if (lines.indexOf("---", closing + 1) >= 0) {
     errors.push(`${id}: generated issue contains an extra YAML front matter delimiter`);
   }
   const { field, hasKey, listItems } = frontMatterAccessors(lines.slice(1, closing).join("\n"));
   if (field("id") !== id) errors.push(`${id}: id must match generated issue id`);
-  for (const req of ["title", "type", "state", "afk"]) {
-    if (!field(req)) errors.push(`${id}: missing generated front-matter key '${req}'`);
+  for (const required of ["title", "type", "state", "afk"]) {
+    if (!field(required)) errors.push(`${id}: missing generated front-matter key '${required}'`);
   }
-  for (const req of ["acceptance", "evidence"]) {
-    if (!hasKey(req)) errors.push(`${id}: missing generated front-matter key '${req}'`);
+  for (const required of ["acceptance", "evidence"]) {
+    if (!hasKey(required)) errors.push(`${id}: missing generated front-matter key '${required}'`);
   }
   if (hasKey("acceptance") && listItems("acceptance").length === 0) {
     errors.push(`${id}: generated acceptance list is empty`);
@@ -174,33 +118,136 @@ function generatedIssueErrors({ id, md }) {
   return errors;
 }
 
-const generatedErrors = issues.flatMap(generatedIssueErrors);
-if (generatedErrors.length) fail(`generated issue markdown invalid:\n  ${generatedErrors.join("\n  ")}`);
+function blockedPlan(startDir, seedId, runDir, runRel, blocker) {
+  return { startDir, seedId, runDir, runRel, blockers: [blocker], documents: [] };
+}
 
-const issueRel = (id) => `${runRel}/issues/${id}.md`;
-
-if (!write) {
-  console.log(`# Dry-run local issues for ${seedId}`);
-  console.log(`# Re-run with --write to create files under ${runRel}/issues.`);
-  for (const issue of issues) {
-    console.log(`\n--- ${issueRel(issue.id)} ---`);
-    console.log(issue.md.trimEnd());
+export function planIssues(startDir, seedId) {
+  if (!isValidSeedId(seedId)) throw new Error(`invalid --seed-id: ${seedId}`);
+  const root = path.resolve(startDir);
+  const runDir = runDirFor(root, seedId);
+  const runRel = runRelFor(seedId);
+  let manifest;
+  try { manifest = readManifest(runDir, seedId, root); }
+  catch (error) { throw new Error(`manifest rejected: ${error.message}`); }
+  if (!manifest) return blockedPlan(root, seedId, runDir, runRel, `no run at ${runRel}`);
+  if (!manifest.game_thesis_path) {
+    return blockedPlan(root, seedId, runDir, runRel, "Backlog decomposition is blocked until GAME_THESIS.md validates; refusing to emit issues before GAME_THESIS.md exists.");
   }
-  process.exit(0);
+  if (!manifest.engine_decision_path) {
+    return blockedPlan(root, seedId, runDir, runRel, "Backlog decomposition is blocked until an engine decision validates; refusing to emit issues before an engine decision exists.");
+  }
+  if (!manifest.spec_path) {
+    return blockedPlan(root, seedId, runDir, runRel, "Backlog decomposition is blocked until SPEC.md validates (run the decompose phase); refusing to emit issues before SPEC.md exists.");
+  }
+
+  const artifacts = {};
+  for (const [kind, { manifestKey, schemaName }] of Object.entries(ARTIFACT_KINDS)) {
+    let file;
+    try { file = resolveRunPath(root, seedId, manifest[manifestKey], manifestKey); }
+    catch (error) { throw error; }
+    const { obj, errors } = readEmbeddedArtifact(file, schemaName);
+    if (errors.length) {
+      return blockedPlan(root, seedId, runDir, runRel, `${kind} artifact invalid:\n  ${errors.join("\n  ")}`);
+    }
+    artifacts[kind] = obj;
+  }
+  const { thesis, engine, spec } = artifacts;
+  if (engine.status !== "accepted") {
+    return blockedPlan(root, seedId, runDir, runRel, `Backlog decomposition is blocked until the engine decision is accepted; current status is ${engine.status}. engine decision must be accepted before emitting issues.`);
+  }
+  if (engine.seed_id !== seedId) {
+    return blockedPlan(root, seedId, runDir, runRel, `Backlog decomposition is blocked because engine decision seed_id '${engine.seed_id}' does not match --seed-id '${seedId}'.`);
+  }
+  if (spec.seed_id !== seedId) {
+    return blockedPlan(root, seedId, runDir, runRel, `Backlog decomposition is blocked because spec seed_id '${spec.seed_id}' does not match --seed-id '${seedId}'.`);
+  }
+  const consistencyErrors = specConsistencyErrors(spec, thesis);
+  if (consistencyErrors.length) {
+    return blockedPlan(root, seedId, runDir, runRel, `spec decomposition inconsistent:\n  ${consistencyErrors.join("\n  ")}`);
+  }
+
+  const documents = [...spec.slices]
+    .sort((a, b) => a.order - b.order)
+    .map((slice) => ({
+      id: slice.id,
+      path: `${runRel}/issues/${slice.id}.md`,
+      content: issueMarkdown(slice, engine, spec)
+    }));
+  const generatedErrors = documents.flatMap(generatedIssueErrors);
+  if (generatedErrors.length) {
+    return blockedPlan(root, seedId, runDir, runRel, `generated issue markdown invalid:\n  ${generatedErrors.join("\n  ")}`);
+  }
+  return { startDir: root, seedId, runDir, runRel, blockers: [], documents };
 }
 
-// Preflight every write (existence, symlink, run confinement) before the first one,
-// so a collision cannot leave a half-rendered backlog.
-for (const issue of issues) {
-  let file;
-  // resolveRunPath also rejects symlinked components, including the file itself.
-  try { file = resolveRunPath(process.cwd(), seedId, issueRel(issue.id), issueRel(issue.id)); }
-  catch (e) { fail(e.message); }
-  if (fs.existsSync(file) && !force) fail(`${path.relative(process.cwd(), file)} exists; pass --force to overwrite`);
+export function emitIssues(plan, { force = false } = {}) {
+  if (!plan || !Array.isArray(plan.blockers) || !Array.isArray(plan.documents)) {
+    throw new Error("emitIssues requires a structured issue plan");
+  }
+  if (plan.blockers.length) throw new Error(plan.blockers.join("\n"));
+  for (const document of plan.documents) {
+    const file = resolveRunPath(plan.startDir, plan.seedId, document.path, document.path);
+    if (fs.existsSync(file) && !force) {
+      throw new Error(`${path.relative(plan.startDir, file)} exists; pass --force to overwrite`);
+    }
+  }
+  fs.mkdirSync(path.join(plan.runDir, "issues"), { recursive: true });
+  const writtenPaths = [];
+  for (const document of plan.documents) {
+    writeRunFileSync(plan.startDir, plan.seedId, document.path, document.content);
+    writtenPaths.push(document.path);
+  }
+  return { writtenPaths };
 }
-fs.mkdirSync(path.join(runDir, "issues"), { recursive: true });
-for (const issue of issues) {
-  try { writeRunFileSync(process.cwd(), seedId, issueRel(issue.id), issue.md); }
-  catch (e) { fail(e.message); }
-  console.log(`[emit-local-issues] wrote ${issueRel(issue.id)}`);
+
+export function formatIssuePlan(plan, { write = false } = {}) {
+  if (plan.blockers.length) return plan.blockers.join("\n");
+  const lines = [
+    write ? `# Local issues planned for ${plan.seedId}` : `# Dry-run local issues for ${plan.seedId}`,
+    write
+      ? "# --write-issues will create these files after run-owned writes preflight."
+      : `# Re-run with --write to create files under ${plan.runRel}/issues.`
+  ];
+  for (const document of plan.documents) {
+    lines.push("", `--- ${document.path} ---`, document.content.trimEnd());
+  }
+  return lines.join("\n");
 }
+
+function fail(message) {
+  console.error(`[emit-local-issues] ERROR: ${message}`);
+  process.exitCode = 1;
+}
+
+function main() {
+  const seedId = arg("seed-id");
+  const write = hasFlag("write");
+  const force = hasFlag("force");
+  if (!seedId) {
+    fail("usage: --seed-id <id> [--write] [--force]");
+    return;
+  }
+  let plan;
+  try { plan = planIssues(process.cwd(), seedId); }
+  catch (error) {
+    fail(error.message);
+    return;
+  }
+  if (plan.blockers.length) {
+    fail(plan.blockers.join("\n"));
+    return;
+  }
+  if (!write) {
+    console.log(formatIssuePlan(plan));
+    return;
+  }
+  try {
+    const { writtenPaths } = emitIssues(plan, { force });
+    for (const writtenPath of writtenPaths) console.log(`[emit-local-issues] wrote ${writtenPath}`);
+  } catch (error) {
+    fail(error.message);
+  }
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) main();

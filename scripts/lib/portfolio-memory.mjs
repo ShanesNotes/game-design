@@ -3,11 +3,12 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 import { validate } from "./validate-json-schema.mjs";
-import { extractFencedJson, isValidSeedId } from "./run-state.mjs";
+import { extractFencedJson, isValidSeedId } from "./run-artifact-identity.mjs";
 import { resolveContractsRoot, resolveDesignRoot, resolveGamesRoot } from "./studio-paths.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const schema = (name) => JSON.parse(fs.readFileSync(path.join(REPO, "schemas", `${name}.schema.json`), "utf8"));
+const PORTFOLIO_SNAPSHOT = Symbol("portfolio-snapshot");
 
 export const PORTFOLIO_FACTORY_VERSION = "0.3.0";
 export const DEPTH_AXES = [
@@ -91,7 +92,7 @@ function canonicalGameRows(markdown) {
   return rows.sort((a, b) => a.gameId.localeCompare(b.gameId));
 }
 
-export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
+function buildPortfolioDigestContentForRoots(seedId, roots) {
   const content = {
     schema_version: "1.0.0",
     sources: [],
@@ -174,7 +175,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     } : {})
   });
 
-  const designRoot = resolveDesignRoot(startDir);
+  const designRoot = roots.design;
   const seedsRoot = designRoot && path.join(designRoot, ".tgf", "seeds");
   if (!seedsRoot || !fs.existsSync(seedsRoot)) {
     content.sources.push({ source: "design-runs", status: "skipped", reason: "design seed root is missing" });
@@ -188,7 +189,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     }
   }
 
-  const contractsRoot = resolveContractsRoot(startDir);
+  const contractsRoot = roots.contracts;
   const verdictSchemaFile = contractsRoot && path.join(contractsRoot, "verdict-record.schema.json");
   let verdictSchema = null;
   if (!verdictSchemaFile || !fs.existsSync(verdictSchemaFile)) {
@@ -208,7 +209,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
     return errors;
   };
 
-  const gamesRoot = resolveGamesRoot(startDir);
+  const gamesRoot = roots.games;
   const proposalsRoot = gamesRoot && path.join(gamesRoot, "_proposals");
   if (!proposalsRoot || !fs.existsSync(proposalsRoot)) {
     content.sources.push({ source: "proposals", status: "skipped", reason: "games/_proposals is missing" });
@@ -290,7 +291,7 @@ export function buildPortfolioDigestContent(seedId, startDir = process.cwd()) {
   return content;
 }
 
-export function readIntakeEvidence(runDir, seedId) {
+function readIntakeEvidenceFor(portfolio, runDir, seedId) {
   const errors = [];
   const digestPath = path.join(runDir, "intake", "portfolio-digest.json");
   const officePath = path.join(runDir, "intake", "office-hours.md");
@@ -302,6 +303,7 @@ export function readIntakeEvidence(runDir, seedId) {
   } else {
     try {
       digest = JSON.parse(fs.readFileSync(digestPath, "utf8"));
+      Object.defineProperty(digest, PORTFOLIO_SNAPSHOT, { value: portfolio });
       validate(schema("portfolio-digest"), digest).forEach((error) => errors.push(`intake portfolio digest ${error}`));
       if (digest.seed_id !== seedId) errors.push(`intake portfolio digest seed_id '${digest.seed_id}' does not match '${seedId}'`);
       const storedContent = {
@@ -311,7 +313,7 @@ export function readIntakeEvidence(runDir, seedId) {
         games: digest.games,
         skipped: digest.skipped
       };
-      if (!isDeepStrictEqual(storedContent, buildPortfolioDigestContent(seedId, process.cwd()))) {
+      if (!isDeepStrictEqual(storedContent, portfolio.buildDigestContent(seedId))) {
         errors.push("intake portfolio digest stale/dishonest — regenerate via npm run portfolio:digest");
       }
     } catch (error) {
@@ -415,4 +417,43 @@ export function depthVectorPortfolioErrors(vector, thesis, digest, verdictText) 
     }
   }
   return errors;
+}
+
+export function openPortfolio(startDir) {
+  if (typeof startDir !== "string" || !startDir.trim()) {
+    throw new Error("openPortfolio requires an explicit startDir");
+  }
+  const root = path.resolve(startDir);
+  const roots = Object.freeze({
+    design: resolveDesignRoot(root),
+    games: resolveGamesRoot(root),
+    contracts: resolveContractsRoot(root)
+  });
+  const portfolio = {
+    root,
+    roots,
+    buildDigestContent(seedId) {
+      return buildPortfolioDigestContentForRoots(seedId, roots);
+    },
+    readIntakeEvidence(runDir, seedId) {
+      return readIntakeEvidenceFor(portfolio, runDir, seedId);
+    },
+    thesisDistinctnessErrors,
+    depthVectorErrors: depthVectorPortfolioErrors
+  };
+  return Object.freeze(portfolio);
+}
+
+export function portfolioForDigest(digest, startDir) {
+  return digest?.[PORTFOLIO_SNAPSHOT] ?? openPortfolio(startDir);
+}
+
+// Compatibility exports for validators outside this slice. New call sites should
+// keep one open portfolio so root discovery is explicit and shared.
+export function buildPortfolioDigestContent(seedId, startDir) {
+  return openPortfolio(startDir).buildDigestContent(seedId);
+}
+
+export function readIntakeEvidence(runDir, seedId) {
+  return openPortfolio(runDir).readIntakeEvidence(runDir, seedId);
 }

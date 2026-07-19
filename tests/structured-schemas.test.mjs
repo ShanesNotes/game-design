@@ -1,4 +1,5 @@
 // T05 — structured feel_targets + typed acceptance (SPEC §3.3).
+// Also: subset validator keyword regressions (maxLength / minLength / uniqueItems).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -12,6 +13,82 @@ import { FEEL_TARGET_REQUIRED_FOR_ADVANCE } from "../scripts/lib/anti-boring-gat
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
+
+// --- subset validator keywords used by live schemas ---
+test("validate enforces maxLength (fire and pass)", () => {
+  assert.deepEqual(validate({ type: "string", maxLength: 3 }, "abc"), []);
+  const errs = validate({ type: "string", maxLength: 3 }, "abcd");
+  assert.ok(errs.some((e) => /maxLength/.test(e)), errs.join("\n"));
+});
+
+test("validate enforces minLength (fire and pass)", () => {
+  assert.deepEqual(validate({ type: "string", minLength: 1 }, "x"), []);
+  const errs = validate({ type: "string", minLength: 1 }, "");
+  assert.ok(errs.some((e) => /minLength/.test(e)), errs.join("\n"));
+});
+
+test("validate minLength/maxLength count Unicode code points (astral plane)", () => {
+  // 😀 is one code point, two UTF-16 code units. Draft 2020-12 uses code points.
+  assert.equal([..."😀"].length, 1);
+  assert.equal("😀".length, 2);
+  const errs = validate({ type: "string", minLength: 2, maxLength: 1 }, "😀");
+  assert.ok(errs.some((e) => /minLength/.test(e)), `expected minLength, got: ${errs.join("\n")}`);
+  assert.ok(!errs.some((e) => /maxLength/.test(e)), `must not fire maxLength for 1 code point: ${errs.join("\n")}`);
+  assert.deepEqual(validate({ type: "string", minLength: 1, maxLength: 1 }, "😀"), []);
+});
+
+test("validate enforces uniqueItems (fire and pass)", () => {
+  assert.deepEqual(validate({ type: "array", uniqueItems: true }, ["a", "b"]), []);
+  const errs = validate({ type: "array", uniqueItems: true }, ["a", "a"]);
+  assert.ok(errs.some((e) => /uniqueItems|duplicate/.test(e)), errs.join("\n"));
+});
+
+test("validate uniqueItems treats JSON-equal objects equal despite key order", () => {
+  const errs = validate(
+    { type: "array", uniqueItems: true },
+    [{ outer: { a: 1, b: [2, 3] } }, { outer: { b: [2, 3], a: 1 } }]
+  );
+  assert.ok(errs.some((e) => /uniqueItems|duplicate/.test(e)), errs.join("\n"));
+});
+
+test("validate uniqueItems keeps __proto__ keys and array/object shapes distinct", () => {
+  const protoPair = JSON.parse('[{"__proto__":{"x":1}},{}]');
+  assert.deepEqual(validate({ type: "array", uniqueItems: true }, protoPair), []);
+  const shapePair = [{ a: 1 }, [["a", 1]]];
+  assert.deepEqual(validate({ type: "array", uniqueItems: true }, shapePair), []);
+});
+
+test("live schemas exercise maxLength, minLength, uniqueItems", () => {
+  const genreSchema = JSON.parse(fs.readFileSync(rel("schemas/genre-index-row.schema.json"), "utf8"));
+  const row = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-genre-index-row.json"), "utf8"));
+  assert.deepEqual(validate(genreSchema, row), [], "minimal genre-index-row fixture must pass");
+  const longMoat = structuredClone(row);
+  longMoat.moat = "x".repeat(121);
+  assert.ok(validate(genreSchema, longMoat).some((e) => /maxLength/.test(e)));
+  const dups = structuredClone(row);
+  dups.design_shape.loop_class.secondary = ["discovery", "discovery"];
+  assert.ok(validate(genreSchema, dups).some((e) => /uniqueItems|duplicate/.test(e)));
+
+  const specSchema = JSON.parse(fs.readFileSync(rel("schemas/spec-decomposition.schema.json"), "utf8"));
+  const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+  assert.deepEqual(validate(specSchema, spec), []);
+  // minLength is on asset_requests[].derive.recipe / base.pack_id / base.name
+  const emptyRecipe = structuredClone(spec);
+  emptyRecipe.asset_requests = [{
+    request_id: "r1",
+    role: "hero",
+    kind: "sprite",
+    constraints: {},
+    substitution_policy: "none",
+    derive: { base: { pack_id: "p", name: "n" }, recipe: "" }
+  }];
+  assert.ok(validate(specSchema, emptyRecipe).some((e) => /minLength/.test(e)));
+
+  const cardSchema = JSON.parse(fs.readFileSync(rel("schemas/reference-card.schema.json"), "utf8"));
+  const card = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-reference-card.json"), "utf8"));
+  assert.deepEqual(validate(cardSchema, card), [], "minimal reference-card fixture must pass");
+});
+
 
 function node(script, args, opts = {}) {
   return spawnSync(process.execPath, [rel("scripts", script), ...args], { encoding: "utf8", ...opts });

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { arg } from "./lib/argv.mjs";
-import { validate } from "./lib/validate-json-schema.mjs";
+import { validateJsonCorpus } from "./lib/validate-json-corpus.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const DESIGN_FACETS = [
@@ -115,13 +115,11 @@ function evidenceErrors(item, label, today, production = false) {
   return errors;
 }
 
+/** Domain policy: primary must not appear in secondary (uniqueItems is schema-enforced). */
 function membershipErrors(membership, label) {
   const errors = [];
   if (membership.secondary.includes(membership.primary)) {
     errors.push(`${label}: primary '${membership.primary}' must not repeat in secondary`);
-  }
-  if (new Set(membership.secondary).size !== membership.secondary.length) {
-    errors.push(`${label}: duplicate secondary membership`);
   }
   return errors;
 }
@@ -144,100 +142,74 @@ export function validateGenreIndex({
   cardsDir,
   today = new Date().toISOString().slice(0, 10)
 }) {
-  const errors = [];
-  if (!fs.existsSync(schemaPath)) return { errors: [`missing schema: ${schemaPath}`], rows: [], indexLines: [] };
   if (!fs.existsSync(rowsDir)) return { errors: [`missing rows dir: ${rowsDir}`], rows: [], indexLines: [] };
   if (!fs.existsSync(cardsDir)) return { errors: [`missing cards dir: ${cardsDir}`], rows: [], indexLines: [] };
-  if (!fs.lstatSync(rowsDir).isDirectory() || fs.lstatSync(rowsDir).isSymbolicLink()) {
-    return { errors: [`rows dir must be a real directory: ${rowsDir}`], rows: [], indexLines: [] };
-  }
 
-  const schema = readJson(schemaPath, errors, "schema");
-  if (!schema) return { errors, rows: [], indexLines: [] };
-  const files = fs.readdirSync(rowsDir).filter((name) => name.endsWith(".json")).sort();
-  const rows = [];
-  const seenIds = new Set();
   const seenTitles = new Set();
 
-  for (const file of files) {
-    const full = path.join(rowsDir, file);
-    if (!fs.lstatSync(full).isFile() || fs.lstatSync(full).isSymbolicLink()) {
-      errors.push(`${file}: row must be a real file`);
-      continue;
-    }
-    const row = readJson(full, errors, file);
-    if (!row) continue;
-    const schemaErrors = validate(schema, row);
-    for (const error of schemaErrors) errors.push(`${file}: ${error}`);
-    if (schemaErrors.length) continue;
-
-    if (file !== `${row.id}.json`) errors.push(`${file}: filename must be '${row.id}.json'`);
-    if (seenIds.has(row.id)) errors.push(`${file}: duplicate id '${row.id}'`);
-    seenIds.add(row.id);
-    const normalizedTitle = row.title.trim().toLowerCase();
-    if (seenTitles.has(normalizedTitle)) errors.push(`${file}: duplicate normalized title '${row.title.trim()}'`);
-    seenTitles.add(normalizedTitle);
-
-    // Not redundant with the schema's maxLength: the subset validator (validate-json-schema.mjs)
-    // does not implement maxLength, so this is the only live enforcement of the 120-char moat rule.
-    if (row.moat.length > 120) errors.push(`${file}: moat must be at most 120 characters`);
-    for (const facet of DESIGN_FACETS) {
-      errors.push(...membershipErrors(row.design_shape[facet], `${file}: ${facet}`));
-    }
-    errors.push(...membershipErrors(row.market_genres, `${file}: market_genres`));
-
-    row.evidence.forEach((item, index) => {
-      errors.push(...evidenceErrors(item, `${file}: evidence[${index}]`, today));
-    });
-    if (!row.evidence.some((item) => item.metric_type === "storefront_genres")) {
-      errors.push(`${file}: evidence must include storefront_genres evidence`);
-    }
-    const fetchedMarketGenres = new Set(
-      row.evidence
-        .filter((item) => item.metric_type === "storefront_genres")
-        .flatMap((item) => item.value_or_range)
-        .map((value) => value.trim().toLowerCase())
-        .map((value) => STOREFRONT_GENRE_ALIASES.get(value) || value)
-        .filter(Boolean)
-    );
-    for (const genre of new Set([row.market_genres.primary, ...row.market_genres.secondary])) {
-      if (!fetchedMarketGenres.has(genre)) {
-        errors.push(`${file}: market genre '${genre}' is absent from fetched storefront_genres evidence`);
+  return validateJsonCorpus({
+    dir: rowsDir,
+    schemaPath,
+    indexPath,
+    requireRealFiles: true,
+    summaryFrom: summaryFor,
+    extraErrors(row, file) {
+      const errors = [];
+      const normalizedTitle = row.title.trim().toLowerCase();
+      if (seenTitles.has(normalizedTitle)) {
+        errors.push(`${file}: duplicate normalized title '${row.title.trim()}'`);
       }
-    }
-    (row.production_scale_evidence || []).forEach((item, index) => {
-      errors.push(...evidenceErrors(item, `${file}: production_scale_evidence[${index}]`, today, true));
-    });
+      seenTitles.add(normalizedTitle);
 
-    const matchingCard = path.join(cardsDir, `${row.id}.json`);
-    if (fs.existsSync(matchingCard) && row.card_ref !== row.id) {
-      errors.push(`${file}: existing Tier-1 card requires card_ref '${row.id}'`);
-    }
-    if (row.card_ref) {
-      if (row.card_ref !== row.id) {
-        errors.push(`${file}: card_ref must equal row id '${row.id}'`);
+      for (const facet of DESIGN_FACETS) {
+        errors.push(...membershipErrors(row.design_shape[facet], `${file}: ${facet}`));
       }
-      const cardPath = path.join(cardsDir, `${row.card_ref}.json`);
-      if (!fs.existsSync(cardPath)) {
-        errors.push(`${file}: card_ref '${row.card_ref}' does not resolve`);
-      } else {
-        const card = readJson(cardPath, errors, `${file}: card_ref`);
-        if (card && card.id !== row.card_ref) errors.push(`${file}: card_ref body id does not match '${row.card_ref}'`);
-      }
-    }
-    rows.push(row);
-  }
+      errors.push(...membershipErrors(row.market_genres, `${file}: market_genres`));
 
-  rows.sort((a, b) => a.id.localeCompare(b.id));
-  const indexLines = rows.map((row) => JSON.stringify(summaryFor(row)));
-  if (errors.length === 0 && indexPath) {
-    fs.mkdirSync(path.dirname(indexPath), { recursive: true });
-    const body = indexLines.length ? `${indexLines.join("\n")}\n` : "";
-    const tempPath = `${indexPath}.tmp-${process.pid}`;
-    fs.writeFileSync(tempPath, body);
-    fs.renameSync(tempPath, indexPath);
-  }
-  return { errors, rows, indexLines };
+      row.evidence.forEach((item, index) => {
+        errors.push(...evidenceErrors(item, `${file}: evidence[${index}]`, today));
+      });
+      if (!row.evidence.some((item) => item.metric_type === "storefront_genres")) {
+        errors.push(`${file}: evidence must include storefront_genres evidence`);
+      }
+      const fetchedMarketGenres = new Set(
+        row.evidence
+          .filter((item) => item.metric_type === "storefront_genres")
+          .flatMap((item) => item.value_or_range)
+          .map((value) => value.trim().toLowerCase())
+          .map((value) => STOREFRONT_GENRE_ALIASES.get(value) || value)
+          .filter(Boolean)
+      );
+      for (const genre of new Set([row.market_genres.primary, ...row.market_genres.secondary])) {
+        if (!fetchedMarketGenres.has(genre)) {
+          errors.push(`${file}: market genre '${genre}' is absent from fetched storefront_genres evidence`);
+        }
+      }
+      (row.production_scale_evidence || []).forEach((item, index) => {
+        errors.push(...evidenceErrors(item, `${file}: production_scale_evidence[${index}]`, today, true));
+      });
+
+      const matchingCard = path.join(cardsDir, `${row.id}.json`);
+      if (fs.existsSync(matchingCard) && row.card_ref !== row.id) {
+        errors.push(`${file}: existing Tier-1 card requires card_ref '${row.id}'`);
+      }
+      if (row.card_ref) {
+        if (row.card_ref !== row.id) {
+          errors.push(`${file}: card_ref must equal row id '${row.id}'`);
+        }
+        const cardPath = path.join(cardsDir, `${row.card_ref}.json`);
+        if (!fs.existsSync(cardPath)) {
+          errors.push(`${file}: card_ref '${row.card_ref}' does not resolve`);
+        } else {
+          const card = readJson(cardPath, errors, `${file}: card_ref`);
+          if (card && card.id !== row.card_ref) {
+            errors.push(`${file}: card_ref body id does not match '${row.card_ref}'`);
+          }
+        }
+      }
+      return errors;
+    }
+  });
 }
 
 function main() {

@@ -10,11 +10,14 @@
 // `FORGE-GATE:ENGINE <profile>`; --require-manifest upgrades that to a hard fail.
 // Mapping failure aborts BEFORE staging and lists every missing field.
 //
+// Handoff (staging → verify → dry-run | exact target materialize → cleanup →
+// receipt) is owned by runSpecPackHandoff; CLI exits only after that returns.
+// Run evidence is recorded only from a successful export receipt.
+//
 // Usage: node scripts/package-spec.mjs --seed-id <id> [--to <dir>] [--write]
 //          [--force] [--require-manifest]
 //          [--revise-of <game-dir>]   # post-complete revision (SPEC §6-B); parent_digest
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -24,7 +27,7 @@ import {
   specPackRootFor, validateManifest, manifestPathPolicyErrors, pathIsInside,
   writeRunFileSync, appendRunFileSync, validateLedgerRow, firstSymlinkComponent
 } from "./lib/run-state.mjs";
-import { leakageErrors, listFiles } from "./lib/leakage.mjs";
+import { listFiles } from "./lib/leakage.mjs";
 import { renderTemplate } from "./lib/template.mjs";
 import { arg, hasFlag } from "./lib/argv.mjs";
 import { validate } from "./lib/validate-json-schema.mjs";
@@ -43,6 +46,7 @@ import {
   contractsVersion,
   forgeManifestSchemaPath
 } from "./lib/studio-paths.mjs";
+import { runSpecPackHandoff } from "./lib/spec-pack-export.mjs";
 
 /** forge-manifest schema_version for revision exports (parent_digest requires 1.1.0). */
 const REVISION_SCHEMA_VERSION = "1.1.0";
@@ -231,21 +235,21 @@ const tplDir = path.join(FACTORY_ROOT, "templates", "spec-pack");
 const sub = (s) => renderTemplate(s, {
   SEED_ID: seedId, SEED: seedText, PITCH: thesis.pitch, PLAYER_FANTASY: thesis.player_fantasy
 });
-const staging = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-spec-pack-"));
-function put(relPath, contents) {
-  const p = path.join(staging, relPath);
-  fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, contents);
-}
-function copyTree(fromDir, toRel) {
-  for (const e of fs.readdirSync(fromDir, { withFileTypes: true })) {
-    const from = path.join(fromDir, e.name);
-    if (e.isDirectory()) copyTree(from, path.join(toRel, e.name));
-    else put(path.join(toRel, e.name), fs.readFileSync(from, "utf8"));
-  }
-}
 
-try {
+function fillStaging(staging) {
+  function put(relPath, contents) {
+    const p = path.join(staging, relPath);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, contents);
+  }
+  function copyTree(fromDir, toRel) {
+    for (const e of fs.readdirSync(fromDir, { withFileTypes: true })) {
+      const from = path.join(fromDir, e.name);
+      if (e.isDirectory()) copyTree(from, path.join(toRel, e.name));
+      else put(path.join(toRel, e.name), fs.readFileSync(from, "utf8"));
+    }
+  }
+
   for (const f of ["README.md", "AGENTS.md", "PLAYTEST_PLAN.md", "MISSION.md", "RESOURCES.md", "NOTES.md"]) {
     put(f, sub(fs.readFileSync(path.join(tplDir, f), "utf8")));
   }
@@ -263,13 +267,17 @@ try {
   put("GAME_THESIS.md", fs.readFileSync(thesisPath, "utf8"));
   if (manifest.design_lane?.mode === "yolo") {
     const g1Path = path.join(runDir, "reviews", "G1_BRIEF.md");
-    if (!fs.existsSync(g1Path)) fail("yolo pack requires reviews/G1_BRIEF.md; run npm run g1:brief first");
+    if (!fs.existsSync(g1Path)) {
+      throw new Error("yolo pack requires reviews/G1_BRIEF.md; run npm run g1:brief first");
+    }
     put("G1_BRIEF.md", fs.readFileSync(g1Path, "utf8"));
   }
   put("SPEC.md", fs.readFileSync(specPath, "utf8"));
   put(path.join("decisions", path.basename(enginePath)), fs.readFileSync(enginePath, "utf8"));
   for (const f of issueFiles) {
-    if (firstSymlinkComponent(path.join(issuesDir, f))) fail(`issue file must not be a symlink: ${f}`);
+    if (firstSymlinkComponent(path.join(issuesDir, f))) {
+      throw new Error(`issue file must not be a symlink: ${f}`);
+    }
     put(path.join("issues", f), fs.readFileSync(path.join(issuesDir, f), "utf8"));
   }
   for (const s of ["playtest-report", "depth-vector", "asset-provenance"]) {
@@ -292,86 +300,87 @@ try {
 
     const schemaPath = forgeManifestSchemaPath(FACTORY_ROOT);
     if (!schemaPath) {
-      fail("forge-manifest.schema.json not found via STUDIO_ROOT/contracts (set STUDIO_ROOT or GAME_CONTRACTS_ROOT)");
+      throw new Error(
+        "forge-manifest.schema.json not found via STUDIO_ROOT/contracts (set STUDIO_ROOT or GAME_CONTRACTS_ROOT)"
+      );
     }
     const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
     const schemaErrors = validate(schema, pendingManifest);
     if (schemaErrors.length) {
-      fail(`forge-manifest failed contracts schema validation:\n  ${schemaErrors.join("\n  ")}`);
+      throw new Error(`forge-manifest failed contracts schema validation:\n  ${schemaErrors.join("\n  ")}`);
     }
     put("forge-manifest.json", JSON.stringify(pendingManifest, null, 2) + "\n");
   }
-
-  // Separation is absolute (ADR 0003): the assembled pack must carry zero factory
-  // state — no .tgf paths, orchestrator names, or absolute source paths — even if
-  // an authored artifact (thesis/spec/issue) smuggled one in.
-  const leaks = leakageErrors([staging], staging);
-  if (leaks.length) fail(`spec pack failed leakage gate; redact these in the run artifacts and re-export:\n  ${leaks.join("\n  ")}`);
-
-  const packFiles = listFiles(staging).map((p) => path.relative(staging, p)).sort();
-
-  if (!write) {
-    console.log(`# Dry-run spec pack for ${seedId}`);
-    console.log(`# Target: ${target}`);
-    console.log(`# Re-run with --write to export.`);
-    for (const f of packFiles) console.log(`- ${f}`);
-    process.exit(0);
-  }
-
-  if (fs.existsSync(target) && fs.readdirSync(target).length && !force) {
-    fail(`${target} exists and is not empty; pass --force to overwrite its pack files`);
-  }
-  fs.mkdirSync(target, { recursive: true });
-  for (const f of packFiles) {
-    const to = path.join(target, f);
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    fs.copyFileSync(path.join(staging, f), to);
-  }
-
-  // Record the export in the run: ledger row always; spec_pack_path only when the
-  // target is the declared default root (the path policy forbids anything else).
-  const iso = new Date().toISOString();
-  const insideDefaultRoot = pathIsInside(specPackRootFor(seedId), target);
-  const exportCmd = isRevision
-    ? `node scripts/package-spec.mjs --seed-id ${seedId} --revise-of ${gameDir} --write`
-    : `node scripts/package-spec.mjs --seed-id ${seedId} --write`;
-  const row = {
-    ts: iso, seed_id: seedId, phase: manifest.current_phase,
-    event: isRevision ? "spec-pack-revision-exported" : "spec-pack-exported",
-    status: "passed", actor: "package-spec.mjs",
-    changed_paths: [`${runRel}/manifest.json`, `${runRel}/execution-ledger.jsonl`],
-    verification: {
-      commands: [exportCmd],
-      status: "passed",
-      evidence: isRevision
-        ? `revision pack exported (${packFiles.length} files); parent_digest set; pins recomputed; target recorded in this row's notes`
-        : `spec pack exported (${packFiles.length} files) after run validation and leakage gate; target recorded in this row's notes`
-    },
-    blockers: []
-  };
-  const rowErrors = validateLedgerRow(row);
-  if (rowErrors.length) fail(`ledger row invalid:\n  ${rowErrors.join("\n  ")}`);
-  const next = JSON.parse(JSON.stringify(manifest));
-  if (insideDefaultRoot) next.spec_pack_path = target;
-  next.last_verified_at = iso;
-  const manErrors = [
-    ...validateManifest(next).map((e) => `manifest ${e}`),
-    ...manifestPathPolicyErrors(next, seedId)
-  ];
-  if (manErrors.length) fail(`resulting manifest invalid:\n  ${manErrors.join("\n  ")}`);
-  writeRunFileSync(process.cwd(), seedId, `${runRel}/manifest.json`, JSON.stringify(next, null, 2) + "\n");
-  appendRunFileSync(process.cwd(), seedId, `${runRel}/execution-ledger.jsonl`, JSON.stringify(row) + "\n");
-
-  console.log(`[package-spec] exported ${packFiles.length} files to ${target}`);
-  if (pendingManifest) {
-    console.log(`[package-spec] forge-manifest.json emitted (engine ${GODOT_PROFILE})`);
-    if (isRevision) {
-      console.log(
-        `[package-spec] revision: schema_version ${pendingManifest.schema_version} parent_digest ${parentDigest}`
-      );
-    }
-  }
-  console.log(`[package-spec] next: open ${target} in a fresh session and follow its AGENTS.md`);
-} finally {
-  fs.rmSync(staging, { recursive: true, force: true });
 }
+
+// Handoff owns staging, verification, dry-run / exact materialize, and cleanup.
+// process.exit is only after this returns so staging always removes.
+let handoff;
+try {
+  handoff = runSpecPackHandoff({
+    fillStaging,
+    target,
+    write,
+    force,
+    seedId,
+    log: console.log
+  });
+} catch (err) {
+  fail(err && err.message ? err.message : String(err));
+}
+
+if (!handoff.ok) {
+  fail(handoff.error || "spec pack handoff failed");
+}
+
+if (handoff.mode === "dry-run") {
+  process.exit(0);
+}
+
+// Record export evidence only from a successful receipt (final tree verified).
+const receipt = handoff.receipt;
+if (!receipt) fail("internal error: export succeeded without receipt");
+
+const packFiles = receipt.packFiles;
+const iso = new Date().toISOString();
+const insideDefaultRoot = pathIsInside(specPackRootFor(seedId), target);
+const exportCmd = isRevision
+  ? `node scripts/package-spec.mjs --seed-id ${seedId} --revise-of ${gameDir} --write`
+  : `node scripts/package-spec.mjs --seed-id ${seedId} --write`;
+const row = {
+  ts: iso, seed_id: seedId, phase: manifest.current_phase,
+  event: isRevision ? "spec-pack-revision-exported" : "spec-pack-exported",
+  status: "passed", actor: "package-spec.mjs",
+  changed_paths: [`${runRel}/manifest.json`, `${runRel}/execution-ledger.jsonl`],
+  verification: {
+    commands: [exportCmd],
+    status: "passed",
+    evidence: isRevision
+      ? `revision pack exported (${packFiles.length} files); parent_digest set; pins recomputed; target recorded in this row's notes`
+      : `spec pack exported (${packFiles.length} files) after run validation and leakage gate; target recorded in this row's notes`
+  },
+  blockers: []
+};
+const rowErrors = validateLedgerRow(row);
+if (rowErrors.length) fail(`ledger row invalid:\n  ${rowErrors.join("\n  ")}`);
+const next = JSON.parse(JSON.stringify(manifest));
+if (insideDefaultRoot) next.spec_pack_path = target;
+next.last_verified_at = iso;
+const manErrors = [
+  ...validateManifest(next).map((e) => `manifest ${e}`),
+  ...manifestPathPolicyErrors(next, seedId)
+];
+if (manErrors.length) fail(`resulting manifest invalid:\n  ${manErrors.join("\n  ")}`);
+writeRunFileSync(process.cwd(), seedId, `${runRel}/manifest.json`, JSON.stringify(next, null, 2) + "\n");
+appendRunFileSync(process.cwd(), seedId, `${runRel}/execution-ledger.jsonl`, JSON.stringify(row) + "\n");
+
+console.log(`[package-spec] exported ${packFiles.length} files to ${target}`);
+if (pendingManifest) {
+  console.log(`[package-spec] forge-manifest.json emitted (engine ${GODOT_PROFILE})`);
+  if (isRevision) {
+    console.log(
+      `[package-spec] revision: schema_version ${pendingManifest.schema_version} parent_digest ${parentDigest}`
+    );
+  }
+}
+console.log(`[package-spec] next: open ${target} in a fresh session and follow its AGENTS.md`);

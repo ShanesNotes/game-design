@@ -7,11 +7,12 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
-  runDirFor, runRelFor, readManifest, readLedger, readEmbeddedArtifact,
+  runDirFor, runRelFor, openRun, readEmbeddedArtifact,
   validateLedgerRow, isValidSeedId, resolveRunPath, writeRunFileSync, appendRunFileSync
 } from "./lib/run-state.mjs";
 import { ARTIFACT_KINDS } from "./lib/factory-contract.mjs";
 import { arg, hasFlag } from "./lib/argv.mjs";
+import { emitIssues, formatIssuePlan, planIssues } from "./emit-local-issues.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
@@ -38,20 +39,17 @@ if (!fs.existsSync(path.join(runDir, "manifest.json"))) {
   if (r.status !== 0) fail(`init failed:\n${r.stderr || r.stdout}`);
 }
 
-let manifest;
-try { manifest = readManifest(runDir, seedId, process.cwd()); }
-catch (e) { fail(`manifest rejected: ${e.message}`); }
-if (!manifest) fail(`no run at ${runRel}`);
-
-let ledger;
-try { ledger = readLedger(runDir, seedId, process.cwd()); }
-catch (e) { fail(`ledger rejected: ${e.message}`); }
-const { rows, parseErrors } = ledger;
-if (parseErrors.length) fail(`ledger invalid:\n  ${parseErrors.join("\n  ")}`);
-rows.forEach((row, i) => {
-  const errors = validateLedgerRow(row);
-  if (errors.length) fail(`ledger row ${i + 1} invalid:\n  ${errors.join("\n  ")}`);
-});
+let run;
+try { run = openRun(process.cwd(), seedId); }
+catch (e) {
+  if (e.code === "RUN_NOT_FOUND") fail(`no run at ${runRel}`);
+  if (e.code === "MANIFEST_REJECTED") fail(`manifest rejected: ${e.message}`);
+  if (["LEDGER_REJECTED", "LEDGER_INVALID"].includes(e.code)) {
+    fail(`ledger invalid:\n  ${(e.errors || [e.message]).join("\n  ")}`);
+  }
+  fail(`run invalid:\n  ${(e.errors || [e.message]).join("\n  ")}`);
+}
+const { manifest, ledgerRows: rows } = run;
 const seedPathRel = manifest.seed_path || `${runRel}/GAME_SEED.md`;
 let seedPath;
 try { seedPath = resolveRunPath(process.cwd(), seedId, seedPathRel, "seed_path"); }
@@ -78,23 +76,9 @@ function readArtifact({ manifestKey, schemaName }) {
 const thesis = readArtifact(ARTIFACT_KINDS.thesis);
 const engine = readArtifact(ARTIFACT_KINDS.engine);
 const spec = readArtifact(ARTIFACT_KINDS.spec);
-function issueBlocker() {
-  if (!thesis.obj) return "Backlog decomposition is blocked until GAME_THESIS.md validates.";
-  if (!engine.obj) return "Backlog decomposition is blocked until an engine decision validates.";
-  if (engine.obj.status !== "accepted") {
-    return `Backlog decomposition is blocked until the engine decision is accepted; current status is ${engine.obj.status}.`;
-  }
-  if (engine.obj.seed_id !== seedId) {
-    return `Backlog decomposition is blocked because engine decision seed_id '${engine.obj.seed_id}' does not match '${seedId}'.`;
-  }
-  if (!spec.obj) return "Backlog decomposition is blocked until SPEC.md validates (run the decompose phase).";
-  if (spec.obj.seed_id !== seedId) {
-    return `Backlog decomposition is blocked because spec seed_id '${spec.obj.seed_id}' does not match '${seedId}'.`;
-  }
-  return null;
-}
-const issueBlockerText = issueBlocker();
-const readyForIssues = !issueBlockerText;
+let issuePlan;
+try { issuePlan = planIssues(process.cwd(), seedId); }
+catch (error) { fail(`backlog decomposition failed:\n${error.message}`); }
 
 function bullets(items) {
   if (!items || !items.length) return "- (none recorded)";
@@ -124,33 +108,8 @@ function nextAction(phase) {
   return table[phase] || "Inspect manifest.current_phase and route through tgf-harness.";
 }
 
-let plannedIssuePaths = [];
-let emittedIssuePaths = [];
-function parseDryRunIssuePaths(stdout) {
-  return stdout.split("\n").map((line) => line.match(/^--- (.+\.md) ---$/)?.[1]).filter(Boolean);
-}
-function parseWrittenIssuePaths(stdout) {
-  return stdout.split("\n").map((line) => line.match(/^\[emit-local-issues\] wrote (.+)$/)?.[1]).filter(Boolean);
-}
-function runIssueEmitter({ write = false } = {}) {
-  const args = [path.join(SCRIPT_DIR, "emit-local-issues.mjs"), "--seed-id", seedId];
-  if (write) args.push("--write");
-  if (write && forceIssues) args.push("--force");
-  const r = spawnSync(process.execPath, args, { cwd: process.cwd(), encoding: "utf8" });
-  if (r.status !== 0) fail(`backlog decomposition failed:\n${r.stderr || r.stdout}`);
-  return r.stdout.trim();
-}
 function issuePreview() {
-  if (!readyForIssues) return issueBlockerText;
-  const stdout = runIssueEmitter();
-  plannedIssuePaths = parseDryRunIssuePaths(stdout);
-  if (!writeIssues) return stdout;
-  return stdout
-    .replace(`# Dry-run local issues for ${seedId}`, `# Local issues planned for ${seedId}`)
-    .replace(
-      /# Re-run with --write to create files under .+\./,
-      "# --write-issues will create these files after run-owned writes preflight."
-    );
+  return formatIssuePlan(issuePlan, { write: writeIssues });
 }
 
 const lines = [];
@@ -161,7 +120,7 @@ lines.push(`- run state: ${runRel}`);
 lines.push(`- seed: ${seedText}`);
 lines.push(`- thesis: ${manifest.game_thesis_path || "(not compiled)"}`);
 lines.push(`- engine ADR: ${manifest.engine_decision_path || "(not decided)"}`);
-lines.push(`- ledger rows: ${rows.length}${parseErrors.length ? ` (${parseErrors.length} parse warning(s))` : ""}`);
+lines.push(`- ledger rows: ${rows.length}`);
 lines.push("");
 lines.push("## Architectural decision ladder");
 lines.push("");
@@ -241,8 +200,12 @@ const walkthroughRel = `${runRel}/IDEA_WALKTHROUGH.md`;
 const ledgerRel = `${runRel}/execution-ledger.jsonl`;
 
 if (!noWrite) {
+  const plannedIssuePaths = issuePlan.documents.map((document) => document.path);
+  if (writeIssues && issuePlan.blockers.length) {
+    fail(`backlog decomposition failed:\n${issuePlan.blockers.join("\n")}`);
+  }
   if (writeIssues && plannedIssuePaths.length === 0) {
-    fail("backlog decomposition dry-run produced no issue paths to write");
+    fail("backlog decomposition plan produced no issue paths to write");
   }
   const buildRow = (issuePaths) => ({
     ts: new Date().toISOString(),
@@ -266,10 +229,12 @@ if (!noWrite) {
     resolveRunPath(process.cwd(), seedId, walkthroughRel, walkthroughRel);
     resolveRunPath(process.cwd(), seedId, ledgerRel, ledgerRel);
   } catch (e) { fail(e.message); }
+  let writtenIssuePaths = [];
   if (writeIssues) {
-    emittedIssuePaths = parseWrittenIssuePaths(runIssueEmitter({ write: true }));
+    try { writtenIssuePaths = emitIssues(issuePlan, { force: forceIssues }).writtenPaths; }
+    catch (error) { fail(`backlog decomposition failed:\n${error.message}`); }
   }
-  const issuePaths = writeIssues ? (emittedIssuePaths.length ? emittedIssuePaths : plannedIssuePaths) : [];
+  const issuePaths = writeIssues ? writtenIssuePaths : [];
   const row = buildRow(issuePaths);
   const rowErrors = validateLedgerRow(row);
   if (rowErrors.length) fail(`ledger row invalid:\n  ${rowErrors.join("\n  ")}`);

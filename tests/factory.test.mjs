@@ -8,6 +8,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validate } from "../scripts/lib/validate-json-schema.mjs";
 import { SKILLS, SCHEMAS, FACTORY_HOOKS, SPEC_PACK_GUARDS, THRESHOLDS } from "../scripts/lib/factory-contract.mjs";
+import { emitIssues, planIssues } from "../scripts/emit-local-issues.mjs";
+import { runSpecPackHandoff } from "../scripts/lib/spec-pack-export.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -58,7 +60,7 @@ required = {"--packs", "--tags", "--atlases", "--models", "--normalized", "--ret
 if not required.issubset(set(sys.argv)):
     raise SystemExit(2)
 query = sys.argv[2]
-if query == "known tree model":
+if query in ("known tree model", "nature Tree"):
     print(json.dumps({"pack_id": "nature", "model_matches": [{"name": "Tree", "path": "tree.glb"}]}))
     raise SystemExit(0)
 if query == "finder-error":
@@ -528,6 +530,30 @@ test("run-gates --dry-run proves all guards gate", () => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
+/** Strip registry-literal tokens only on SCHEMAS / FIXTURE_SCHEMA declaration lines. */
+function stripPullOnlyRegistryLines(source) {
+  const lines = source.split("\n");
+  let inSchemas = false;
+  let inFixtures = false;
+  return lines.map((line) => {
+    if (/export const SCHEMAS\s*=/.test(line)) inSchemas = true;
+    if (/export const FIXTURE_SCHEMA\s*=/.test(line)) inFixtures = true;
+    let out = line;
+    if (inSchemas || inFixtures) {
+      // Registry vocabulary only — do not blank the same tokens on executable lines.
+      out = out
+        .replaceAll('"genre-index-row"', '""')
+        .replaceAll('"minimal-genre-index-row.json"', '""')
+        .replaceAll('"genre-index-row.schema.json"', '""');
+    }
+    if (inSchemas && /\]\s*;/.test(line)) inSchemas = false;
+    if (inFixtures && /\}\s*;/.test(line)) inFixtures = false;
+    return out;
+  }).join("\n");
+}
+
+const PULL_ONLY_FORBIDDEN = /(?:genre[-_ ]?index|reference[-_ ]?games?)/i;
+
 test("genre index is pull-only: never referenced by the seed/intake pipeline", () => {
   // Complete run-artifact pipeline: content entrypoints/readers plus their content-bearing libraries.
   const pipelineFiles = [
@@ -552,15 +578,29 @@ test("genre index is pull-only: never referenced by the seed/intake pipeline", (
   for (const file of pipelineFiles) {
     let source = fs.readFileSync(rel(file), "utf8");
     if (file === "scripts/lib/factory-contract.mjs") {
-      // Its schema-name registry is vocabulary, not pipeline injection.
-      source = source.replace('"genre-index-row"', "");
+      // Schema-name + fixture registry entries are vocabulary, not pipeline injection.
+      // Exemption is scoped to SCHEMAS / FIXTURE_SCHEMA blocks only (not global replaceAll).
+      source = stripPullOnlyRegistryLines(source);
     }
     assert.doesNotMatch(
       source,
-      /(?:genre[-_ ]?index|reference[-_ ]?games?)/i,
+      PULL_ONLY_FORBIDDEN,
       `${file} must not auto-inject the pull-only genre index`
     );
   }
+});
+
+test("pull-only guard catches non-registry genre fixture injection in factory-contract", () => {
+  // Self-test: an executable loadFixture outside the registry must still match the ban
+  // after the scoped strip (global replaceAll would have blanked it and evaded the guard).
+  let source = fs.readFileSync(rel("scripts/lib/factory-contract.mjs"), "utf8");
+  source += '\nexport const seedContext = loadFixture("minimal-genre-index-row.json");\n';
+  source = stripPullOnlyRegistryLines(source);
+  assert.match(
+    source,
+    PULL_ONLY_FORBIDDEN,
+    "injected non-registry fixture load must still be rejected after scoped strip"
+  );
 });
 
 test("advance-run performs a legal phase transition and keeps the run valid", () => {
@@ -992,6 +1032,61 @@ test("emit-local-issues dry-runs the spec backlog without writing by default", (
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("planIssues returns structured eligibility blockers without running the CLI", () => {
+  const dir = tmp();
+  const id = "selftest-issue-plan-blocked";
+  try {
+    decomposeReadyRun(dir, id, { spec: false });
+    const plan = planIssues(dir, id);
+    assert.equal(plan.documents.length, 0);
+    assert.match(plan.blockers.join("\n"), /blocked until SPEC\.md validates/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("planIssues owns spec eligibility and returns ordered issue documents", () => {
+  const dir = tmp();
+  const id = "selftest-issue-plan";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    let plan = planIssues(dir, id);
+    assert.deepEqual(plan.blockers, []);
+    assert.deepEqual(plan.documents.map((document) => document.path), [
+      `.tgf/seeds/${id}/issues/tracer-loop.md`,
+      `.tgf/seeds/${id}/issues/sunlight-pressure.md`
+    ]);
+    assert.match(plan.documents[0].content, /id: tracer-loop/);
+
+    const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+    spec.seed_id = id;
+    spec.slices = spec.slices.map((slice) => ({ ...slice, loop_verbs_covered: ["plant"] }));
+    fs.writeFileSync(path.join(runDir, "SPEC.md"), specMdWith(id, { slices: spec.slices }));
+    plan = planIssues(dir, id);
+    assert.equal(plan.documents.length, 0);
+    assert.match(plan.blockers.join("\n"), /core loop verb 'water' is not covered/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("emitIssues preflights collisions and returns only actually written paths", () => {
+  const dir = tmp();
+  const id = "selftest-issue-emit-api";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    const plan = planIssues(dir, id);
+    const first = path.join(runDir, "issues", "tracer-loop.md");
+    const second = path.join(runDir, "issues", "sunlight-pressure.md");
+    fs.writeFileSync(first, "sentinel");
+    assert.throws(() => emitIssues(plan), /exists; pass --force/);
+    assert.equal(fs.readFileSync(first, "utf8"), "sentinel");
+    assert.equal(fs.existsSync(second), false, "collision preflight must prevent partial writes");
+
+    const emitted = emitIssues(plan, { force: true });
+    assert.deepEqual(emitted.writtenPaths, plan.documents.map((document) => document.path));
+    for (const writtenPath of emitted.writtenPaths) {
+      assert.equal(fs.existsSync(path.join(dir, writtenPath)), true);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("emit-local-issues --write renders validator-clean issues inside the seed run", () => {
   const dir = tmp();
   const id = "selftest-emit-write";
@@ -1086,6 +1181,25 @@ test("emit-local-issues refuses to overwrite symlinked issue files", () => {
   }
 });
 
+function listStagingDirs() {
+  return new Set(
+    fs.readdirSync(os.tmpdir()).filter((name) => name.startsWith("tgf-spec-pack-"))
+  );
+}
+
+/** Relative file set under a pack root (posix separators, sorted). */
+function packFileSet(root) {
+  const acc = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else acc.push(path.relative(root, p).split(path.sep).join("/"));
+    }
+  })(root);
+  return acc.sort();
+}
+
 test("package-spec exports a leakage-clean pack and records the handoff", () => {
   const dir = tmp();
   const target = tmp();
@@ -1093,11 +1207,16 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
   try {
     const runDir = decomposeReadyRun(dir, id);
     assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
-    // dry-run lists the pack and writes nothing
+    // dry-run lists the pack and writes nothing; staging temp dirs must not leak
+    const stagingBefore = listStagingDirs();
     let r = node("package-spec.mjs", ["--seed-id", id, "--to", target], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /Dry-run spec pack/);
     assert.equal(fs.readdirSync(target).length, 0, "dry-run must not write the pack");
+    const stagingAfterDry = listStagingDirs();
+    for (const name of stagingAfterDry) {
+      assert.ok(stagingBefore.has(name), `dry-run must remove staging dir ${name}`);
+    }
     // export
     r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -1132,6 +1251,160 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
     r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /pass --force/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("package-spec --force replaces a dirty target with exactly the pack file set", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package-force-exact";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    let r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const cleanSet = packFileSet(target);
+    assert.ok(cleanSet.length > 5, "baseline pack should have multiple files");
+
+    // Dirty the target with stale files and a nested orphan.
+    fs.writeFileSync(path.join(target, "STALE_ORPHAN.txt"), "not part of the pack\n");
+    fs.mkdirSync(path.join(target, "stale-dir"), { recursive: true });
+    fs.writeFileSync(path.join(target, "stale-dir", "old.md"), "# leftover\n");
+    assert.ok(packFileSet(target).length > cleanSet.length);
+
+    r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write", "--force"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(packFileSet(target), cleanSet, "forced export must equal the verified pack file set");
+    assert.ok(!fs.existsSync(path.join(target, "STALE_ORPHAN.txt")), "stale root file removed");
+    assert.ok(!fs.existsSync(path.join(target, "stale-dir")), "stale directory pruned");
+
+    const rows = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8")
+      .trim().split("\n").map((l) => JSON.parse(l));
+    assert.equal(rows.filter((row) => row.event === "spec-pack-exported").length, 2);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("materializeExact does not write through pre-existing symlink or hardlink destinations", () => {
+  // Confinement: a linked destination must not mutate an outside file; export
+  // either succeeds confined (outside untouched) or refuses without a receipt.
+  const root = tmp();
+  try {
+    for (const kind of ["symlink", "hardlink"]) {
+      const target = path.join(root, kind);
+      const outside = path.join(root, `${kind}.txt`);
+      fs.mkdirSync(target, { recursive: true });
+      fs.writeFileSync(outside, "OUTSIDE");
+      const dest = path.join(target, "README.md");
+      if (kind === "symlink") fs.symlinkSync(outside, dest);
+      else fs.linkSync(outside, dest);
+
+      const r = runSpecPackHandoff({
+        target,
+        write: true,
+        force: true,
+        log() {},
+        fillStaging(s) {
+          fs.writeFileSync(path.join(s, "README.md"), "PACK");
+        }
+      });
+      assert.equal(fs.readFileSync(outside, "utf8"), "OUTSIDE", `${kind}: outside file must stay untouched`);
+      if (r.ok) {
+        assert.ok(r.receipt, `${kind}: successful confined export yields a receipt`);
+        assert.equal(fs.readFileSync(path.join(target, "README.md"), "utf8"), "PACK");
+        // Destination must be a real file, not a remaining symlink.
+        assert.ok(!fs.lstatSync(path.join(target, "README.md")).isSymbolicLink());
+      } else {
+        assert.equal(r.receipt, undefined, `${kind}: refused export must not emit a receipt`);
+      }
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("materializeExact refuses a symlinked target root without writing outside", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "tgf-linkroot-"));
+  try {
+    const outside = path.join(root, "outside");
+    const target = path.join(root, "target");
+    fs.mkdirSync(outside);
+    fs.symlinkSync(outside, target);
+    assert.throws(() => runSpecPackHandoff({
+      target, write: true, force: true, log() {},
+      fillStaging(s) { fs.writeFileSync(path.join(s, "README.md"), "PACK"); }
+    }), /target must be a real directory/);
+    assert.equal(fs.existsSync(path.join(outside, "README.md")), false);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("materializeExact --force resolves file-vs-directory path conflicts fully", () => {
+  // Stale FILE named "issues" where the pack needs issues/ must be replaced;
+  // full success preferred (entire pack set present, no partial overwrite fail).
+  const root = tmp();
+  try {
+    const target = path.join(root, "target");
+    fs.mkdirSync(target);
+    fs.writeFileSync(path.join(target, "A.md"), "old A");
+    fs.writeFileSync(path.join(target, "issues"), "blocking file");
+
+    const r = runSpecPackHandoff({
+      target,
+      write: true,
+      force: true,
+      log() {},
+      fillStaging(s) {
+        fs.writeFileSync(path.join(s, "A.md"), "new A");
+        fs.mkdirSync(path.join(s, "issues"));
+        fs.writeFileSync(path.join(s, "issues", "one.md"), "issue");
+      }
+    });
+    assert.equal(r.ok, true, r.error || "expected full success");
+    assert.ok(r.receipt, "forced conflict resolution must yield a receipt");
+    assert.equal(fs.readFileSync(path.join(target, "A.md"), "utf8"), "new A");
+    assert.equal(fs.readFileSync(path.join(target, "issues", "one.md"), "utf8"), "issue");
+    assert.ok(fs.statSync(path.join(target, "issues")).isDirectory());
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("package-spec failing export records no handoff evidence", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package-no-partial-evidence";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    const ledgerBefore = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8");
+    const manifestBefore = fs.readFileSync(path.join(runDir, "manifest.json"), "utf8");
+    // Smuggle a banned token so leakage gate fails during handoff.
+    fs.appendFileSync(path.join(runDir, "GAME_THESIS.md"), "\n\nLeak probe: Tiny Game Factory must not ship.\n");
+
+    const stagingBefore = listStagingDirs();
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /leakage gate|former product name|tiny.game.factory/i, r.stderr);
+    assert.equal(fs.readdirSync(target).length, 0, "failed export must not write the pack");
+    assert.equal(
+      fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8"),
+      ledgerBefore,
+      "failed export must not append ledger evidence"
+    );
+    assert.equal(
+      fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"),
+      manifestBefore,
+      "failed export must not update manifest handoff fields"
+    );
+    const stagingAfter = listStagingDirs();
+    for (const name of stagingAfter) {
+      assert.ok(stagingBefore.has(name), `failed export must remove staging dir ${name}`);
+    }
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -1173,6 +1446,8 @@ test("availability probe reports one known asset hit and exactly two zero-hit ro
       specOverrides: {
         asset_requests: [
           { request_id: "known-tree", role: "world", kind: "model", query: "known tree model", constraints: {}, substitution_policy: "allow" },
+          // Exact pair is authoritative even when query would miss (shared finder seam).
+          { request_id: "exact-tree", role: "world", kind: "model", pack_id: "nature", name: "Tree", query: "xyzzynonsense", constraints: {}, substitution_policy: "allow" },
           { request_id: "nonsense-asset", role: "world", kind: "model", query: "xyzzynonsense", constraints: {}, substitution_policy: "allow" },
           { request_id: "finder-error", role: "world", kind: "model", query: "finder-error", constraints: {}, substitution_policy: "allow" }
         ],
@@ -1190,6 +1465,8 @@ test("availability probe reports one known asset hit and exactly two zero-hit ro
     const report = JSON.parse(fs.readFileSync(path.join(runDir, "reviews", "availability-report.json"), "utf8"));
     assert.equal(report.asset_requests["known-tree"].hits, 1);
     assert.equal(report.asset_requests["known-tree"].top3[0].name, "Tree");
+    assert.equal(report.asset_requests["exact-tree"].hits, 1);
+    assert.equal(report.asset_requests["exact-tree"].top3[0].name, "Tree");
     const rows = [...Object.values(report.asset_requests), ...Object.values(report.lore_refs)];
     assert.equal(rows.filter((row) => row.hits === 0).length, 2);
     assert.deepEqual(report.asset_requests["nonsense-asset"], { hits: 0, top3: [] });
@@ -1459,18 +1736,24 @@ test("walk-game-idea --write-issues records emitted local issues in the run ledg
   const id = "selftest-walk-write";
   try {
     const runDir = decomposeReadyRun(dir, id);
+    const plannedIssuePaths = planIssues(dir, id).documents.map((document) => document.path);
     const r = node("walk-game-idea.mjs", ["--seed-id", id, "--write-issues"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.ok(fs.existsSync(path.join(runDir, "issues", "tracer-loop.md")));
     assert.ok(fs.existsSync(path.join(runDir, "issues", "sunlight-pressure.md")));
+    for (const writtenPath of plannedIssuePaths) {
+      assert.equal(fs.existsSync(path.join(dir, writtenPath)), true);
+    }
     const ledgerRows = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line));
     const last = ledgerRows.at(-1);
     assert.deepEqual(last.changed_paths, [
       `.tgf/seeds/${id}/IDEA_WALKTHROUGH.md`,
-      `.tgf/seeds/${id}/issues/tracer-loop.md`,
-      `.tgf/seeds/${id}/issues/sunlight-pressure.md`
+      ...plannedIssuePaths
     ]);
     assert.match(last.verification.evidence, /local issue files emitted/);
+    const walkthroughSource = fs.readFileSync(rel("scripts", "walk-game-idea.mjs"), "utf8");
+    assert.match(walkthroughSource, /writtenIssuePaths = emitIssues\([^\n]+\)\.writtenPaths/);
+    assert.doesNotMatch(walkthroughSource, /writtenIssuePaths\.length\s*\?[^:]+:\s*plannedIssuePaths/);
     const chk = node("validate-artifacts.mjs", ["--check", "issues"], { cwd: dir });
     assert.equal(chk.status, 0, chk.stdout);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -1483,10 +1766,15 @@ test("walk-game-idea write-issues preserves existing local issues unless force i
     const runDir = decomposeReadyRun(dir, id);
     const existing = path.join(runDir, "issues", "tracer-loop.md");
     fs.writeFileSync(existing, "keep me");
+    const ledgerPath = path.join(runDir, "execution-ledger.jsonl");
+    const ledgerBefore = fs.readFileSync(ledgerPath, "utf8");
     const r = node("walk-game-idea.mjs", ["--seed-id", id, "--write-issues"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /exists; pass --force/);
     assert.equal(fs.readFileSync(existing, "utf8"), "keep me");
+    assert.equal(fs.existsSync(path.join(runDir, "issues", "sunlight-pressure.md")), false);
+    assert.equal(fs.existsSync(path.join(runDir, "IDEA_WALKTHROUGH.md")), false);
+    assert.equal(fs.readFileSync(ledgerPath, "utf8"), ledgerBefore);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

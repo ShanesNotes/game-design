@@ -5,7 +5,8 @@
 // policy have one home. It refuses an illegal phase transition, appends a
 // schema-valid ledger row, updates the manifest's current_phase / resume_point /
 // last_verified_at, applies field edits (--set, --append), and re-validates the
-// whole run before writing — so the manifest and ledger can never desync.
+// whole run before replacing ledger then manifest. A failed manifest replacement
+// rolls the ledger back to its exact prior bytes.
 //
 // Usage:
 //   node scripts/advance-run.mjs --seed-id <id> --to <phase> --event <event>
@@ -13,13 +14,9 @@
 //     [--note <resume reason>] [--resume-artifact <path>]
 //     [--set <key>=<jsonOrString> ...] [--append <key>=<value> ...] [--dry-run]
 import {
-  runDirFor, runRelFor, readManifest, readLedger, validateManifest, validateLedgerRow,
-  manifestPathPolicyErrors, phaseArtifactConstraintErrors, questionBudgetErrors,
-  deepenAttemptErrors, isLegalTransition, legalNextPhases,
-  isValidSeedId, writeRunFileSync, appendRunFileSync
+  advanceRun, isValidSeedId, runRelFor
 } from "./lib/run-state.mjs";
 import { arg, multi, hasFlag } from "./lib/argv.mjs";
-import { isPortfolioRun, readIntakeEvidence } from "./lib/portfolio-memory.mjs";
 
 function fail(msg) { console.error(`[advance-run] ERROR: ${msg}`); process.exit(1); }
 
@@ -46,85 +43,35 @@ for (const pair of setPairs) {
     fail("design_lane is init-time immutable; to cross a design-lock stop, record the Shane-authored release row (event='stop-line-released', status='passed')");
   }
 }
-
-const runDir = runDirFor(process.cwd(), seedId);
 const runRel = runRelFor(seedId);
-let manifest;
-try { manifest = readManifest(runDir, seedId, process.cwd()); } catch (e) { fail(`manifest rejected: ${e.message}`); }
-if (!manifest) fail(`no run at ${runRel}`);
-let currentLedger;
-try { currentLedger = readLedger(runDir, seedId, process.cwd()); }
-catch (e) { fail(`ledger rejected: ${e.message}`); }
-if (currentLedger.parseErrors.length) fail(`ledger invalid:\n  ${currentLedger.parseErrors.join("\n  ")}`);
-currentLedger.rows.forEach((row, i) => {
-  const errors = validateLedgerRow(row);
-  if (errors.length) fail(`ledger row ${i + 1} invalid:\n  ${errors.join("\n  ")}`);
-});
-
-const from = manifest.current_phase;
-if (!isLegalTransition(from, to)) {
-  fail(`illegal transition ${from} -> ${to}. legal next: ${legalNextPhases(from).join(", ") || "(none — terminal)"}`);
-}
-if (from === "intake" && to === "toolchain" && isPortfolioRun(manifest)) {
-  const intakeErrors = readIntakeEvidence(runDir, seedId).errors;
-  if (intakeErrors.length) fail(`intake evidence invalid:\n  ${intakeErrors.join("\n  ")}`);
-}
-
-const iso = new Date().toISOString();
-const ledgerRow = { ts: iso, seed_id: seedId, phase: to, event, status, actor };
-if (lane) ledgerRow.lane = lane;
-
-// Apply manifest edits on a clone, then validate before committing anything.
-const next = JSON.parse(JSON.stringify(manifest));
-next.current_phase = to;
-// Each entry into the deepen loop consumes one of the two transform attempts.
-// The counter is phase-machine state, not agent memory: it increments on the
-// transition itself (an explicit --set below still wins), and the budget check
-// in manErrors refuses a third attempt.
-if (to === "deepen" && from !== "deepen") {
-  next.deepen_attempt_count = Number(manifest.deepen_attempt_count || 0) + 1;
-}
-next.last_verified_at = iso;
-next.resume_point = {
-  phase: to,
-  artifact_path: resumeArtifact || manifest.resume_point?.artifact_path || `${runRel}/manifest.json`,
-  reason: note || `advanced ${from} -> ${to} (${event})`
-};
-
 const coerce = (v) => { try { return JSON.parse(v); } catch { return v; } };
+const setUpdates = [];
 for (const pair of setPairs) {
   const eq = pair.indexOf("=");
   const key = pair.slice(0, eq);
-  next[key] = coerce(pair.slice(eq + 1));
+  setUpdates.push([key, coerce(pair.slice(eq + 1))]);
 }
+const appendUpdates = [];
 for (const pair of multi("append")) {
   const eq = pair.indexOf("=");
   if (eq < 0) fail(`--append expects key=value, got "${pair}"`);
   const key = pair.slice(0, eq);
-  if (!Array.isArray(next[key])) next[key] = [];
-  next[key].push(coerce(pair.slice(eq + 1)));
+  appendUpdates.push([key, coerce(pair.slice(eq + 1))]);
 }
 
-const rowErrors = validateLedgerRow(ledgerRow);
-if (rowErrors.length) fail(`ledger row invalid:\n  ${rowErrors.join("\n  ")}`);
-const manErrors = [
-  ...validateManifest(next).map((e) => `manifest ${e}`),
-  ...manifestPathPolicyErrors(next, seedId),
-  ...phaseArtifactConstraintErrors(next),
-  ...questionBudgetErrors(next),
-  ...deepenAttemptErrors(next)
-];
-if (manErrors.length) fail(`resulting manifest invalid:\n  ${manErrors.join("\n  ")}`);
-
-if (dryRun) {
-  console.log(JSON.stringify({ ok: true, mode: "dry-run", from, to, ledger_row: ledgerRow, manifest_after: next }, null, 2));
-  process.exit(0);
-}
-
+let receipt;
 try {
-  writeRunFileSync(process.cwd(), seedId, `${runRel}/manifest.json`, JSON.stringify(next, null, 2) + "\n");
-  appendRunFileSync(process.cwd(), seedId, `${runRel}/execution-ledger.jsonl`, JSON.stringify(ledgerRow) + "\n");
+  receipt = advanceRun(process.cwd(), seedId, {
+    to, event, status, actor, lane, note, resumeArtifact, dryRun,
+    updates: { set: setUpdates, append: appendUpdates }
+  });
 } catch (e) {
+  if (e.code === "RUN_NOT_FOUND") fail(`no run at ${runRel}`);
+  if (e.code === "MANIFEST_REJECTED") fail(`manifest rejected: ${e.message}`);
+  if (["LEDGER_REJECTED", "LEDGER_INVALID"].includes(e.code)) {
+    fail(`ledger invalid:\n  ${(e.errors || [e.message]).join("\n  ")}`);
+  }
   fail(e.message);
 }
-console.log(`[advance-run] ${from} -> ${to} (${event}/${status}) — ${runRel}`);
+if (dryRun) console.log(JSON.stringify(receipt, null, 2));
+else console.log(`[advance-run] ${receipt.from} -> ${receipt.to} (${event}/${status}) — ${runRel}`);

@@ -3,7 +3,6 @@
 // Missing external indexes skip that probe surface; nothing here gates packaging.
 import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { arg } from "./lib/argv.mjs";
 import {
@@ -11,12 +10,13 @@ import {
   runDirFor, runRelFor, writeRunFileSync
 } from "./lib/run-state.mjs";
 import { resolveAssetsRoot, resolveLoreRoot } from "./lib/studio-paths.mjs";
+import {
+  ASSET_INDEXES,
+  createSubprocessAdapter,
+  findForRequest
+} from "./lib/asset-finder.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const ASSET_INDEXES = [
-  "packs", "tags", "atlases", "models", "normalized", "retarget",
-  "animations", "audio", "ui", "icons"
-];
 const MATCH_FIELD = {
   sprite: "sprite_matches",
   model: "model_matches",
@@ -47,49 +47,28 @@ function assetTop3(rows, request) {
   }))).slice(0, 3);
 }
 
-function probeAsset(root, request) {
-  // Mirror forge resolve's preference: an exact {pack_id, name} reference is
-  // authoritative even when a free-text query is also present (a query miss
-  // must not report zero availability for a directly-addressable asset).
-  const exactPair = request.pack_id && request.name ? `${request.pack_id} ${request.name}` : "";
-  const fallback = request.query || [request.pack_id, request.name].filter(Boolean).join(" ");
-  const queries = [...new Set([exactPair, fallback].filter(Boolean))];
-  let last = null;
-  for (const query of queries) {
-    last = probeAssetQuery(root, request, query);
-    if (last && last.hits > 0) return last;
-  }
-  return last;
-}
-
-function probeAssetQuery(root, request, query) {
-  const finder = path.join(root, "_tools", "find_assets.py");
-  const indexes = path.join(root, "_indexes");
-  const finderArgs = [finder, "find", query];
-  for (const name of ASSET_INDEXES) {
-    finderArgs.push(`--${name}`, path.join(indexes, `${name}.jsonl`));
-  }
-  finderArgs.push("--source-root", root, "--limit", "10");
-  const result = spawnSync("python3", finderArgs, { encoding: "utf8" });
-  let rows;
-  try {
-    rows = String(result.stdout || "").split(/\r?\n/u)
-      .filter((line) => line.trim() !== "")
-      .map((line) => JSON.parse(line));
-  } catch (error) {
-    console.warn(`[spec-probe] WARN asset request ${request.request_id}: invalid finder JSONL (${error.message})`);
+function probeAsset(adapter, request) {
+  const result = findForRequest(adapter, request, { limit: 10, checkLocal: false });
+  if (result.status === "error") {
+    console.warn(
+      `[spec-probe] WARN asset request ${request.request_id}: ${result.note || "finder error"}`
+    );
     return null;
   }
-  if (result.status === 1 && rows.length === 1 && rows[0].no_match === true) {
+  if (result.status === "empty") {
+    console.warn(`[spec-probe] WARN asset request ${request.request_id}: empty request text`);
+    return null;
+  }
+  if (result.status === "no_match") {
     return { hits: 0, top3: [] };
   }
-  if (result.status !== 0) {
-    console.warn(`[spec-probe] WARN asset request ${request.request_id}: ${String(result.stderr || `finder exited ${result.status}`).trim()}`);
-    return null;
-  }
-  const top3 = assetTop3(rows.filter((row) => row.no_match !== true), request);
+  // status === 'matches' — may be zero specialized hits for this kind
   const field = MATCH_FIELD[request.kind];
-  const hits = rows.reduce((total, row) => total + (Array.isArray(row[field]) ? row[field].length : 0), 0);
+  const hits = result.rows.reduce(
+    (total, row) => total + (Array.isArray(row[field]) ? row[field].length : 0),
+    0
+  );
+  const top3 = assetTop3(result.rows, request);
   return { hits, top3 };
 }
 
@@ -125,8 +104,12 @@ if (specAssetRequests.length) {
   const missing = assetPaths.filter((file) => !file || !fs.existsSync(file));
   if (missing.length) missing.forEach((file) => warnSkipped(file || "GAME_ASSETS_ROOT"));
   else {
+    const adapter = createSubprocessAdapter({
+      assetsRoot,
+      startDir: FACTORY_ROOT
+    });
     for (const request of specAssetRequests) {
-      const result = probeAsset(assetsRoot, request);
+      const result = probeAsset(adapter, request);
       if (result) report.asset_requests[request.request_id] = result;
     }
   }

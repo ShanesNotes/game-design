@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { arg } from "./lib/argv.mjs";
-import { validate } from "./lib/validate-json-schema.mjs";
+import { validateJsonCorpus } from "./lib/validate-json-corpus.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -23,10 +23,6 @@ export function validateReferenceCards({
   indexPath,
   schemaPath
 }) {
-  const errors = [];
-  if (!fs.existsSync(schemaPath)) {
-    return { errors: [`missing schema: ${schemaPath}`], indexLines: [] };
-  }
   if (!fs.existsSync(canonPath)) {
     return { errors: [`missing CANON: ${canonPath}`], indexLines: [] };
   }
@@ -34,78 +30,35 @@ export function validateReferenceCards({
     return { errors: [`missing cards dir: ${cardsDir}`], indexLines: [] };
   }
 
-  let schema;
-  try {
-    schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
-  } catch (e) {
-    return { errors: [`schema parse failed: ${e.message}`], indexLines: [] };
-  }
-
   const canonText = fs.readFileSync(canonPath, "utf8");
   const canonIdCounts = parseCanonIdColumnCounts(canonText);
-  const files = fs.readdirSync(cardsDir)
-    .filter((f) => f.endsWith(".json"))
-    .sort();
 
-  const summaries = [];
-  const seenIds = new Set();
-
-  for (const file of files) {
-    const full = path.join(cardsDir, file);
-    let card;
-    try {
-      card = JSON.parse(fs.readFileSync(full, "utf8"));
-    } catch (e) {
-      errors.push(`${file}: JSON parse failed: ${e.message}`);
-      continue;
-    }
-
-    const schemaErrs = validate(schema, card);
-    for (const e of schemaErrs) errors.push(`${file}: ${e}`);
-    if (schemaErrs.length) continue;
-
-    // README contract: cards/<id>.json. Only the documented fixture is exempt
-    // from the filename rule — any other underscore name is a smuggled card.
-    const isFixture = file === "_example.json";
-    if (!isFixture && file !== `${card.id}.json`) {
-      errors.push(
-        `${file}: filename must be '${card.id}.json' (got '${file}')`
-      );
-    }
-
-    if (seenIds.has(card.id)) {
-      errors.push(`${file}: duplicate card id '${card.id}'`);
-    }
-    seenIds.add(card.id);
-
-    // Canon membership: exactly one data row whose first column equals card.id.
-    // Header cells, prose, and HTML comments do not count.
-    const rowCount = canonIdCounts.get(card.id) || 0;
-    if (rowCount !== 1) {
-      errors.push(
-        rowCount === 0
-          ? `${file}: card id '${card.id}' not listed in CANON.md`
-          : `${file}: card id '${card.id}' appears ${rowCount} times in CANON.md table (need exactly one)`
-      );
-    }
-
-    summaries.push({
+  const { errors, indexLines } = validateJsonCorpus({
+    dir: cardsDir,
+    schemaPath,
+    indexPath,
+    duplicateIdLabel: "card id",
+    // README contract: cards/<id>.json. Only the documented fixture is exempt.
+    filenameOk: (file, id) => file === "_example.json" || file === `${id}.json`,
+    summaryFrom: (card) => ({
       id: card.id,
       title: card.title,
       genre_tags: card.genre_tags,
       register_mapping: card.register_mapping,
       status: card.status
-    });
-  }
-
-  summaries.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const indexLines = summaries.map((row) => JSON.stringify(row));
-
-  if (errors.length === 0 && indexPath) {
-    fs.mkdirSync(path.dirname(indexPath), { recursive: true });
-    const body = indexLines.length ? indexLines.join("\n") + "\n" : "";
-    fs.writeFileSync(indexPath, body);
-  }
+    }),
+    extraErrors(card, file) {
+      const rowCount = canonIdCounts.get(card.id) || 0;
+      if (rowCount !== 1) {
+        return [
+          rowCount === 0
+            ? `${file}: card id '${card.id}' not listed in CANON.md`
+            : `${file}: card id '${card.id}' appears ${rowCount} times in CANON.md table (need exactly one)`
+        ];
+      }
+      return [];
+    }
+  });
 
   return { errors, indexLines };
 }
