@@ -58,7 +58,7 @@ required = {"--packs", "--tags", "--atlases", "--models", "--normalized", "--ret
 if not required.issubset(set(sys.argv)):
     raise SystemExit(2)
 query = sys.argv[2]
-if query == "known tree model":
+if query in ("known tree model", "nature Tree"):
     print(json.dumps({"pack_id": "nature", "model_matches": [{"name": "Tree", "path": "tree.glb"}]}))
     raise SystemExit(0)
 if query == "finder-error":
@@ -1089,6 +1089,25 @@ test("emit-local-issues refuses to overwrite symlinked issue files", () => {
   }
 });
 
+function listStagingDirs() {
+  return new Set(
+    fs.readdirSync(os.tmpdir()).filter((name) => name.startsWith("tgf-spec-pack-"))
+  );
+}
+
+/** Relative file set under a pack root (posix separators, sorted). */
+function packFileSet(root) {
+  const acc = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else acc.push(path.relative(root, p).split(path.sep).join("/"));
+    }
+  })(root);
+  return acc.sort();
+}
+
 test("package-spec exports a leakage-clean pack and records the handoff", () => {
   const dir = tmp();
   const target = tmp();
@@ -1096,11 +1115,16 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
   try {
     const runDir = decomposeReadyRun(dir, id);
     assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
-    // dry-run lists the pack and writes nothing
+    // dry-run lists the pack and writes nothing; staging temp dirs must not leak
+    const stagingBefore = listStagingDirs();
     let r = node("package-spec.mjs", ["--seed-id", id, "--to", target], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /Dry-run spec pack/);
     assert.equal(fs.readdirSync(target).length, 0, "dry-run must not write the pack");
+    const stagingAfterDry = listStagingDirs();
+    for (const name of stagingAfterDry) {
+      assert.ok(stagingBefore.has(name), `dry-run must remove staging dir ${name}`);
+    }
     // export
     r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
     assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -1135,6 +1159,76 @@ test("package-spec exports a leakage-clean pack and records the handoff", () => 
     r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
     assert.equal(r.status, 1, r.stdout + r.stderr);
     assert.match(r.stderr, /pass --force/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("package-spec --force replaces a dirty target with exactly the pack file set", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package-force-exact";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    let r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const cleanSet = packFileSet(target);
+    assert.ok(cleanSet.length > 5, "baseline pack should have multiple files");
+
+    // Dirty the target with stale files and a nested orphan.
+    fs.writeFileSync(path.join(target, "STALE_ORPHAN.txt"), "not part of the pack\n");
+    fs.mkdirSync(path.join(target, "stale-dir"), { recursive: true });
+    fs.writeFileSync(path.join(target, "stale-dir", "old.md"), "# leftover\n");
+    assert.ok(packFileSet(target).length > cleanSet.length);
+
+    r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write", "--force"], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(packFileSet(target), cleanSet, "forced export must equal the verified pack file set");
+    assert.ok(!fs.existsSync(path.join(target, "STALE_ORPHAN.txt")), "stale root file removed");
+    assert.ok(!fs.existsSync(path.join(target, "stale-dir")), "stale directory pruned");
+
+    const rows = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8")
+      .trim().split("\n").map((l) => JSON.parse(l));
+    assert.equal(rows.filter((row) => row.event === "spec-pack-exported").length, 2);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("package-spec failing export records no handoff evidence", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-package-no-partial-evidence";
+  try {
+    const runDir = decomposeReadyRun(dir, id);
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+    const ledgerBefore = fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8");
+    const manifestBefore = fs.readFileSync(path.join(runDir, "manifest.json"), "utf8");
+    // Smuggle a banned token so leakage gate fails during handoff.
+    fs.appendFileSync(path.join(runDir, "GAME_THESIS.md"), "\n\nLeak probe: Tiny Game Factory must not ship.\n");
+
+    const stagingBefore = listStagingDirs();
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /leakage gate|former product name|tiny.game.factory/i, r.stderr);
+    assert.equal(fs.readdirSync(target).length, 0, "failed export must not write the pack");
+    assert.equal(
+      fs.readFileSync(path.join(runDir, "execution-ledger.jsonl"), "utf8"),
+      ledgerBefore,
+      "failed export must not append ledger evidence"
+    );
+    assert.equal(
+      fs.readFileSync(path.join(runDir, "manifest.json"), "utf8"),
+      manifestBefore,
+      "failed export must not update manifest handoff fields"
+    );
+    const stagingAfter = listStagingDirs();
+    for (const name of stagingAfter) {
+      assert.ok(stagingBefore.has(name), `failed export must remove staging dir ${name}`);
+    }
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -1176,6 +1270,8 @@ test("availability probe reports one known asset hit and exactly two zero-hit ro
       specOverrides: {
         asset_requests: [
           { request_id: "known-tree", role: "world", kind: "model", query: "known tree model", constraints: {}, substitution_policy: "allow" },
+          // Exact pair is authoritative even when query would miss (shared finder seam).
+          { request_id: "exact-tree", role: "world", kind: "model", pack_id: "nature", name: "Tree", query: "xyzzynonsense", constraints: {}, substitution_policy: "allow" },
           { request_id: "nonsense-asset", role: "world", kind: "model", query: "xyzzynonsense", constraints: {}, substitution_policy: "allow" },
           { request_id: "finder-error", role: "world", kind: "model", query: "finder-error", constraints: {}, substitution_policy: "allow" }
         ],
@@ -1193,6 +1289,8 @@ test("availability probe reports one known asset hit and exactly two zero-hit ro
     const report = JSON.parse(fs.readFileSync(path.join(runDir, "reviews", "availability-report.json"), "utf8"));
     assert.equal(report.asset_requests["known-tree"].hits, 1);
     assert.equal(report.asset_requests["known-tree"].top3[0].name, "Tree");
+    assert.equal(report.asset_requests["exact-tree"].hits, 1);
+    assert.equal(report.asset_requests["exact-tree"].top3[0].name, "Tree");
     const rows = [...Object.values(report.asset_requests), ...Object.values(report.lore_refs)];
     assert.equal(rows.filter((row) => row.hits === 0).length, 2);
     assert.deepEqual(report.asset_requests["nonsense-asset"], { hits: 0, top3: [] });

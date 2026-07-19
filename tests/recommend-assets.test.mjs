@@ -6,6 +6,12 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import {
+  createMemoryAdapter,
+  findForRequest,
+  queriesForRequest,
+  requestLabel
+} from "../scripts/lib/asset-finder.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(REPO, "scripts", "recommend-assets.mjs");
@@ -62,13 +68,42 @@ function runCli(specPath, { out, limit, env = {} } = {}) {
   });
 }
 
+test("canonical exact {pack_id, name} stays exact (not name-only)", () => {
+  const req = { request_id: "x", kind: "model", pack_id: "nature", name: "Tree", query: "tree model" };
+  assert.deepEqual(queriesForRequest(req), ["nature Tree", "tree model"]);
+  assert.equal(requestLabel(req), "nature Tree");
+
+  const adapter = createMemoryAdapter(({ query }) => {
+    if (query === "nature Tree") {
+      return {
+        status: 0,
+        stdout: JSON.stringify({
+          pack_id: "nature",
+          score: 99,
+          license: "CC0",
+          bytes_present: false,
+          preview_images: []
+        }) + "\n"
+      };
+    }
+    return {
+      status: 1,
+      stdout: JSON.stringify({ no_match: true, query, nearest: [] }) + "\n"
+    };
+  });
+  const result = findForRequest(adapter, req, { limit: 5, checkLocal: true });
+  assert.equal(result.status, "matches");
+  assert.equal(result.query, "nature Tree");
+  assert.equal(result.rows[0].pack_id, "nature");
+});
+
 test("maps finder cards correctly into asset-recommendations.json", () => {
   const dir = tmp();
   const stub = writeStubFinder(dir, "match");
   const spec = {
     seed_id: "t",
     asset_requests: [
-      { request_id: "hero-tool", kind: "model", request: "pickaxe LOCAL" },
+      { request_id: "hero-tool", kind: "model", query: "pickaxe LOCAL" },
     ],
   };
   const specPath = path.join(dir, "spec.json");
@@ -99,7 +134,7 @@ test("no_match / exit-1 yields empty candidates + note", () => {
   const spec = {
     seed_id: "t",
     asset_requests: [
-      { request_id: "missing", kind: "sprite", request: "NOMATCH thing" },
+      { request_id: "missing", kind: "sprite", query: "NOMATCH thing" },
     ],
   };
   const specPath = path.join(dir, "spec.json");
@@ -139,8 +174,8 @@ test("HTML has a section per request and no img when bytes_present false", () =>
   const spec = {
     seed_id: "t",
     asset_requests: [
-      { request_id: "a", kind: "model", request: "remote only" },
-      { request_id: "b", kind: "sprite", request: "LOCAL sprite" },
+      { request_id: "a", kind: "model", query: "remote only" },
+      { request_id: "b", kind: "sprite", query: "LOCAL sprite" },
     ],
   };
   const specPath = path.join(dir, "spec.json");
@@ -195,4 +230,49 @@ test("non-array asset_requests exits 1 loudly", () => {
     assert.equal(r.status, 1, JSON.stringify(spec));
     assert.match(r.stderr, /spec\.asset_requests must be an array/);
   }
+});
+
+test("CLI exact pack_id+name uses the pair as the finder query", () => {
+  const dir = tmp();
+  // Stub echoes the query into pack_id so we can observe which query was used.
+  const stub = path.join(dir, "echo-query.mjs");
+  fs.writeFileSync(stub, `#!/usr/bin/env node
+const args = process.argv.slice(2);
+const qi = args.indexOf("find");
+const query = qi >= 0 ? args[qi + 1] : "";
+console.log(JSON.stringify({
+  pack_id: "echo:" + query,
+  score: 1,
+  license: "CC0",
+  bytes_present: false,
+  preview_images: [],
+  vendor: "t",
+  store_url: null,
+  path: null
+}));
+process.exit(0);
+`);
+  const spec = {
+    seed_id: "t",
+    asset_requests: [
+      {
+        request_id: "exact-tree",
+        kind: "model",
+        pack_id: "nature",
+        name: "Tree",
+        query: "should-not-be-first"
+      }
+    ]
+  };
+  const specPath = path.join(dir, "spec.json");
+  fs.writeFileSync(specPath, JSON.stringify(spec));
+  const out = path.join(dir, "out");
+  const r = runCli(specPath, {
+    out,
+    env: { RECOMMEND_FINDER_CMD: JSON.stringify([process.execPath, stub]) }
+  });
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  const doc = JSON.parse(fs.readFileSync(path.join(out, "asset-recommendations.json"), "utf8"));
+  assert.equal(doc.requests[0].request, "nature Tree");
+  assert.equal(doc.requests[0].candidates[0].pack_id, "echo:nature Tree");
 });

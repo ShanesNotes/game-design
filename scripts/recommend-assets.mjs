@@ -11,9 +11,13 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { resolveAssetsRoot } from "./lib/studio-paths.mjs";
+import {
+  createSubprocessAdapter,
+  findForRequest,
+  requestLabel,
+  resolveFinderCmd
+} from "./lib/asset-finder.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCHEMA = "asset-recommendations/0.1";
@@ -48,14 +52,6 @@ function parseArgs(argv) {
   return { specPath: path.resolve(positional[0]), out, limit };
 }
 
-function requestQueryText(entry) {
-  if (typeof entry.request === "string" && entry.request.trim()) return entry.request.trim();
-  if (typeof entry.query === "string" && entry.query.trim()) return entry.query.trim();
-  if (typeof entry.name === "string" && entry.name.trim()) return entry.name.trim();
-  if (typeof entry.pack_id === "string" && entry.pack_id.trim()) return entry.pack_id.trim();
-  return "";
-}
-
 function cardFromFinderRow(row) {
   const previews = Array.isArray(row.preview_images) ? row.preview_images : [];
   const preview = previews.length > 0 ? previews[0] : null;
@@ -71,91 +67,29 @@ function cardFromFinderRow(row) {
   };
 }
 
-/** Resolve finder command argv. Injectable via RECOMMEND_FINDER_CMD. */
-export function resolveFinderCmd(startDir = process.cwd()) {
-  const override = process.env.RECOMMEND_FINDER_CMD;
-  if (override && override.trim()) {
-    const trimmed = override.trim();
-    if (trimmed.startsWith("[")) {
-      try {
-        const arr = JSON.parse(trimmed);
-        if (Array.isArray(arr) && arr.every((x) => typeof x === "string")) return arr;
-      } catch {
-        // fall through to shell-ish split
-      }
-    }
-    // Simple whitespace split for "node /tmp/stub.mjs" etc.
-    return trimmed.split(/\s+/);
-  }
-  const assetsRoot = resolveAssetsRoot(startDir);
-  if (!assetsRoot) return null;
-  const finder = path.join(assetsRoot, "_tools", "find_assets.py");
-  return ["python3", finder];
-}
+/** @deprecated Prefer createSubprocessAdapter — kept for any external importers. */
+export { resolveFinderCmd };
 
 /**
- * Invoke finder for free text. Returns { candidates, note? }.
+ * Invoke finder for free text via the shared seam. Returns { candidates, note? }.
  * Never throws on finder failure — empty candidates + note.
  */
 export function queryFinder(finderCmd, queryText, limit) {
-  if (!finderCmd || !finderCmd.length) {
-    return { candidates: [], note: "assets root / finder unavailable" };
-  }
-  if (!queryText) {
-    return { candidates: [], note: "empty request text" };
-  }
-
-  const args = [...finderCmd.slice(1), "find", queryText, "--limit", String(limit), "--check-local"];
-  const bin = finderCmd[0];
-  let proc;
-  try {
-    proc = spawnSync(bin, args, {
-      encoding: "utf8",
-      maxBuffer: 8 * 1024 * 1024,
-      env: process.env,
-    });
-  } catch (err) {
+  const adapter = createSubprocessAdapter({
+    finderCmd,
+    startDir: FACTORY_ROOT
+  });
+  // Synthetic request so findForRequest uses the given free-text only.
+  const result = findForRequest(adapter, { query: queryText }, { limit, checkLocal: true });
+  if (result.status === "matches") {
     return {
-      candidates: [],
-      note: `finder spawn failed: ${err && err.message ? err.message : "error"}`,
+      candidates: result.rows.map(cardFromFinderRow).slice(0, limit)
     };
   }
-  if (proc.error) {
-    return {
-      candidates: [],
-      note: `finder error: ${proc.error.message || "spawn error"}`,
-    };
-  }
-
-  const stdout = String(proc.stdout || "").trim();
-  if (proc.status !== 0) {
-    let note = "no_match";
-    if (stdout) {
-      try {
-        const first = JSON.parse(stdout.split("\n")[0]);
-        if (first && first.no_match) note = "no_match";
-        else note = `finder exit ${proc.status}`;
-      } catch {
-        note = `finder exit ${proc.status}`;
-      }
-    } else {
-      note = `finder exit ${proc.status}`;
-    }
-    return { candidates: [], note };
-  }
-
-  const candidates = [];
-  for (const line of stdout.split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const row = JSON.parse(line);
-      if (row && row.no_match) continue;
-      if (row && row.pack_id != null) candidates.push(cardFromFinderRow(row));
-    } catch {
-      // skip
-    }
-  }
-  return { candidates: candidates.slice(0, limit) };
+  return {
+    candidates: [],
+    note: result.note || (result.status === "no_match" ? "no_match" : "finder error")
+  };
 }
 
 function escapeHtml(s) {
@@ -254,30 +188,38 @@ ${sections || "<p class=\"note\">No asset_requests in this spec.</p>"}
 `;
 }
 
-export function buildRecommendations(spec, sourceSpecPath, limit, finderCmd) {
+export function buildRecommendations(spec, sourceSpecPath, limit, finderCmdOrAdapter) {
   if (!Array.isArray(spec.asset_requests)) {
     throw new Error("spec.asset_requests must be an array");
   }
+  const adapter = finderCmdOrAdapter && typeof finderCmdOrAdapter.run === "function"
+    ? finderCmdOrAdapter
+    : createSubprocessAdapter({
+      finderCmd: finderCmdOrAdapter || undefined,
+      startDir: FACTORY_ROOT
+    });
   const requests = spec.asset_requests;
   const outRequests = [];
   for (const entry of requests) {
     const requestId = entry.request_id || entry.id || "unknown";
     const kind = entry.kind || "";
-    const requestText =
-      typeof entry.request === "string"
-        ? entry.request
-        : typeof entry.query === "string"
-          ? entry.query
-          : requestQueryText(entry);
-    const query = requestQueryText({ ...entry, request: requestText });
-    const { candidates, note } = queryFinder(finderCmd, query, limit);
+    const label = requestLabel(entry);
+    const result = findForRequest(adapter, entry, { limit, checkLocal: true });
+    const candidates =
+      result.status === "matches"
+        ? result.rows.map(cardFromFinderRow).slice(0, limit)
+        : [];
     const row = {
       request_id: requestId,
       kind,
-      request: requestText || query || "",
+      request: label || result.query || "",
       candidates,
     };
-    if (note) row.note = note;
+    if (result.status !== "matches" || !candidates.length) {
+      if (result.note) row.note = result.note;
+      else if (result.status === "no_match") row.note = "no_match";
+      else if (result.status === "empty") row.note = "empty request text";
+    }
     outRequests.push(row);
   }
   return {
@@ -310,8 +252,8 @@ function main() {
   }
 
   const outDir = out ? path.resolve(out) : path.dirname(specPath);
-  const finderCmd = resolveFinderCmd(FACTORY_ROOT);
-  const doc = buildRecommendations(spec, specPath, limit, finderCmd);
+  const adapter = createSubprocessAdapter({ startDir: FACTORY_ROOT });
+  const doc = buildRecommendations(spec, specPath, limit, adapter);
   const html = renderHtml(doc);
 
   fs.mkdirSync(outDir, { recursive: true });
