@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { arg } from "./lib/argv.mjs";
-import { buildPortfolioDigestContent } from "./lib/portfolio-memory.mjs";
+import { openPortfolio } from "./lib/portfolio-memory.mjs";
 import { isValidSeedId } from "./lib/run-state.mjs";
 import { validate } from "./lib/validate-json-schema.mjs";
 
@@ -19,7 +19,7 @@ if (!seedId || !isValidSeedId(seedId)) {
   fail("usage: node scripts/build-portfolio-digest.mjs --seed-id <kebab-id>");
 }
 
-const content = buildPortfolioDigestContent(seedId, process.cwd());
+const content = openPortfolio(process.cwd()).buildDigestContent(seedId);
 const digest = {
   schema_version: content.schema_version,
   seed_id: seedId,

@@ -5,7 +5,7 @@ import { validate } from "./validate-json-schema.mjs";
 import {
   depthVectorConsistencyErrors, feelTargetRequiredForAdvanceErrors
 } from "./anti-boring-gate.mjs";
-import { depthVectorPortfolioErrors, isPortfolioRun } from "./portfolio-memory.mjs";
+import { isPortfolioRun, portfolioForDigest } from "./portfolio-memory.mjs";
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const DEPTH_VECTOR_SCHEMA = JSON.parse(
@@ -27,6 +27,7 @@ export function designLockEvidenceErrors({
   const errors = [];
   const portfolioRun = isPortfolioRun(manifest);
   if (!requirePassing && !portfolioRun) return errors;
+  const portfolio = portfolioForDigest(portfolioDigest, cwd);
 
   const vectorFiles = [];
   (function walk(dir) {
@@ -62,7 +63,7 @@ export function designLockEvidenceErrors({
     if (portfolioRun) {
       const verdictPath = path.join(reviewsDir, "ANTI_BORING_VERDICT.md");
       const verdictText = fs.existsSync(verdictPath) ? fs.readFileSync(verdictPath, "utf8") : "";
-      depthVectorPortfolioErrors(vector, thesis, portfolioDigest, verdictText)
+      portfolio.depthVectorErrors(vector, thesis, portfolioDigest, verdictText)
         .forEach((error) => {
           vectorErrors.push(error);
           errors.push(`${error}: ${relativeFile}`);

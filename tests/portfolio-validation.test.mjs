@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readIntakeEvidence } from "../scripts/lib/portfolio-memory.mjs";
+import { openPortfolio, portfolioForDigest } from "../scripts/lib/portfolio-memory.mjs";
 import { validate } from "../scripts/lib/validate-json-schema.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -169,14 +169,15 @@ test("fabricated empty portfolio digest is rejected when a sibling thesis exists
 });
 
 test("readIntakeEvidence rejects forged prior ADVANCE scores", () => {
-  const dir = tmp();
+  const root = tmp();
+  const studio = path.join(root, "studio");
+  const design = path.join(studio, "design");
   const id = "forged-scores";
-  const previousStudioRoot = process.env.STUDIO_ROOT;
-  const previousDesignRoot = process.env.GAME_DESIGN_ROOT;
   try {
-    assert.equal(run("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], dir).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    const priorDir = path.join(dir, ".tgf", "seeds", "prior-one");
+    fs.mkdirSync(studio, { recursive: true });
+    fs.writeFileSync(path.join(studio, "DISCIPLINES.md"), "# fixture\n");
+    const runDir = path.join(design, ".tgf", "seeds", id);
+    const priorDir = path.join(design, ".tgf", "seeds", "prior-one");
     writeEmbedded(path.join(priorDir, "GAME_THESIS.md"), "Prior Thesis", {
       pitch: "prior",
       design_register: "mechanics-first",
@@ -188,66 +189,61 @@ test("readIntakeEvidence rejects forged prior ADVANCE scores", () => {
       total: 17,
       verdict: "ADVANCE"
     });
-    const env = { ...process.env, STUDIO_ROOT: dir, GAME_DESIGN_ROOT: dir };
-    const built = spawnSync(process.execPath, [
-      path.join(REPO, "scripts", "build-portfolio-digest.mjs"), "--seed-id", id
-    ], { cwd: dir, encoding: "utf8", env });
-    assert.equal(built.status, 0, built.stdout + built.stderr);
-
+    const portfolio = openPortfolio(design);
     const digestPath = path.join(runDir, "intake", "portfolio-digest.json");
-    const forged = JSON.parse(fs.readFileSync(digestPath, "utf8"));
+    const forged = {
+      ...portfolio.buildDigestContent(id),
+      seed_id: id,
+      generated_at: GENERATED_AT
+    };
     forged.prior_theses[0].depth_vector.scores = Object.fromEntries(AXES.map((axis) => [axis, 0]));
     writeJson(digestPath, forged);
+    writeEmbedded(path.join(runDir, "intake", "office-hours.md"), "Office Hours", intake(id));
 
-    process.env.STUDIO_ROOT = dir;
-    process.env.GAME_DESIGN_ROOT = dir;
+    const evidence = portfolio.readIntakeEvidence(runDir, id);
     assert.match(
-      readIntakeEvidence(runDir, id).errors.join("\n"),
+      evidence.errors.join("\n"),
       /digest stale\/dishonest — regenerate via npm run portfolio:digest/
     );
+    assert.equal(portfolioForDigest(evidence.digest, root), portfolio);
   } finally {
-    if (previousStudioRoot === undefined) delete process.env.STUDIO_ROOT;
-    else process.env.STUDIO_ROOT = previousStudioRoot;
-    if (previousDesignRoot === undefined) delete process.env.GAME_DESIGN_ROOT;
-    else process.env.GAME_DESIGN_ROOT = previousDesignRoot;
-    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
 test("readIntakeEvidence rejects omitted parked proposal rows", () => {
-  const dir = tmp();
+  const root = tmp();
+  const studio = path.join(root, "studio");
+  const design = path.join(studio, "design");
   const id = "omitted-proposal";
-  const previousStudioRoot = process.env.STUDIO_ROOT;
-  const previousDesignRoot = process.env.GAME_DESIGN_ROOT;
   try {
-    assert.equal(run("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], dir).status, 0);
-    const runDir = path.join(dir, ".tgf", "seeds", id);
-    writeEmbedded(path.join(dir, "games/_proposals/parked-one/GAME_THESIS.md"), "Parked Thesis", {
+    fs.mkdirSync(studio, { recursive: true });
+    fs.writeFileSync(path.join(studio, "DISCIPLINES.md"), "# fixture\n");
+    const runDir = path.join(design, ".tgf", "seeds", id);
+    writeEmbedded(path.join(studio, "games/_proposals/parked-one/GAME_THESIS.md"), "Parked Thesis", {
       pitch: "parked",
       design_register: "hybrid",
       golden_moment: "a route closes",
       core_loop_candidates: [{ id: "loop-a", verbs: ["bind", "turn"] }]
     });
-    const built = run("build-portfolio-digest.mjs", ["--seed-id", id], dir);
-    assert.equal(built.status, 0, built.stdout + built.stderr);
+    const portfolio = openPortfolio(design);
     const digestPath = path.join(runDir, "intake", "portfolio-digest.json");
-    const stored = JSON.parse(fs.readFileSync(digestPath, "utf8"));
+    const stored = {
+      ...portfolio.buildDigestContent(id),
+      seed_id: id,
+      generated_at: GENERATED_AT
+    };
     assert.equal(stored.prior_theses.find((row) => row.seed_id === "parked-one").parked, true);
     stored.prior_theses = stored.prior_theses.filter((row) => row.seed_id !== "parked-one");
     writeJson(digestPath, stored);
+    writeEmbedded(path.join(runDir, "intake", "office-hours.md"), "Office Hours", intake(id));
 
-    process.env.STUDIO_ROOT = dir;
-    process.env.GAME_DESIGN_ROOT = dir;
     assert.match(
-      readIntakeEvidence(runDir, id).errors.join("\n"),
+      portfolio.readIntakeEvidence(runDir, id).errors.join("\n"),
       /digest stale\/dishonest — regenerate via npm run portfolio:digest/
     );
   } finally {
-    if (previousStudioRoot === undefined) delete process.env.STUDIO_ROOT;
-    else process.env.STUDIO_ROOT = previousStudioRoot;
-    if (previousDesignRoot === undefined) delete process.env.GAME_DESIGN_ROOT;
-    else process.env.GAME_DESIGN_ROOT = previousDesignRoot;
-    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 

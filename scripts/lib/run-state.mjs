@@ -17,18 +17,17 @@ import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { validate } from "./validate-json-schema.mjs";
 import { findStudioRoot } from "./studio-paths.mjs";
-import { isPortfolioRun, readIntakeEvidence } from "./portfolio-memory.mjs";
+import { isPortfolioRun, openPortfolio } from "./portfolio-memory.mjs";
+import {
+  SEED_ID_RE, extractFencedJson, isValidSeedId
+} from "./run-artifact-identity.mjs";
+
+export { SEED_ID_RE, extractFencedJson, isValidSeedId };
 
 const FACTORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const RUN_TRANSACTION_FILE = "run-state-transaction.json";
 
 // --- Identity & paths ---
-
-// The canonical seed-id rule. Mirrors schemas/seed-manifest.schema.json `pattern`.
-export const SEED_ID_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
-export function isValidSeedId(id) {
-  return typeof id === "string" && SEED_ID_RE.test(id);
-}
 
 export function runDirFor(cwd, seedId) {
   return path.resolve(cwd, ".tgf", "seeds", seedId);
@@ -214,13 +213,6 @@ export function validateLedgerRow(row) {
 // factory's schema describes. This keeps one named, diffable, reviewable artifact
 // that is *also* schema-validatable, so "must validate against schemas/…" is a real
 // check, not prose. The prompts (P01/P02) and skills declare the convention.
-export function extractFencedJson(text) {
-  const m = text.match(/```json\s*\n([\s\S]*?)\n```/);
-  if (!m) return { obj: null, error: "no fenced ```json block found" };
-  try { return { obj: JSON.parse(m[1]), error: null }; }
-  catch (e) { return { obj: null, error: `embedded json is not parseable: ${e.message}` }; }
-}
-
 // Read, parse, and schema-validate a markdown artifact's embedded JSON block in
 // one pass. Returns { obj, errors }: obj is the parsed block when it validates,
 // null otherwise. Callers that need both the verdict and the object use this so
@@ -639,7 +631,7 @@ export function advanceRun(cwd, seedId, intent, options = {}) {
     );
   }
   if (from === "intake" && to === "toolchain" && isPortfolioRun(run.manifest)) {
-    const intakeErrors = readIntakeEvidence(run.runDir, seedId).errors;
+    const intakeErrors = openPortfolio(cwd).readIntakeEvidence(run.runDir, seedId).errors;
     if (intakeErrors.length) {
       throw new RunStateError(`intake evidence invalid:\n  ${intakeErrors.join("\n  ")}`, "INTAKE_INVALID", intakeErrors);
     }
