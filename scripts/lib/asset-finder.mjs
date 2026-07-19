@@ -14,6 +14,16 @@ export const ASSET_INDEXES = [
   "animations", "audio", "ui", "icons"
 ];
 
+/** Specialized match-array field names used by find_assets / probe (kind → field). */
+export const MATCH_FIELD = {
+  sprite: "sprite_matches",
+  model: "model_matches",
+  animation: "animation_matches",
+  audio: "audio_matches"
+};
+
+const SPECIALIZED_FIELDS = Object.values(MATCH_FIELD);
+
 /**
  * Ordered free-text queries for a canonical asset request.
  * Exact {pack_id, name} is authoritative and first; free-text query is secondary.
@@ -34,15 +44,18 @@ export function requestLabel(request) {
   return qs[0] || "";
 }
 
-/** Parse finder JSONL stdout into row objects (skips blank / unparseable lines). */
+/**
+ * Parse finder JSONL stdout into row objects.
+ * Throws on any non-blank unparseable line (malformed stdout is not silent zero).
+ */
 export function parseFinderJsonl(stdout) {
   const rows = [];
   for (const line of String(stdout || "").split(/\r?\n/u)) {
     if (!line.trim()) continue;
     try {
       rows.push(JSON.parse(line));
-    } catch {
-      // skip malformed line
+    } catch (err) {
+      throw new Error(err.message || "JSON parse failed");
     }
   }
   return rows;
@@ -88,6 +101,30 @@ export function classifyFinderResult({ status, stdout, stderr, error }) {
     return { status: "matches", rows: [] };
   }
   return { status: "matches", rows: matches };
+}
+
+/** True when any row carries a specialized *_matches array (probe-shaped results). */
+export function hasSpecializedMatches(rows) {
+  return (rows || []).some(
+    (row) => row && SPECIALIZED_FIELDS.some((f) => Array.isArray(row[f]))
+  );
+}
+
+/**
+ * Count hits for a requested kind. When rows are specialized, only the kind's
+ * match array counts; pack-level shopping rows (no *_matches) count as one hit
+ * per row when kind is absent or rows are non-specialized.
+ */
+export function kindHitCount(rows, kind) {
+  const list = rows || [];
+  const field = kind ? MATCH_FIELD[kind] : null;
+  if (field && hasSpecializedMatches(list)) {
+    return list.reduce(
+      (total, row) => total + (Array.isArray(row[field]) ? row[field].length : 0),
+      0
+    );
+  }
+  return list.length;
 }
 
 /**
@@ -275,7 +312,9 @@ export function findForRequest(adapter, request, { limit = 10, checkLocal = fals
   let last = null;
   for (const query of queries) {
     last = queryViaAdapter(adapter, query, { limit, checkLocal });
-    if (last.status === "matches" && last.rows.length > 0) {
+    // Accept only when the result has hits of the REQUESTED KIND (BASE probe
+    // semantics). Kind-mismatched specialized rows fall through to free-text.
+    if (last.status === "matches" && kindHitCount(last.rows, request.kind) > 0) {
       return last;
     }
   }

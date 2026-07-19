@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
+  classifyFinderResult,
   createMemoryAdapter,
   findForRequest,
   queriesForRequest,
@@ -95,6 +96,54 @@ test("canonical exact {pack_id, name} stays exact (not name-only)", () => {
   assert.equal(result.status, "matches");
   assert.equal(result.query, "nature Tree");
   assert.equal(result.rows[0].pack_id, "nature");
+});
+
+test("classifyFinderResult treats malformed non-JSONL stdout as error", () => {
+  // Exit 0 with garbage must not classify as successful empty matches (false zero availability).
+  const result = classifyFinderResult({
+    status: 0,
+    stdout: "not-json\n",
+    stderr: "",
+    error: null
+  });
+  assert.equal(result.status, "error");
+  assert.equal(result.rows.length, 0);
+  assert.match(result.note || "", /invalid finder JSONL/i);
+});
+
+test("findForRequest falls through when exact rows lack requested-kind hits", () => {
+  // Exact pair returning only audio_matches for a model request must not suppress free-text fallback.
+  const calls = [];
+  const adapter = createMemoryAdapter(({ query }) => {
+    calls.push(query);
+    if (query === "nature Tree") {
+      return {
+        status: 0,
+        stdout: JSON.stringify({
+          pack_id: "unrelated",
+          audio_matches: [{ name: "Noise" }]
+        }) + "\n"
+      };
+    }
+    return {
+      status: 0,
+      stdout: JSON.stringify({
+        pack_id: "nature",
+        model_matches: [{ name: "Tree" }]
+      }) + "\n"
+    };
+  });
+  const result = findForRequest(adapter, {
+    kind: "model",
+    pack_id: "nature",
+    name: "Tree",
+    query: "fallback-tree"
+  });
+  assert.deepEqual(calls, ["nature Tree", "fallback-tree"]);
+  assert.equal(result.status, "matches");
+  assert.equal(result.query, "fallback-tree");
+  const modelHits = result.rows.flatMap((r) => r.model_matches || []).length;
+  assert.equal(modelHits, 1);
 });
 
 test("maps finder cards correctly into asset-recommendations.json", () => {
