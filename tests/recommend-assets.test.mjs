@@ -175,3 +175,24 @@ test("unreadable / invalid spec exits 1 loudly", () => {
   assert.equal(r2.status, 1);
   assert.match(r2.stderr, /invalid|ERROR/i);
 });
+
+test("non-array asset_requests exits 1 loudly", () => {
+  const dir = tmp();
+  const stub = writeStubFinder(dir, "match");
+  const cases = [
+    { seed_id: "t" }, // missing key
+    { seed_id: "t", asset_requests: null },
+    { seed_id: "t", asset_requests: { request_id: "x" } },
+    { seed_id: "t", asset_requests: "hero" },
+  ];
+  for (const spec of cases) {
+    const specPath = path.join(dir, `bad-ar-${Math.random().toString(16).slice(2)}.json`);
+    fs.writeFileSync(specPath, JSON.stringify(spec));
+    const r = runCli(specPath, {
+      out: dir,
+      env: { RECOMMEND_FINDER_CMD: JSON.stringify([process.execPath, stub]) },
+    });
+    assert.equal(r.status, 1, JSON.stringify(spec));
+    assert.match(r.stderr, /spec\.asset_requests must be an array/);
+  }
+});

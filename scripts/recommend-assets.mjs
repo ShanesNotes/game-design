@@ -175,10 +175,6 @@ function renderCard(c) {
   const store = c.store_url
     ? `<a href="${escapeHtml(c.store_url)}">${escapeHtml(c.store_url)}</a>`
     : "—";
-  const hasPreview =
-    c.bytes_present &&
-    c.preview &&
-    (c.previews_present === undefined || c.previews_present !== false);
 
   // Show img only when local bytes/previews present; else buy-at card.
   let media;
@@ -259,7 +255,10 @@ ${sections || "<p class=\"note\">No asset_requests in this spec.</p>"}
 }
 
 export function buildRecommendations(spec, sourceSpecPath, limit, finderCmd) {
-  const requests = Array.isArray(spec.asset_requests) ? spec.asset_requests : [];
+  if (!Array.isArray(spec.asset_requests)) {
+    throw new Error("spec.asset_requests must be an array");
+  }
+  const requests = spec.asset_requests;
   const outRequests = [];
   for (const entry of requests) {
     const requestId = entry.request_id || entry.id || "unknown";
@@ -305,6 +304,9 @@ function main() {
   }
   if (!spec || typeof spec !== "object" || Array.isArray(spec)) {
     fail(`spec must be a JSON object: ${specPath}`);
+  }
+  if (!Array.isArray(spec.asset_requests)) {
+    fail("spec.asset_requests must be an array");
   }
 
   const outDir = out ? path.resolve(out) : path.dirname(specPath);
