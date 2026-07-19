@@ -168,8 +168,13 @@ user/design taste gate for *where* art may come from after fun-lock:
 | **`imagine`** | Prefer Grok Imagine for generatable 2D (`kind: sprite`). Other kinds (model/animation/audio) still use the library. Landings under `games/<id>/generated/imagine/`. |
 | **`combo`** | Library first; on catalog miss for sprites, authorized Imagine landings may fill the lock. |
 
-Agents do not invent the policy — it is set in the decomposition/spec (human or
-seed decision). Forge honors it; silent generate under `local` is a bug.
+**Where the author sets it:** once, on the SPEC.json block during decompose
+(`.factory/prompts/P18_DECOMPOSE_SPEC.md` — forge-authoring sections). Omit or
+set `local` unless the game accepts generated 2D sprites (`imagine` / `combo`
+arms the Imagine track: game sourcing → Grok generate → forge consume). The
+seed→spec walkthrough names the same decision at the decompose step
+(`scripts/walk-game-idea.mjs` next-action for `decompose`). Agents do not invent
+the policy. Forge honors it; silent generate under `local` is a bug.
 
 ## Human taste gates
 

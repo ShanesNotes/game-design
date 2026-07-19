@@ -77,6 +77,21 @@ SLICING RULES:
 - **Forge-authoring sections (required for godot-4 manifest export, SPEC §3.4).**
   Author these on the SPEC.json block during decompose (empty arrays / false flags
   are valid; the mapper requires the keys, not content):
+  - `asset_source_policy` ∈ `local` | `imagine` | `combo` — **default `local`**
+    when omitted. This is the single design taste gate for *where* art may come
+    from after fun-lock (docs/doctrine.md § Asset source policy). Set it once
+    here on the SPEC; do not invent a parallel policy elsewhere.
+    - **`local` (default)** — purchased library only. Catalog miss → open
+      sourcing / purchase. **No** Grok Imagine.
+    - **`imagine`** — prefer Grok Imagine for generatable 2D (`kind: sprite`);
+      other kinds still use the library. Landings under
+      `games/<id>/generated/imagine/`.
+    - **`combo`** — library first; on catalog miss for sprites, authorized
+      Imagine landings may fill the lock.
+    Choose `imagine` or `combo` only for 2D-sprite games where generated art is
+    acceptable. Those values **arm the Imagine track** downstream
+    (`studio sourcing` → Grok generate → forge resolve consume). Under `local`,
+    forge ignores Imagine landings even if present.
   - `asset_requests[]` — semantic asset needs
     `{request_id, role, kind ∈ sprite|model|animation|audio, query and/or
     {pack_id,name}, constraints, substitution_policy ∈ allow|report|block}`.
@@ -126,8 +141,9 @@ SLICING RULES:
 REVISION AUTHORING (post-complete; export-surface only — not a new phase):
 When a completed seed needs a design change (Shane, or a mission whose prompt
 explicitly authorizes it — same governance class as verdict `done`), re-author
-only the SPEC surface: slices + forge-authoring sections (`asset_requests`,
-`lore_refs`, `capabilities`, `verify_plan`, optional `ext.disciplines`).
+only the SPEC surface: slices + forge-authoring sections (`asset_source_policy`,
+`asset_requests`, `lore_refs`, `capabilities`, `verify_plan`, optional
+`ext.disciplines`).
 Re-render issues. Do not reopen thesis/engine unless the change requires it.
 Revisions may retire never-dispatched slices; built slices stay immutable
 (forge intake enforces). Export via P19's revision path (`--revise-of`), not

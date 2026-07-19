@@ -114,7 +114,7 @@ function nextAction(phase) {
     "design-review": "Run the design red-team (tgf-depth-redteam) against the thesis: register-aware depth vector + feel findings (adjectives, unblamable deaths) + verdict ADVANCE/DEEPEN/KILL.",
     deepen: "Apply exactly one named transform to the thesis (register-specific kits in docs/anti-boring-gate.md), increment deepen attempts, then re-run the design review.",
     "engine-profile": "Score engine/profile candidates against the design-locked thesis and write decisions/0001-engine-profile.md.",
-    decompose: "Author SPEC.md (tgf-decompose): tracer bullet carries the golden moment's feedback chain; seam slices pin later systems' data models; then emit local issues.",
+    decompose: "Author SPEC.md (tgf-decompose / P18): set asset_source_policy once (local|imagine|combo; default local — only imagine/combo arms Grok Imagine for 2D sprites); tracer bullet carries the golden moment's feedback chain; seam slices pin later systems' data models; then emit local issues.",
     handoff: "Package the spec pack (package-spec.mjs) into the clean co-dev folder and record the export.",
     blocked: "Read the ledger blocker, resolve it with evidence, then resume the appropriate non-terminal phase.",
     failed: "Distill failure evidence into a new seed or explicit restart decision.",
