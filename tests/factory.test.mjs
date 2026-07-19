@@ -552,8 +552,11 @@ test("genre index is pull-only: never referenced by the seed/intake pipeline", (
   for (const file of pipelineFiles) {
     let source = fs.readFileSync(rel(file), "utf8");
     if (file === "scripts/lib/factory-contract.mjs") {
-      // Its schema-name registry is vocabulary, not pipeline injection.
-      source = source.replace('"genre-index-row"', "");
+      // Schema-name + fixture registry entries are vocabulary, not pipeline injection.
+      source = source
+        .replaceAll('"genre-index-row"', "")
+        .replaceAll('"minimal-genre-index-row.json"', "")
+        .replaceAll('"genre-index-row.schema.json"', "");
     }
     assert.doesNotMatch(
       source,

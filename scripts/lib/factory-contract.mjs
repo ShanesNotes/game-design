@@ -49,7 +49,9 @@ export const FIXTURE_SCHEMA = {
   "minimal-playtest-report.json": "playtest-report.schema.json",
   "minimal-depth-vector.json": "depth-vector.schema.json",
   "minimal-ledger-row.json": "execution-ledger-row.schema.json",
-  "minimal-module-card.json": "module-card.schema.json"
+  "minimal-module-card.json": "module-card.schema.json",
+  "minimal-reference-card.json": "reference-card.schema.json",
+  "minimal-genre-index-row.json": "genre-index-row.schema.json"
 };
 
 // Active prompt files in .factory/prompts/. Retired build-phase prompts live in

@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "id": "minimal-fixture-row",
+  "title": "Minimal Fixture Row",
+  "edition_pinned": "Minimal Fixture Row 1.0",
+  "design_shape": {
+    "register": { "primary": "mechanics-first", "secondary": [] },
+    "loop_class": { "primary": "optimization", "secondary": [] },
+    "session_structure": { "primary": "runs", "secondary": [] },
+    "progression_form": { "primary": "run-reset", "secondary": [] },
+    "player_count": { "primary": "solo", "secondary": [] }
+  },
+  "market_genres": { "primary": "strategy", "secondary": ["puzzle"] },
+  "moat": "Visible threats force each turn to trade damage against position.",
+  "scope_efficiency_hypothesis": "A small ruleset recombines through state.",
+  "exemplar_rationale": "It exposes optimization through readable choices.",
+  "evidence": [
+    {
+      "claim": "Steam reported 10000 all-language user reviews.",
+      "metric_type": "steam_user_reviews",
+      "value_or_range": 10000,
+      "class": "review-established",
+      "class_definition": "taxonomy-v1#steam-user-reviews/review-established",
+      "platform": "Steam",
+      "territory": "worldwide",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/appreviews/1?json=1",
+      "source_tier": "primary-platform"
+    },
+    {
+      "claim": "Steam listed Strategy and Puzzle storefront genres.",
+      "metric_type": "storefront_genres",
+      "value_or_range": ["Strategy", "Puzzle"],
+      "class": "storefront-listed",
+      "class_definition": "taxonomy-v1#storefront-genres/storefront-listed",
+      "platform": "Steam",
+      "territory": "United States",
+      "observed_at": "2026-07-13",
+      "source": "https://store.steampowered.com/api/appdetails?appids=1&cc=us&l=en",
+      "source_tier": "primary-platform"
+    }
+  ]
+}

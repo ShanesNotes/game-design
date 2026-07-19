@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "id": "minimal-fixture-card",
+  "title": "Minimal Fixture Card",
+  "edition_pinned": "v0-fixture — schema exercise only",
+  "genre_tags": ["fixture"],
+  "register_mapping": "mechanics-first",
+  "moat": "A single irreversible adjacency rewrite forces route planning.",
+  "loop_skeleton": {
+    "verbs": ["plant", "water"],
+    "description": "Plant a seed, water to rewrite adjacency."
+  },
+  "depth_mechanisms": [
+    {
+      "name": "adjacency rewrite",
+      "mechanism": "Water swaps edge sets between tiles.",
+      "falsifiable_claim": "Without water-order planning, clear rates stay flat."
+    },
+    {
+      "name": "wilt clock",
+      "mechanism": "Unlit plants wilt out in three ticks.",
+      "falsifiable_claim": "Removing wilt drops solve time over 30%."
+    }
+  ],
+  "feel_signature": "Short irreversible commits; failure is a dark bed.",
+  "second_session_answer": "Return to re-route through yesterday's water scars.",
+  "packaging_lessons": ["Ship one bed before meta layers."],
+  "anti_lessons": ["Do not add XP to hide adjacency mistakes."],
+  "system_bom": [
+    { "system": "play-loop", "note": "core cycle" },
+    { "system": "win-loss-death", "note": "wilt ends run" },
+    { "system": "save-state", "note": "adjacency persists" }
+  ],
+  "citations": [
+    { "claim": "Synthetic minimal fixture for schema registry.", "source": "examples/fixtures" }
+  ],
+  "status": "draft"
+}
