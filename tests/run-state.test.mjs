@@ -169,6 +169,66 @@ test("manifestPathPolicyErrors keeps run artifact paths inside the seed run", ()
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("manifestPathPolicyErrors accepts legacy games/{seed-id} default root (pre-DES-C)", () => {
+  // Pre-DES-C runs store default_spec_pack_root = $STUDIO_ROOT/games/{seed-id}.
+  // Policy must tolerate that immutable history; new inits still write _export-*.
+  const dir = tmp();
+  const id = "rs-legacy-root";
+  const exportRoot = rs.specPackRootFor(id, dir);
+  const legacyRoot = path.join(path.dirname(exportRoot), id);
+  const base = {
+    seed_id: id,
+    seed_path: `.tgf/seeds/${id}/GAME_SEED.md`,
+    game_thesis_path: `.tgf/seeds/${id}/GAME_THESIS.md`,
+    engine_decision_path: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+    spec_path: `.tgf/seeds/${id}/SPEC.md`,
+    spec_pack_path: null,
+    execution_ledger_path: `.tgf/seeds/${id}/execution-ledger.jsonl`,
+    review_report_paths: [],
+    handoff_paths: [],
+    resume_point: { artifact_path: `.tgf/seeds/${id}/README_AGENT_BOOT.md` }
+  };
+  try {
+    fs.mkdirSync(rs.runDirFor(dir, id), { recursive: true });
+    // (a) legacy-shaped: default = games/{id} passes; pack under legacy root ok
+    const legacy = {
+      ...base,
+      default_spec_pack_root: legacyRoot,
+      spec_pack_path: legacyRoot
+    };
+    assert.deepEqual(
+      rs.manifestPathPolicyErrors(legacy, id, dir),
+      [],
+      "legacy games/{seed-id} default_spec_pack_root must pass policy"
+    );
+    // (b) new-init shape: default = games/_export-{id} still passes
+    const modern = { ...base, default_spec_pack_root: exportRoot };
+    assert.deepEqual(rs.manifestPathPolicyErrors(modern, id, dir), []);
+    // (c) any other absolute root still fails
+    const other = path.join(path.dirname(exportRoot), "not-this-seed");
+    const badDefault = rs.manifestPathPolicyErrors(
+      { ...base, default_spec_pack_root: other },
+      id,
+      dir
+    );
+    assert.ok(badDefault.length > 0, "foreign absolute default root must fail");
+    assert.match(badDefault.join("\n"), /default_spec_pack_root must be|illegal absolute/);
+    const foreignAbs = rs.manifestPathPolicyErrors(
+      {
+        ...base,
+        default_spec_pack_root: exportRoot,
+        // inject a foreign /home/ark absolute via a string field the scanner sees
+        notes: "/home/ark/elsewhere/not-a-pack-root"
+      },
+      id,
+      dir
+    );
+    assert.match(foreignAbs.join("\n"), /illegal absolute source path/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("questionBudgetErrors enforces lane budgets before the spec is decomposed", () => {
   const q = (n) => Array.from({ length: n }, (_, i) => ({ question: `q${i}`, recommended_default: "d", phase_asked: "thesis" }));
   const lane = (mode) => ({ mode, stop_line: "pack", origination: "user" });
