@@ -23,6 +23,7 @@ import {
 import {
   resolveAssetsRoot,
   resolveLoreRoot,
+  resolveContractsRoot,
   contractsVersion,
   forgeManifestSchemaPath,
   findStudioRoot,
@@ -138,9 +139,9 @@ function advanceRun(dir, id, { phase, thesisPath, enginePath, specPath, ledgerPh
   return runDir;
 }
 
-function decomposeReadyRun(dir, id, { profile = GODOT_PROFILE, thesisOverrides = {}, specOverrides = {} } = {}) {
+function decomposeReadyRun(dir, id, { profile = GODOT_PROFILE, thesisOverrides = {}, specOverrides = {}, env } = {}) {
   assert.equal(
-    node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir }).status,
+    node("init-game-run.mjs", ["--seed-id", id, "--seed", "x"], { cwd: dir, env }).status,
     0
   );
   markRunLegacy(dir, id);
@@ -563,7 +564,7 @@ test("GB01: unknown discipline aborts package-spec before staging", () => {
 /** Completed run: all decompose artifacts + ledger/phase at complete. */
 function completeReadyRun(dir, id, opts = {}) {
   const runDir = decomposeReadyRun(dir, id, opts);
-  assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+  assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir, env: opts.env }).status, 0);
   advanceRun(dir, id, {
     phase: "complete",
     thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
@@ -705,6 +706,73 @@ test("F05b AC4: revision mapping failure aborts with full missing-field list", (
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
     fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test("FRG-B: default revise-of target refuses to clobber an intaken game scaffold", () => {
+  const dir = tmp();
+  const neutral = tmp();
+  const tmpStudio = tmp();
+  const id = "selftest-revise-of-clobber";
+  // Pin the default pack root ($STUDIO_ROOT/games/<id>) at a temp studio while
+  // assets/lore/contracts keep resolving to the real repos via env overrides.
+  const contractsRoot = resolveContractsRoot(REPO);
+  assert.ok(contractsRoot, "contracts root must resolve");
+  const env = {
+    STUDIO_ROOT: tmpStudio,
+    GAME_ASSETS_ROOT: resolveAssetsRoot(REPO),
+    GAME_LORE_ROOT: resolveLoreRoot(REPO),
+    GAME_CONTRACTS_ROOT: contractsRoot
+  };
+  // Simulate the intaken game at the default pack root: forge stamp + scaffold
+  // sentinels + the parent forge-manifest (raw-byte parent_digest source).
+  const gameDir = path.join(tmpStudio, "games", id);
+  fs.mkdirSync(path.join(gameDir, "scenes"), { recursive: true });
+  const parentBody = fs.readFileSync(
+    path.join(STUDIO_ROOT, "contracts", "fixtures", "manifest-revision", "base.json")
+  );
+  fs.writeFileSync(path.join(gameDir, "forge-template-stamp.json"), JSON.stringify({ template: "forge", v: 1 }) + "\n");
+  fs.writeFileSync(path.join(gameDir, "project.godot"), "; godot project\n");
+  fs.writeFileSync(path.join(gameDir, "scenes", "main.tscn"), "[gd_scene]\n");
+  fs.writeFileSync(path.join(gameDir, "AGENT_BOOT.md"), "# boot\n");
+  fs.writeFileSync(path.join(gameDir, "forge-manifest.json"), parentBody);
+  const parentDigest = crypto.createHash("sha256").update(parentBody).digest("hex");
+  const scaffoldFiles = [
+    "forge-template-stamp.json", "project.godot", path.join("scenes", "main.tscn"),
+    "AGENT_BOOT.md", "forge-manifest.json"
+  ];
+  const scaffoldSnapshot = () =>
+    scaffoldFiles.map((f) => [f, fs.existsSync(path.join(gameDir, f)) ? fs.readFileSync(path.join(gameDir, f), "utf8") : null]);
+  const before = scaffoldSnapshot();
+  try {
+    completeReadyRun(dir, id, { profile: GODOT_PROFILE, env });
+
+    // Default path (no --to): the documented repro command — must refuse.
+    const refused = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--revise-of", gameDir, "--write", "--force"],
+      { cwd: dir, env }
+    );
+    assert.equal(refused.status, 1, refused.stdout + refused.stderr);
+    assert.match(refused.stderr, /forge-template-stamp\.json/);
+    assert.match(refused.stderr, /--to/);
+    assert.deepEqual(scaffoldSnapshot(), before, "intaken scaffold must survive the refusal");
+
+    // Neutral --to: export lands there, game dir untouched (proven live 2026-07-20).
+    const r = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--revise-of", gameDir, "--to", neutral, "--write"],
+      { cwd: dir, env }
+    );
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.ok(fs.existsSync(path.join(neutral, "SPEC.md")), "pack lands at the neutral target");
+    const mf = JSON.parse(fs.readFileSync(path.join(neutral, "forge-manifest.json"), "utf8"));
+    assert.equal(mf.parent_digest, parentDigest);
+    assert.deepEqual(scaffoldSnapshot(), before, "game dir must be untouched by a --to revision export");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(neutral, { recursive: true, force: true });
+    fs.rmSync(tmpStudio, { recursive: true, force: true });
   }
 });
 

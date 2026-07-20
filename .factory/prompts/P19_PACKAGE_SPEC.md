@@ -37,13 +37,17 @@ TASK:
 REVISION EXPORT (phase `complete` only — not a phase transition):
 When packaging a post-complete design change against a live game, pass
 `--revise-of <game-dir>` (`npm run spec:revise -- --seed-id <id> --revise-of
-<game-dir> --write`). The run stays at `complete`. Emits a full immutable
-forge-manifest **v1.1.0** with `parent_digest` = sha256 of the raw bytes of
-`<game-dir>/forge-manifest.json` and **freshly computed pins** (pin-refresh
-path). Plain export without `--revise-of` still refuses at `complete`.
-Godot-gate still applies (non-godot → no manifest + `FORGE-GATE:ENGINE`
-token). Same mapper + validation as plain export — no delta language
-(SPEC §6-B).
+<game-dir> --to <export-dir> --write`). The run stays at `complete`. Emits a
+full immutable forge-manifest **v1.1.0** with `parent_digest` = sha256 of the
+raw bytes of `<game-dir>/forge-manifest.json` and **freshly computed pins**
+(pin-refresh path). The revised pack lands at the neutral `--to` target
+(e.g. `games/_export-<id>-r2`), never the game dir itself — without `--to`,
+package-spec refuses when the default target is an intaken game dir
+(`forge-template-stamp.json` present) and names `--to` as the fix, leaving
+the game untouched for `forge intake --revise` to apply. Plain export
+without `--revise-of` still refuses at `complete`. Godot-gate still applies
+(non-godot → no manifest + `FORGE-GATE:ENGINE` token). Same mapper +
+validation as plain export — no delta language (SPEC §6-B).
 
 THE PACK MUST STAND ALONE:
 - Its AGENTS.md explains the co-dev loop without referencing this factory.
