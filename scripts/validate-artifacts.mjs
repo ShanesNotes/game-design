@@ -377,7 +377,16 @@ function checkEmbeddedArtifact(kind) {
     try { m = runState.readManifest(runState.runDirFor(process.cwd(), seedId), seedId, process.cwd()); }
     catch (e) { return [`manifest rejected: ${e.message}`]; }
     if (!m) return [`no run at .tgf/seeds/${seedId}`];
-    if (!m[manifestKey]) return [`run ${seedId} has no ${manifestKey} set yet`];
+    if (!m[manifestKey]) {
+      // Not-yet-recorded is the advance-before-check trap: the artifact may
+      // exist on disk but is not in the manifest until advance-run --set.
+      // --file validates it without recording; do not force advance-first.
+      return [
+        `run ${seedId} has no ${manifestKey} set yet (artifact not recorded in the manifest). ` +
+        `Validate the unrecorded file with: node scripts/validate-artifacts.mjs --check ${kind} --seed-id ${seedId} --file .tgf/seeds/${seedId}/<artifact.md> ` +
+        `(then record via advance-run --set ${manifestKey}=...)`
+      ];
+    }
     try { p = runState.resolveRunPath(process.cwd(), seedId, m[manifestKey], manifestKey); }
     catch (e) { return [e.message]; }
   }

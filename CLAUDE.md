@@ -21,13 +21,15 @@ node scripts/advance-run.mjs --seed-id <kebab-id> --to <phase> --event <event> -
 ```
 
 At `decompose`, render `SPEC.md` into the issue backlog; at `handoff`, export the
-spec pack (both dry-run by default). For studio work **always pass `--to`** under
-`games/`:
+spec pack (both dry-run by default). Default pack root is
+`$STUDIO_ROOT/games/_export-<kebab-id>` (two-dir shape: export there, forge
+intake births `games/<kebab-id>`). Explicit `--to` is optional when it matches
+that root:
 
 ```bash
 node scripts/emit-local-issues.mjs --seed-id <kebab-id> --write
-npm run spec:package -- --seed-id <kebab-id> \
-  --to ../games/_export-<kebab-id> --write --require-manifest
+npm run spec:package -- --seed-id <kebab-id> --write --require-manifest
+# equivalent: --to ../games/_export-<kebab-id>
 ```
 
 Then from studio root: `node forge/bin/forge.mjs intake games/_export-<kebab-id>`.

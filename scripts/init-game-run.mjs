@@ -60,7 +60,7 @@ const readTpl = (name) =>
   renderTemplate(fs.readFileSync(path.join(tplDir, name), "utf8"), { SEED_ID: seedId, SEED: seed, ISO: iso });
 
 const manifest = JSON.parse(readTpl("manifest.json"));
-// Path-registry default: $STUDIO_ROOT/games/{seed-id} (not legacy ~/tgf-games).
+// Path-registry default: $STUDIO_ROOT/games/_export-{seed-id} (forge intake births games/{seed-id}).
 manifest.default_spec_pack_root = specPackRoot;
 manifest.design_lane = { mode, stop_line: stop, origination };
 const bootDoc = readTpl("README_AGENT_BOOT.md");

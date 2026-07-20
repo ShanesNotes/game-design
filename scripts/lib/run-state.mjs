@@ -35,9 +35,10 @@ export function runDirFor(cwd, seedId) {
 export function runRelFor(seedId) {
   return path.join(".tgf", "seeds", seedId);
 }
-// Default export destination for a finished spec pack: $STUDIO_ROOT/games/{seed-id}
-// (path-registry). Declared, never created until an explicit package-spec step.
-// package-spec --to still wins over this default.
+// Default export destination for a finished spec pack:
+// $STUDIO_ROOT/games/_export-{seed-id} (two-dir studio shape: export pack here,
+// forge intake births games/{seed-id}). Declared, never created until an
+// explicit package-spec step. package-spec --to still wins over this default.
 // Discovery: startDir → FACTORY_ROOT walk-up → STUDIO_ROOT env (via findStudioRoot).
 export function specPackRootFor(seedId, startDir = process.cwd()) {
   const studio =
@@ -47,7 +48,7 @@ export function specPackRootFor(seedId, startDir = process.cwd()) {
       "cannot resolve STUDIO_ROOT for default pack root (set STUDIO_ROOT or run under a studio tree with DISCIPLINES.md)",
     );
   }
-  return path.join(studio, "games", seedId);
+  return path.join(studio, "games", `_export-${seedId}`);
 }
 
 export function pathIsInside(parent, child) {
@@ -395,8 +396,9 @@ export function openRun(cwd, seedId) {
 // --- Path policy ---
 
 // The only absolute path a manifest may contain is its own default_spec_pack_root,
-// which must equal $STUDIO_ROOT/games/{seed-id} (path-registry). This keeps a run
-// from pointing writes at source repos or anywhere outside its declared sandbox.
+// which must equal $STUDIO_ROOT/games/_export-{seed-id} (export root; forge
+// intake then births games/{seed-id}). This keeps a run from pointing writes at
+// source repos or anywhere outside its declared sandbox.
 export function manifestPathPolicyErrors(manifest, seedId, cwd = process.cwd()) {
   const errors = [];
   const specPackRoot = specPackRootFor(seedId, cwd);
