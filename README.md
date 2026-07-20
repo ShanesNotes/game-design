@@ -19,9 +19,8 @@ handed to forge (or co-dev). **No game is built in this repo** (ADR 0006).
 
 This repository is the **design harness**, not a game. It owns reusable doctrine,
 prompts, schemas, hooks, and validators. Spec packs export by default to
-`$STUDIO_ROOT/games/<seed-id>` (path-registry). Prefer
-`$STUDIO_ROOT/games/_export-<seed-id>/` via `--to` when you want a non-product
-export folder; `--to` always wins over the default.
+`$STUDIO_ROOT/games/_export-<seed-id>` (two-dir shape: export there, then
+`forge intake` births `games/<seed-id>`); `--to` always wins over the default.
 
 ## Quickstart
 

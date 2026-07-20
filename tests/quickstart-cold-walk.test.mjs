@@ -217,8 +217,9 @@ test("DES-B cold walk: Quickstart + fixtures reach a green --require-manifest ex
     step(pack, "package-spec --write --require-manifest");
     assert.match(pack.stdout, /forge-manifest\.json emitted/);
 
-    // The pack landed at the documented default root and is verifier-clean.
-    const packDir = path.join(dir, "games", ID);
+    // The pack landed at the documented default root (games/_export-<id>
+    // since DES-C; forge intake births games/<id>) and is verifier-clean.
+    const packDir = path.join(dir, "games", `_export-${ID}`);
     const manifest = JSON.parse(fs.readFileSync(path.join(packDir, "forge-manifest.json"), "utf8"));
     assert.deepEqual(validate(contractsSchema, manifest), [], "pack forge-manifest must validate");
     const specFixture = JSON.parse(spec);
