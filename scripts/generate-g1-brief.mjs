@@ -87,7 +87,10 @@ if (!depthVector) fail("no gate-passing ADVANCE depth vector exists under review
 
 const verdictPath = path.join(reviewsDir, "ANTI_BORING_VERDICT.md");
 const verdictText = fs.existsSync(verdictPath) ? fs.readFileSync(verdictPath, "utf8") : "";
-const verdictMatch = verdictText.match(/(?:^|\n)[ \t]*(?:#{1,6}[ \t]*)?(?:\*\*)?VERDICT[ \t]*:(?:\*\*)?[ \t]*(?:\r?\n[ \t]*)?(ADVANCE|DEEPEN|KILL)[ \t]*(?:\*\*)?[ \t]*(?=\r?\n|$)/i);
+// P07 verdict-line contract: `VERDICT: <RULING>` on its own line, or a
+// `## Verdict` heading followed by the bold ruling (e.g. `**ADVANCE**`).
+const verdictMatch = verdictText.match(/(?:^|\n)[ \t]*(?:#{1,6}[ \t]*)?(?:\*\*)?VERDICT[ \t]*:(?:\*\*)?[ \t]*(?:\r?\n[ \t]*)?(ADVANCE|DEEPEN|KILL)[ \t]*(?:\*\*)?[ \t]*(?=\r?\n|$)/i)
+  ?? verdictText.match(/(?:^|\n)[ \t]*#{1,6}[ \t]*VERDICT[ \t]*\r?\n(?:[ \t]*\r?\n)*[ \t]*\*\*(ADVANCE|DEEPEN|KILL)\*\*[ \t]*(?=\r?\n|$)/i);
 if (verdictMatch?.[1]?.toUpperCase() !== "ADVANCE") {
   fail("reviews/ANTI_BORING_VERDICT.md is missing an ADVANCE verdict");
 }

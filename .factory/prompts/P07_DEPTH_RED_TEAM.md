@@ -122,6 +122,17 @@ OUTPUT:
 VERDICT:
 ADVANCE | DEEPEN | KILL
 
+Verdict-line output contract (machine-read): `scripts/generate-g1-brief.mjs`
+parses the ruling out of `reviews/ANTI_BORING_VERDICT.md` and fails loudly when
+it is missing or malformed. State the ruling in exactly one of these forms:
+
+- `VERDICT: <RULING>` on its own line (a markdown heading prefix such as
+  `## VERDICT: ADVANCE` and bold markers are tolerated), or
+- a `## Verdict` heading line followed by the ruling in bold on the next
+  non-empty line, e.g. `**ADVANCE**`.
+
+`<RULING>` is exactly one of `ADVANCE`, `DEEPEN`, `KILL`.
+
 - **ADVANCE** requires total ≥ 16/24 with the register's six mandatory axes
   nonzero — mechanics-first/hybrid: Choice, Tradeoff, Pressure, Uncertainty,
   Mastery, Replayable Variation; narrative-first swaps Replayable Variation for

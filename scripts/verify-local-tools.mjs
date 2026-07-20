@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // P17 toolchain probe. Verifies tool availability via real commands — never from memory.
-// Writes .factory/local_tool_probe.json always; with `--write <ledger.md>` it refreshes a
-// generated block inside the curated toolchain ledger without clobbering hand-written rows.
+// Writes .factory/local_tool_probe.json and refreshes the generated block inside the
+// curated toolchain ledger (default docs/toolchain-verification-ledger.md; override with
+// `--write <ledger.md>`) without clobbering hand-written rows.
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -17,7 +18,7 @@ const checks = [
   { cmd: "claude", args: ["--version"], category: "builder" },
   { cmd: "codex", args: ["--version"], category: "builder" },
   { cmd: "omx", args: ["--version"], category: "builder" },
-  { cmd: "grok-build", args: ["--version"], category: "builder" },
+  { cmd: "kimi", args: ["--version"], category: "builder" },
   { cmd: "npx", args: ["playwright", "--version"], category: "harness" },
   { cmd: "godot", args: ["--version"], category: "engine" },
   { cmd: "godot4", args: ["--version"], category: "engine" },
@@ -42,8 +43,14 @@ fs.mkdirSync(".factory", { recursive: true });
 fs.writeFileSync(".factory/local_tool_probe.json", JSON.stringify({ date: iso, results }, null, 2));
 
 const writeIdx = process.argv.indexOf("--write");
-if (writeIdx >= 0 && process.argv[writeIdx + 1]) {
-  const ledgerPath = process.argv[writeIdx + 1];
+if (writeIdx >= 0 && !process.argv[writeIdx + 1]) {
+  console.error("[verify-local-tools] ERROR: --write requires a <ledger.md> path");
+  process.exit(1);
+}
+const ledgerPath = writeIdx >= 0
+  ? process.argv[writeIdx + 1]
+  : path.join("docs", "toolchain-verification-ledger.md");
+{
   const START = "<!-- TGF:PROBE:START -->";
   const END = "<!-- TGF:PROBE:END -->";
   let block = `${START}\n\n## Local probe results (generated)\n\n`;
