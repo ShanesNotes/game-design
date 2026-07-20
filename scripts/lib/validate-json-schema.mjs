@@ -1,9 +1,11 @@
-// Minimal JSON Schema validator — supports the draft-2020-12 subset used by TGF schemas.
+// Minimal JSON Schema validator — supports the draft-2020-12 subset used by TGF schemas
+// and the live contracts forge-manifest (incl. baseline allOf / contains / not gates).
 // Intentionally tiny and dependency-free. Supports: type (incl. integer/number/array/null
-// and arrays of types), enum, pattern, required, properties, additionalProperties:false,
-// items, minItems, uniqueItems, minLength, maxLength, minimum, maximum, and if/then/else.
+// and arrays of types), enum, const, pattern, required, properties, additionalProperties:false,
+// items, minItems, uniqueItems, minLength, maxLength, minimum, maximum, if/then/else,
+// allOf, anyOf, not, contains.
 // Returns an array of error strings ([] means valid).
-// This is NOT a general-purpose validator; it covers exactly what schemas/*.json use.
+// This is NOT a general-purpose validator; it covers exactly what the studio schemas use.
 
 function jsType(v) {
   if (v === null) return "null";
@@ -52,6 +54,12 @@ export function validate(schema, data, path = "$") {
     errors.push(`${path}: ${JSON.stringify(data)} not in enum ${JSON.stringify(schema.enum)}`);
   }
 
+  // Draft 2020-12 const is same-value equality (=== covers the string/number cases
+  // used by forge-manifest if/contains gates; objects would need deep equality).
+  if (schema.const !== undefined && schema.const !== data) {
+    errors.push(`${path}: ${JSON.stringify(data)} !== const ${JSON.stringify(schema.const)}`);
+  }
+
   if (schema.pattern && typeof data === "string" && !new RegExp(schema.pattern).test(data)) {
     errors.push(`${path}: ${JSON.stringify(data)} does not match pattern ${schema.pattern}`);
   }
@@ -95,6 +103,13 @@ export function validate(schema, data, path = "$") {
     if (schema.items) {
       data.forEach((item, i) => errors.push(...validate(schema.items, item, `${path}[${i}]`)));
     }
+    // contains: at least one item must satisfy the subschema (pause surface, etc.).
+    if (schema.contains) {
+      const found = data.some((item, i) => validate(schema.contains, item, `${path}[${i}]`).length === 0);
+      if (!found) {
+        errors.push(`${path}: array does not contain a matching item (contains)`);
+      }
+    }
   }
 
   if (data !== null && typeof data === "object" && !Array.isArray(data)) {
@@ -117,6 +132,25 @@ export function validate(schema, data, path = "$") {
     const conditionMatches = validate(schema.if, data, path).length === 0;
     const branch = conditionMatches ? schema.then : schema.else;
     if (branch) errors.push(...validate(branch, data, path));
+  }
+
+  // allOf / anyOf / not — forge-manifest version gates (baseline required / forbidden,
+  // derive/policy forbid below floors) nest under allOf with if/then + not.
+  if (Array.isArray(schema.allOf)) {
+    for (let i = 0; i < schema.allOf.length; i++) {
+      errors.push(...validate(schema.allOf[i], data, path));
+    }
+  }
+  if (Array.isArray(schema.anyOf)) {
+    const anyOk = schema.anyOf.some((sub) => validate(sub, data, path).length === 0);
+    if (!anyOk) {
+      errors.push(`${path}: does not match any anyOf subschema`);
+    }
+  }
+  if (schema.not) {
+    if (validate(schema.not, data, path).length === 0) {
+      errors.push(`${path}: must not match 'not' subschema`);
+    }
   }
 
   return errors;
