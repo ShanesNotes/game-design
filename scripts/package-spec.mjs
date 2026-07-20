@@ -38,7 +38,8 @@ import {
   computePins,
   computePackDigest,
   ASSET_SOURCE_POLICY_SCHEMA_VERSION,
-  DERIVE_SCHEMA_VERSION
+  DERIVE_SCHEMA_VERSION,
+  PLAYABLE_BASELINE_SCHEMA_VERSION
 } from "./lib/manifest-mapper.mjs";
 import {
   resolveAssetsRoot,
@@ -219,21 +220,25 @@ if (!isGodot) {
   pendingManifest = mapResult.manifest;
   // Full-manifest revision (SPEC §6-B): parent_digest; no delta language.
   // Version-floor ladder (same value on schema_version and pins.contracts_version):
+  //   playable_baseline emitted → 1.4.0
   //   any request carries derive → 1.3.0
   //   else asset_source_policy present → 1.2.0
   //   else REVISION_SCHEMA_VERSION (1.1.0 parent_digest floor)
   if (isRevision) {
+    const hasBaseline = pendingManifest.playable_baseline != null;
     const hasDerive =
       Array.isArray(pendingManifest.asset_requests) &&
       pendingManifest.asset_requests.some(
         (r) => r !== null && typeof r === "object" && !Array.isArray(r) && r.derive != null
       );
     const needsPolicyFloor = pendingManifest.asset_source_policy != null;
-    const revVersion = hasDerive
-      ? DERIVE_SCHEMA_VERSION
-      : needsPolicyFloor
-        ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
-        : REVISION_SCHEMA_VERSION;
+    const revVersion = hasBaseline
+      ? PLAYABLE_BASELINE_SCHEMA_VERSION
+      : hasDerive
+        ? DERIVE_SCHEMA_VERSION
+        : needsPolicyFloor
+          ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
+          : REVISION_SCHEMA_VERSION;
     pendingManifest.schema_version = revVersion;
     pendingManifest.parent_digest = parentDigest;
     // Intake requires schema_version === pins.contracts_version.

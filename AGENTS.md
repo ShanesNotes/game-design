@@ -20,7 +20,8 @@ operating procedure.
    register, seam slices, BRIEF.md input seam), 0010 (feel doctrine under studio
    terms; supersedes culled 0009), 0011 (portfolio at the front door — intake
    default entry, distinctness, depth evidence/provenance), 0012 (design lanes —
-   manifest design_lane: mode/stop_line/origination).
+   manifest design_lane: mode/stop_line/origination), 0013 (playable baseline —
+   boot/controls/ui/outcome declared + slice-covered at handoff).
 4. `factory.config.toml` — doctrine flags, gate thresholds, engine matrix.
 5. The relevant `.factory/prompts/P##_*.md` for the phase you are in.
 
@@ -96,6 +97,9 @@ pack, picks an engine, or writes `GAME_THESIS.md`.
 - The spec pack is exported only by `scripts/package-spec.mjs`, gated by run
   validation and the leakage scan. Factory vocabulary, ledgers, hooks, and skill
   docs must never leak into a pack.
+- Godot-4 exports refuse a SPEC whose `playable_baseline` (boot/controls/ui/
+  outcome, each mapped to a slice) is missing or unresolved — the refusal names
+  the system and aborts before staging (ADR 0013).
 - Playtest evidence, bot-session minimums, and content-before-fun-lock rules are
   **shipped-pack doctrine**: the pack's guards enforce them downstream in the
   co-dev repo, not in this repo.

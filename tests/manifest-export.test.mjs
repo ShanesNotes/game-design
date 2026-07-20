@@ -17,8 +17,10 @@ import {
   FORGE_GATE_TOKEN,
   BUILD_DISCIPLINES,
   validateSpecDisciplines,
+  validateSpecBaseline,
   ASSET_SOURCE_POLICY_SCHEMA_VERSION,
-  DERIVE_SCHEMA_VERSION
+  DERIVE_SCHEMA_VERSION,
+  PLAYABLE_BASELINE_SCHEMA_VERSION
 } from "../scripts/lib/manifest-mapper.mjs";
 import {
   resolveAssetsRoot,
@@ -260,6 +262,9 @@ test("AC2: godot-4 export emits schema-valid forge-manifest with real pin SHAs",
     assert.equal(mf.engine.profile, GODOT_PROFILE);
     assert.equal(mf.thesis.register, "mechanics-first");
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
+    // ADR 0013: the SPEC declares the playable baseline, but the live contracts
+    // tip is < 1.4.0, so the manifest must NOT carry it (version-conditional).
+    assert.equal(mf.playable_baseline, undefined);
 
     // contracts test runner can also validate (Node path)
     const contractsValidate = path.join(STUDIO_ROOT, "contracts", "test", "validate-node.mjs");
@@ -1071,5 +1076,168 @@ test("derive: revision export with derive block claims 1.3.0 (both fields) + int
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
     fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+// --- PB: playable baseline (ADR 0013; INTERFACE boot/controls/ui/outcome) ---
+
+const minimalSpecFixture = () =>
+  JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+
+test("PB: baseline absent → mapping refuses, naming every missing system", () => {
+  const { thesis, spec, engine, pins, meta } = baseMapInputs();
+  delete spec.playable_baseline;
+  const r = mapForgeManifest({ thesis, spec, engine, pins, meta });
+  assert.equal(r.ok, false);
+  for (const sys of ["boot", "controls", "ui", "outcome"]) {
+    assert.ok(r.missing.includes(`spec.playable_baseline.${sys}`), r.missing.join(", "));
+  }
+});
+
+test("PB: validateSpecBaseline enforces slice resolution, pause surface, outcome floor", () => {
+  const good = validateSpecBaseline(minimalSpecFixture());
+  assert.equal(good.ok, true, good.errors.join(", "));
+
+  const unresolved = minimalSpecFixture();
+  unresolved.playable_baseline.outcome.slice = "no-such-slice";
+  const r1 = validateSpecBaseline(unresolved);
+  assert.equal(r1.ok, false);
+  assert.ok(
+    r1.errors.some((e) => e.startsWith("spec.playable_baseline.outcome.slice")),
+    r1.errors.join(", ")
+  );
+
+  const noPause = minimalSpecFixture();
+  noPause.playable_baseline.ui.surfaces = noPause.playable_baseline.ui.surfaces.filter(
+    (s) => s.id !== "pause"
+  );
+  const r2 = validateSpecBaseline(noPause);
+  assert.equal(r2.ok, false);
+  assert.ok(r2.errors.some((e) => /ui\.surfaces/.test(e) && /pause/.test(e)), r2.errors.join(", "));
+
+  const pauseNoQuit = minimalSpecFixture();
+  pauseNoQuit.playable_baseline.ui.surfaces.find((s) => s.id === "pause").provides =
+    "pause menu with resume";
+  assert.equal(validateSpecBaseline(pauseNoQuit).ok, false);
+
+  const thinOutcome = minimalSpecFixture();
+  thinOutcome.playable_baseline.outcome.states = ["only-one"];
+  const r4 = validateSpecBaseline(thinOutcome);
+  assert.equal(r4.ok, false);
+  assert.ok(r4.errors.some((e) => e.includes("outcome.states")), r4.errors.join(", "));
+});
+
+test("PB: emission is conditional on contracts >= 1.4.0 (hermetic pins)", () => {
+  const { thesis, spec, engine, pins, meta } = baseMapInputs();
+
+  // Live checkout reads 1.3.0: baseline validated and required, but the
+  // manifest must NOT carry it below 1.4.0; claim stays the built-against tip.
+  const r13 = mapForgeManifest({
+    thesis, spec, engine,
+    pins: { ...pins, contracts_version: "1.3.0" },
+    meta
+  });
+  assert.equal(r13.ok, true, (r13.missing || []).join(", "));
+  assert.equal(r13.manifest.playable_baseline, undefined);
+  assert.equal(r13.manifest.schema_version, "1.3.0");
+  assert.equal(r13.manifest.schema_version, r13.manifest.pins.contracts_version);
+  assert.deepEqual(validate(loadContractsSchema(), r13.manifest), []);
+
+  // Contracts 1.4.0: emitted verbatim and floors the claim (both fields).
+  // Hermetic — the live contracts schema enum stops at 1.3.0, so no live
+  // schema validation on this branch (the 1.4.0 schema lands with contracts).
+  const r14 = mapForgeManifest({
+    thesis, spec, engine,
+    pins: { ...pins, contracts_version: "1.4.0" },
+    meta
+  });
+  assert.equal(r14.ok, true, (r14.missing || []).join(", "));
+  assert.deepEqual(r14.manifest.playable_baseline, spec.playable_baseline);
+  assert.equal(r14.manifest.schema_version, PLAYABLE_BASELINE_SCHEMA_VERSION);
+  assert.equal(r14.manifest.pins.contracts_version, PLAYABLE_BASELINE_SCHEMA_VERSION);
+});
+
+test("PB: package-spec refuses a SPEC without baseline — names systems, aborts before staging", () => {
+  const dir = tmp();
+  const target = tmp();
+  const id = "selftest-baseline-refused";
+  try {
+    // specOverrides drops the key from the authored SPEC (JSON omits undefined).
+    decomposeReadyRun(dir, id, { profile: GODOT_PROFILE, specOverrides: { playable_baseline: undefined } });
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir }).status, 0);
+
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stderr, /aborted before staging/i);
+    assert.match(r.stderr, /spec\.playable_baseline\.boot/);
+    assert.match(r.stderr, /spec\.playable_baseline\.controls/);
+    assert.match(r.stderr, /spec\.playable_baseline\.outcome/);
+    assert.equal(fs.readdirSync(target).length, 0, "refused export must not write pack");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("PB: package-spec emits baseline + 1.4.0 claim when live contracts tip is 1.4.0 (plain + revision)", () => {
+  const dir = tmp();
+  const target = tmp();
+  const target2 = tmp();
+  const id = "selftest-baseline-emitted";
+  const { gameDir, parentDigest } = fixtureGameDir();
+  // Hermetic contracts tip: clone the live schema, extend the enum tail to
+  // 1.4.0, and permit the new top-level block (the real 1.4.0 contracts slice
+  // lands separately; this proves the version-conditional emission end to end).
+  const contractsDir = tmp();
+  const schema = loadContractsSchema();
+  schema.properties.schema_version.enum.push("1.4.0");
+  schema.properties.playable_baseline = { type: "object" };
+  fs.writeFileSync(
+    path.join(contractsDir, "forge-manifest.schema.json"),
+    JSON.stringify(schema, null, 2) + "\n"
+  );
+  const env = { GAME_CONTRACTS_ROOT: contractsDir };
+  try {
+    decomposeReadyRun(dir, id, { profile: GODOT_PROFILE, env });
+    assert.equal(node("emit-local-issues.mjs", ["--seed-id", id, "--write"], { cwd: dir, env }).status, 0);
+
+    // Plain export: baseline emitted, claim floored to 1.4.0 (both fields).
+    const r = node("package-spec.mjs", ["--seed-id", id, "--to", target, "--write"], { cwd: dir, env });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const mf = JSON.parse(fs.readFileSync(path.join(target, "forge-manifest.json"), "utf8"));
+    assert.equal(mf.schema_version, "1.4.0");
+    assert.equal(mf.pins.contracts_version, "1.4.0");
+    assert.ok(mf.playable_baseline, "baseline emitted at contracts 1.4.0");
+    assert.ok(mf.playable_baseline.ui.surfaces.some((s) => s.id === "pause"));
+    const sliceIds = new Set(mf.slices.map((s) => s.id));
+    for (const sys of ["boot", "controls", "ui", "outcome"]) {
+      assert.ok(sliceIds.has(mf.playable_baseline[sys].slice), `${sys} slice resolves to a manifest slice`);
+    }
+
+    // Revision export: baseline rung keeps the claim at 1.4.0 (not 1.1.0).
+    advanceRun(dir, id, {
+      phase: "complete",
+      thesisPath: `.tgf/seeds/${id}/GAME_THESIS.md`,
+      enginePath: `.tgf/seeds/${id}/decisions/0001-engine-profile.md`,
+      specPath: `.tgf/seeds/${id}/SPEC.md`,
+      ledgerPhases: ["handoff", "complete"]
+    });
+    const rr = node(
+      "package-spec.mjs",
+      ["--seed-id", id, "--to", target2, "--write", "--revise-of", gameDir],
+      { cwd: dir, env }
+    );
+    assert.equal(rr.status, 0, rr.stdout + rr.stderr);
+    const rmf = JSON.parse(fs.readFileSync(path.join(target2, "forge-manifest.json"), "utf8"));
+    assert.equal(rmf.schema_version, "1.4.0");
+    assert.equal(rmf.pins.contracts_version, "1.4.0");
+    assert.equal(rmf.parent_digest, parentDigest);
+    assert.ok(rmf.playable_baseline);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(target2, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
+    fs.rmSync(contractsDir, { recursive: true, force: true });
   }
 });

@@ -1105,6 +1105,21 @@ test("planIssues owns spec eligibility and returns ordered issue documents", () 
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("playable-baseline slices render as issues like any other slice (ADR 0013)", () => {
+  const dir = tmp();
+  const id = "selftest-baseline-issues";
+  try {
+    decomposeReadyRun(dir, id);
+    const plan = planIssues(dir, id);
+    assert.deepEqual(plan.blockers, []);
+    const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+    const rendered = plan.documents.map((document) => document.id);
+    for (const system of Object.values(spec.playable_baseline)) {
+      assert.ok(rendered.includes(system.slice), `baseline slice '${system.slice}' renders as an issue`);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("emitIssues preflights collisions and returns only actually written paths", () => {
   const dir = tmp();
   const id = "selftest-issue-emit-api";

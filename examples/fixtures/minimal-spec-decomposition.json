@@ -19,6 +19,34 @@
     "frame_budget_ms": 16.67,
     "load_budget_s": 5
   },
+  "playable_baseline": {
+    "boot": {
+      "entry_scene": "res://scenes/main.tscn",
+      "slice": "tracer-loop"
+    },
+    "controls": {
+      "actions": [
+        { "action": "plant", "verb": "plant" },
+        { "action": "water", "verb": "water" },
+        { "action": "rotate_asteroid", "verb": "rotate-asteroid" }
+      ],
+      "consumer_paths": ["res://scripts/player.gd"],
+      "slice": "tracer-loop"
+    },
+    "ui": {
+      "surfaces": [
+        { "id": "pause", "provides": "pause/quit menu with resume", "path": "res://scenes/ui/pause_menu.tscn" },
+        { "id": "hud", "provides": "water and sunlight feedback", "path": "res://scenes/ui/hud.tscn" }
+      ],
+      "slice": "tracer-loop"
+    },
+    "outcome": {
+      "states": ["garden-thriving", "garden-withered"],
+      "communicated_by": "end-of-day summary screen",
+      "path": "res://scenes/ui/day_summary.tscn",
+      "slice": "sunlight-pressure"
+    }
+  },
   "slices": [
     {
       "id": "tracer-loop",

@@ -17,6 +17,8 @@
 //   verify_plan, capabilities     ← spec authored sections (P18)
 //   asset_source_policy           ← spec (optional; default local on export)
 //   asset_requests[].derive       ← spec (optional; floors claim to 1.3.0)
+//   playable_baseline             ← spec (required at export; emitted + floors
+//                                   claim to 1.4.0 only when contracts tip >= 1.4.0)
 //   ext.disciplines               ← spec.ext.disciplines (optional; validated enum)
 //   pins                          ← computed (caller)
 //   schema_version, game_id,
@@ -29,6 +31,10 @@ export const GODOT_PROFILE = "godot-4";
 export const ASSET_SOURCE_POLICY_SCHEMA_VERSION = "1.2.0";
 /** Floor when any asset_request carries derive (field introduced in forge-manifest 1.3.0). */
 export const DERIVE_SCHEMA_VERSION = "1.3.0";
+/** Floor when playable_baseline is emitted (field introduced in forge-manifest 1.4.0). */
+export const PLAYABLE_BASELINE_SCHEMA_VERSION = "1.4.0";
+/** The studio's minimal every-game floor (ADR 0013), in manifest key order. */
+export const PLAYABLE_BASELINE_SYSTEMS = Object.freeze(["boot", "controls", "ui", "outcome"]);
 export const FORGE_GATE_TOKEN = "FORGE-GATE:ENGINE";
 
 /** Build-phase discipline enum (SPEC game-build §2 / DISCIPLINES.md owners subset). */
@@ -138,6 +144,109 @@ export function validateSpecDisciplines(specExt) {
   return { ok: true, disciplines: out, errors: [] };
 }
 
+/** Numeric semver-ish compare: is `version` (e.g. "1.4.0") at or above `floor`? Malformed → false. */
+function versionAtLeast(version, floor) {
+  const parse = (v) => String(v).split(".").map((n) => (/^\d+$/.test(n) ? Number(n) : NaN));
+  const a = parse(version);
+  const b = parse(floor);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (Number.isNaN(x) || Number.isNaN(y)) return false;
+    if (x !== y) return x > y;
+  }
+  return true;
+}
+
+/**
+ * Validate spec.playable_baseline (ADR 0013; INTERFACE boot/controls/ui/outcome).
+ * Required at package/export time for every godot-4 run regardless of contracts
+ * version — but optional in the spec-decomposition schema so recorded legacy
+ * runs keep validating (gate policy in checkers, ADR 0005). Checks JSON Schema
+ * cannot express: every system's `slice` resolves to a declared slices[].id,
+ * and ui.surfaces includes a `pause` surface whose provides covers pause/quit.
+ * Errors are dotted spec paths that name the missing/broken system.
+ *
+ * @returns {{ ok: boolean, baseline: object|null, errors: string[] }}
+ */
+export function validateSpecBaseline(spec) {
+  const errors = [];
+  const sliceIds = new Set(
+    (Array.isArray(spec?.slices) ? spec.slices : [])
+      .map((s) => (isPlainObject(s) ? s.id : null))
+      .filter(isNonEmptyString)
+  );
+  const checkSlice = (sys, val) => {
+    if (!isNonEmptyString(val)) errors.push(`spec.playable_baseline.${sys}.slice`);
+    else if (!sliceIds.has(val)) errors.push(`spec.playable_baseline.${sys}.slice→slices[].id`);
+  };
+
+  const b = isPlainObject(spec) ? spec.playable_baseline : null;
+  if (!isPlainObject(b)) {
+    for (const sys of PLAYABLE_BASELINE_SYSTEMS) errors.push(`spec.playable_baseline.${sys}`);
+    return { ok: false, baseline: null, errors };
+  }
+
+  if (!isPlainObject(b.boot)) {
+    errors.push("spec.playable_baseline.boot");
+  } else {
+    if (!isNonEmptyString(b.boot.entry_scene)) errors.push("spec.playable_baseline.boot.entry_scene");
+    checkSlice("boot", b.boot.slice);
+  }
+
+  if (!isPlainObject(b.controls)) {
+    errors.push("spec.playable_baseline.controls");
+  } else {
+    const c = b.controls;
+    if (
+      !Array.isArray(c.actions) ||
+      c.actions.length < 1 ||
+      !c.actions.every((a) => isPlainObject(a) && isNonEmptyString(a.action) && isNonEmptyString(a.verb))
+    ) {
+      errors.push("spec.playable_baseline.controls.actions");
+    }
+    if (!isStringArray(c.consumer_paths) || c.consumer_paths.length < 1) {
+      errors.push("spec.playable_baseline.controls.consumer_paths");
+    }
+    checkSlice("controls", c.slice);
+  }
+
+  if (!isPlainObject(b.ui)) {
+    errors.push("spec.playable_baseline.ui");
+  } else {
+    const u = b.ui;
+    if (
+      !Array.isArray(u.surfaces) ||
+      u.surfaces.length < 1 ||
+      !u.surfaces.every(
+        (s) => isPlainObject(s) && isNonEmptyString(s.id) && isNonEmptyString(s.provides) && isNonEmptyString(s.path)
+      )
+    ) {
+      errors.push("spec.playable_baseline.ui.surfaces");
+    } else {
+      const pause = u.surfaces.find((s) => s.id === "pause");
+      const provides = pause ? pause.provides.toLowerCase() : "";
+      if (!pause || !provides.includes("pause") || !provides.includes("quit")) {
+        errors.push('spec.playable_baseline.ui.surfaces (pause surface: id "pause", provides covers pause/quit)');
+      }
+    }
+    checkSlice("ui", u.slice);
+  }
+
+  if (!isPlainObject(b.outcome)) {
+    errors.push("spec.playable_baseline.outcome");
+  } else {
+    const o = b.outcome;
+    if (!isStringArray(o.states) || o.states.length < 2) errors.push("spec.playable_baseline.outcome.states");
+    if (!isNonEmptyString(o.communicated_by)) errors.push("spec.playable_baseline.outcome.communicated_by");
+    if (!isNonEmptyString(o.path)) errors.push("spec.playable_baseline.outcome.path");
+    checkSlice("outcome", o.slice);
+  }
+
+  if (errors.length) return { ok: false, baseline: null, errors };
+  return { ok: true, baseline: b, errors: [] };
+}
+
 /**
  * Build a forge-manifest object from the three source artifacts + computed pins/meta.
  *
@@ -169,6 +278,14 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
   const discResult = validateSpecDisciplines(spec.ext);
   if (!discResult.ok) {
     for (const e of discResult.errors) missing.push(e);
+  }
+
+  // Playable baseline (ADR 0013): required for every godot-4 export regardless
+  // of contracts tip; emitted into the manifest only when the live contracts
+  // version carries it (>= 1.4.0 — 1.3.0 manifests must NOT carry it).
+  const baselineResult = validateSpecBaseline(spec);
+  if (!baselineResult.ok) {
+    for (const e of baselineResult.errors) missing.push(e);
   }
 
   // Only emit godot-4 profile in the manifest body (schema enum). Caller must
@@ -366,16 +483,21 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
 
   // Base exports claim the contracts version they were built against
   // (pins.contracts_version = contractsVersion() tip from package-spec).
-  // Feature floors (max wins): derive → 1.3.0; asset_source_policy → 1.2.0.
+  // Feature floors (max wins): playable_baseline → 1.4.0 (only ever emitted
+  // when the live tip carries it); derive → 1.3.0; asset_source_policy → 1.2.0.
   // INVARIANT (forge intake): schema_version === pins.contracts_version.
   const hasDerive =
     Array.isArray(spec.asset_requests) &&
     spec.asset_requests.some((r) => isPlainObject(r) && isPlainObject(r.derive));
-  const contractClaim = hasDerive
-    ? DERIVE_SCHEMA_VERSION
-    : hasAssetSourcePolicy
-      ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
-      : pins.contracts_version;
+  const emitBaseline =
+    baselineResult.ok && versionAtLeast(pins.contracts_version, PLAYABLE_BASELINE_SCHEMA_VERSION);
+  const contractClaim = emitBaseline
+    ? PLAYABLE_BASELINE_SCHEMA_VERSION
+    : hasDerive
+      ? DERIVE_SCHEMA_VERSION
+      : hasAssetSourcePolicy
+        ? ASSET_SOURCE_POLICY_SCHEMA_VERSION
+        : pins.contracts_version;
   const manifest = {
     schema_version: contractClaim,
     game_id: meta.game_id,
@@ -433,6 +555,27 @@ export function mapForgeManifest({ thesis, spec, engine, pins, meta }) {
   };
   if (hasAssetSourcePolicy) {
     manifest.asset_source_policy = spec.asset_source_policy;
+  }
+  if (emitBaseline) {
+    const b = baselineResult.baseline;
+    manifest.playable_baseline = {
+      boot: { entry_scene: b.boot.entry_scene, slice: b.boot.slice },
+      controls: {
+        actions: b.controls.actions.map((a) => ({ action: a.action, verb: a.verb })),
+        consumer_paths: [...b.controls.consumer_paths],
+        slice: b.controls.slice
+      },
+      ui: {
+        surfaces: b.ui.surfaces.map((s) => ({ id: s.id, provides: s.provides, path: s.path })),
+        slice: b.ui.slice
+      },
+      outcome: {
+        states: [...b.outcome.states],
+        communicated_by: b.outcome.communicated_by,
+        path: b.outcome.path,
+        slice: b.outcome.slice
+      }
+    };
   }
 
   return { ok: true, missing: [], manifest, errors };

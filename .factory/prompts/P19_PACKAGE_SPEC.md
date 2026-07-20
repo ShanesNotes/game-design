@@ -21,7 +21,11 @@ TASK:
      `contracts/forge-manifest.schema.json`). Mapping requires golden_moment,
      structured feel_targets/acceptance, engine version fields
      (`godot_min`/`godot_max`/`renderer`/`language`), and the SPEC authored
-     sections (`asset_requests`, `lore_refs`, `capabilities`, `verify_plan`).
+     sections (`asset_requests`, `lore_refs`, `capabilities`, `verify_plan`,
+     `playable_baseline`). The playable baseline (ADR 0013 — boot/controls/ui/
+     outcome, each mapped to a slice) is refused when missing or when a slice
+     ref does not resolve, and is emitted into the manifest only when the live
+     contracts version is ≥ 1.4.0.
      Mapping failure aborts before staging and lists every missing field.
      For any `lore_refs` row: resolve `motif_id` from sibling `lore/` (or
      `<STUDIO_ROOT>/lore`) via `python3 _tools/find_lore.py find "<free text>"`

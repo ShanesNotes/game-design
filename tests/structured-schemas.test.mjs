@@ -89,6 +89,30 @@ test("live schemas exercise maxLength, minLength, uniqueItems", () => {
   assert.deepEqual(validate(cardSchema, card), [], "minimal reference-card fixture must pass");
 });
 
+test("spec-decomposition schema: playable_baseline optional for legacy runs but shape-locked", () => {
+  const specSchema = JSON.parse(fs.readFileSync(rel("schemas/spec-decomposition.schema.json"), "utf8"));
+  const spec = JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8"));
+  assert.deepEqual(validate(specSchema, spec), [], "fixture's playable_baseline must pass");
+
+  // Legacy tolerance (ADR 0013): recorded runs without the block still validate —
+  // the baseline is required at package/export time by the mapper, not the schema.
+  const legacy = structuredClone(spec);
+  delete legacy.playable_baseline;
+  assert.deepEqual(validate(specSchema, legacy), []);
+
+  const extraKey = structuredClone(spec);
+  extraKey.playable_baseline.boot.mode = "debug";
+  assert.ok(validate(specSchema, extraKey).length > 0, "additionalProperties must fire");
+
+  const thinStates = structuredClone(spec);
+  thinStates.playable_baseline.outcome.states = ["only-one"];
+  assert.ok(validate(specSchema, thinStates).length > 0, "outcome.states minItems 2 must fire");
+
+  const noActions = structuredClone(spec);
+  noActions.playable_baseline.controls.actions = [];
+  assert.ok(validate(specSchema, noActions).length > 0, "controls.actions minItems 1 must fire");
+});
+
 
 function node(script, args, opts = {}) {
   return spawnSync(process.execPath, [rel("scripts", script), ...args], { encoding: "utf8", ...opts });

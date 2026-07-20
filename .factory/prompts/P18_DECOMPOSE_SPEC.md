@@ -149,6 +149,21 @@ SLICING RULES:
     modding | telemetry`.
   - `verify_plan` — `{golden_cameras[] {id, position, target}, frame_budget_ms,
     load_budget_s}`.
+  - `playable_baseline` — the studio's minimal "every game has these" floor
+    (ADR 0013): `boot` (`entry_scene`, `slice`), `controls` (`actions[]
+    {action, verb}` — one input-map action per player verb, `consumer_paths[]`
+    — the scripts that read them, `slice`), `ui` (`surfaces[] {id, provides,
+    path}` — one surface MUST be `id: "pause"` whose `provides` covers
+    pause/quit, `slice`), `outcome` (`states[]` (≥2), `communicated_by` — the
+    mechanism the player perceives, `path`, `slice`). Every `slice` ref must
+    name an existing `slices[].id`; put each system on the slice that genuinely
+    delivers it (the tracer usually carries boot/controls/ui; outcome may land
+    on a later slice). Required for every godot-4 export regardless of
+    contracts version: `spec:package` refuses a pack whose baseline is missing
+    or whose slice refs don't resolve, naming the missing system. The mapper
+    emits it into the forge-manifest only when the live contracts version is
+    ≥ 1.4.0 (below that the manifest must not carry it). Baseline-carrying
+    slices render as issues like any other slice — no special backlog shape.
 - **Discipline tags (optional; game-build protocol).** When the game will be
   built under the studio game-build protocol, author acceptance-level discipline
   tags so each work-unit routes to the right packet. Shape on the SPEC.json
@@ -182,7 +197,7 @@ When a completed seed needs a design change (Shane, or a mission whose prompt
 explicitly authorizes it — same governance class as verdict `done`), re-author
 only the SPEC surface: slices + forge-authoring sections (`asset_source_policy`,
 `asset_requests` including optional per-request `derive`, `lore_refs`,
-`capabilities`, `verify_plan`, optional `ext.disciplines`).
+`capabilities`, `verify_plan`, `playable_baseline`, optional `ext.disciplines`).
 Re-render issues. Do not reopen thesis/engine unless the change requires it.
 Revisions may retire never-dispatched slices; built slices stay immutable
 (forge intake enforces). Revisions may change `asset_requests` (add/remove
