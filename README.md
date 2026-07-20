@@ -138,7 +138,7 @@ is the honest status check.
    npm run spec:package -- --seed-id <id> --require-manifest
    npm run spec:package -- --seed-id <id> --write --require-manifest
    ```
-   Default target is `$STUDIO_ROOT/games/<id>` (`--to` always wins);
+   Default target is `$STUDIO_ROOT/games/_export-<id>` (`--to` always wins);
    `--require-manifest` hard-fails a non-godot-4 profile instead of exporting
    manifest-less.
 
