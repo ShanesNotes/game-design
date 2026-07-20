@@ -132,6 +132,7 @@ in the regenerated universe list.
 | `docs/adr/0010-feel-doctrine-studio-terms.md` | rewritten | Re-derived feel + design_canon under studio terms; supersedes culled 0009 (DESIGN-RECORD §5). |
 | `docs/doctrine-audit-ledger.md` | rewritten | Exhaustive provenance ledger (DESIGN-RECORD §8 / T04); Slice B rows for ADR 0011 + in-universe rewrites (grill-refresh 2026-07-12). |
 | `docs/adr/0012-design-lanes.md` | rewritten | Owner-confirmed grill/yolo attention lanes, equal-strength gates, recorded-question split, G1 seam, and yolo stop-line release contract (2026-07-12). |
+| `docs/adr/0013-playable-baseline.md` | reaffirmed | Playable-baseline floor (boot/controls/ui/outcome, slice-covered) refused at the design→forge handoff; checker-enforced per ADR 0005, version-conditional 1.4.0 emission (owner-directed 2026-07-20). |
 
 ## Grill-refresh Slice B (2026-07-12) — front-end wiring truth
 
