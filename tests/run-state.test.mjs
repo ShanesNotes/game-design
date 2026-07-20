@@ -31,21 +31,22 @@ test("isValidSeedId accepts kebab ids and rejects junk", () => {
   assert.ok(!rs.isValidSeedId("a"));
 });
 
-test("specPackRootFor defaults to $STUDIO_ROOT/games/{seed-id} (path-registry)", () => {
+test("specPackRootFor defaults to $STUDIO_ROOT/games/_export-{seed-id} (two-dir export root)", () => {
   const id = "pack-root-probe";
   const prev = process.env.STUDIO_ROOT;
   try {
     process.env.STUDIO_ROOT = "/tmp/fake-studio-root";
-    assert.equal(rs.specPackRootFor(id), path.join("/tmp/fake-studio-root", "games", id));
-    // Not the legacy tgf-games path
+    assert.equal(rs.specPackRootFor(id), path.join("/tmp/fake-studio-root", "games", `_export-${id}`));
+    // Not the product game dir and not legacy tgf-games
+    assert.notEqual(rs.specPackRootFor(id), path.join("/tmp/fake-studio-root", "games", id));
     assert.notEqual(rs.specPackRootFor(id), `/home/ark/tgf-games/${id}`);
   } finally {
     if (prev === undefined) delete process.env.STUDIO_ROOT;
     else process.env.STUDIO_ROOT = prev;
   }
-  // Discovery from design repo cwd (no STUDIO_ROOT) lands under real studio/games
+  // Discovery from design repo cwd (no STUDIO_ROOT) lands under real studio/games/_export-*
   const discovered = rs.specPackRootFor(id, REPO);
-  assert.match(discovered, /[/\\]games[/\\]pack-root-probe$/);
+  assert.match(discovered, /[/\\]games[/\\]_export-pack-root-probe$/);
   assert.ok(!discovered.includes("tgf-games"));
 });
 
@@ -137,6 +138,22 @@ test("manifestPathPolicyErrors keeps run artifact paths inside the seed run", ()
     assert.match(specAbs.join("\n"), /spec_path must resolve inside/);
     const pack = rs.manifestPathPolicyErrors({ ...manifest, spec_pack_path: "/tmp/not-the-spec-pack" }, id, dir);
     assert.match(pack.join("\n"), /spec_pack_path must resolve inside/);
+    // DES-C: truthful pack path at games/_export-{id} is accepted (package-spec records the root)
+    const exportRoot = rs.specPackRootFor(id, dir);
+    const honestPack = rs.manifestPathPolicyErrors({
+      ...manifest,
+      default_spec_pack_root: exportRoot,
+      spec_pack_path: exportRoot
+    }, id, dir);
+    assert.deepEqual(honestPack, [], "spec_pack_path at games/_export-{id} must be legal");
+    // product game dir (post-intake) is NOT the pack root
+    const productDir = path.join(path.dirname(exportRoot), id);
+    const productPack = rs.manifestPathPolicyErrors({
+      ...manifest,
+      default_spec_pack_root: exportRoot,
+      spec_pack_path: productDir
+    }, id, dir);
+    assert.match(productPack.join("\n"), /spec_pack_path must resolve inside|illegal absolute/);
     const outside = tmp();
     fs.symlinkSync(outside, path.join(runDir, "linked"));
     const linked = rs.manifestPathPolicyErrors({ ...manifest, game_thesis_path: `.tgf/seeds/${id}/linked/GAME_THESIS.md` }, id, dir);

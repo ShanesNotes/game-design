@@ -15,7 +15,8 @@ TASK:
    orchestrator names, or absolute source paths may travel) and re-run. Never
    weaken the gate.
 3. Export: `node scripts/package-spec.mjs --seed-id <id> --write`
-   (default target: the run's `default_spec_pack_root`).
+   (default target: the run's `default_spec_pack_root` =
+   `$STUDIO_ROOT/games/_export-<id>`; forge intake then births `games/<id>`).
    - **Godot-4:** also emits `forge-manifest.json` (schema-valid against studio
      `contracts/forge-manifest.schema.json`). Mapping requires golden_moment,
      structured feel_targets/acceptance, engine version fields

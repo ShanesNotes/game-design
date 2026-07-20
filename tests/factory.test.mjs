@@ -188,7 +188,7 @@ test("init-game-run creates only .tgf/seeds/{id} with valid manifest + ledger", 
     assert.deepEqual(validate(schema, manifest), []);
     assert.equal(manifest.external_side_effects_allowed, false);
     assert.equal(manifest.spec_pack_path, null);
-    assert.match(manifest.default_spec_pack_root, /[/\\]games[/\\]selftest-create$/);
+    assert.match(manifest.default_spec_pack_root, /[/\\]games[/\\]_export-selftest-create$/);
     assert.ok(!manifest.default_spec_pack_root.includes("tgf-games"));
     assert.equal(manifest.current_phase, "intake");
     assert.equal(manifest.factory_version, "0.3.0");
@@ -787,6 +787,45 @@ test("validate-artifacts --check thesis --file is confined by seed-id", () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+// Ordering trap: check before advance-run --set must work via --file, and the
+// no-path error must name the real cause + correct next command (not "advance first").
+test("validate-artifacts --check thesis|spec: unrecorded path has clear error; --file validates pre-record", () => {
+  const dir = tmp();
+  const id = "selftest-order-trap";
+  try {
+    assert.equal(initLegacyRun(dir, id).status, 0);
+    const runDir = path.join(dir, ".tgf", "seeds", id);
+    fs.writeFileSync(path.join(runDir, "GAME_THESIS.md"), thesisMd());
+    fs.writeFileSync(path.join(runDir, "SPEC.md"), specMdWith(id));
+
+    // Clear-error path: no manifest key, no --file
+    let r = node("validate-artifacts.mjs", ["--check", "thesis", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /not recorded/);
+    assert.match(r.stdout, /--file/);
+    assert.match(r.stdout, new RegExp(`--check thesis --seed-id ${id} --file`));
+
+    r = node("validate-artifacts.mjs", ["--check", "spec", "--seed-id", id], { cwd: dir });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /not recorded/);
+    assert.match(r.stdout, /--file/);
+    assert.match(r.stdout, new RegExp(`--check spec --seed-id ${id} --file`));
+
+    // Fixed path: --file validates before recording (no advance-run --set yet)
+    r = node("validate-artifacts.mjs", [
+      "--check", "thesis", "--seed-id", id, "--file", `.tgf/seeds/${id}/GAME_THESIS.md`
+    ], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+
+    r = node("validate-artifacts.mjs", [
+      "--check", "spec", "--seed-id", id, "--file", `.tgf/seeds/${id}/SPEC.md`
+    ], { cwd: dir });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
