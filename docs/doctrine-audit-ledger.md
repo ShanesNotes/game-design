@@ -84,6 +84,7 @@ tracked they fail the check.
 | `.factory/prompts/P14_KILL_RESTART.md` | reaffirmed | Kill/restart after failed deepen is still the evidence-over-sunk-cost exit (DESIGN-RECORD quality stance). |
 | `.factory/prompts/P16_REPO_SCOUT.md` | reaffirmed | Scout harvest of primitives still serves design reuse without cargo-cult (discipline ownership test in DESIGN-RECORD §5). |
 | `.factory/prompts/P17_VERIFY_TOOLCHAIN.md` | reaffirmed | Probe-before-assume tool doctrine still binds (design needs verified agent surfaces). |
+| `.factory/prompts/P17_5_UNDERSTANDING_CHECKPOINT.md` | rewritten | Owner-requested process gate: one-page "game as I understand it" between design-lock and decompose (grill sign-off / yolo self-review); kingdoms Ruling-A redirect cost ~40m without it. |
 | `.factory/prompts/P18_DECOMPOSE_SPEC.md` | rewritten | Feel first-class + forge-authoring (SPEC §3.4 / T06); optional ext.disciplines (GB01); post-issue fail-fast `spec:package --require-manifest` dry-run (grill-refresh B / ADR 0011); audited reference packaging_lessons + system_bom disposition checklist with SKIPPED when empty (FUE W2-B). |
 | `.factory/prompts/P19_PACKAGE_SPEC.md` | rewritten | Forge-manifest emission + Godot-gate + --require-manifest (SPEC §3.4–§3.5 / T06). |
 | `hooks/engine_migration_requires_adr.mjs` | reaffirmed | Still enforces seed-scoped engine decision files (DESIGN-RECORD engine phase remains). |

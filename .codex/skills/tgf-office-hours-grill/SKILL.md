@@ -20,13 +20,46 @@ fields from portfolio and seed evidence, classifies remaining unknowns, and
 completes by advancing to **`toolchain`** — never to thesis (illegal vs the
 run-state graph: `intake → toolchain` only).
 
+## Open with grill-depth calibration (grill lane only — do this first)
+
+Owner process ask (kingdoms mid-run verdict, near-verbatim):
+
+> "The design seed phase needs to start with a question about the level of
+> grilling to tease the game out."
+
+> "The design needs to have a checkpoint of understanding before building
+> slices."
+
+> "What I really wanted was Warcraft 3 but with early Christian creation lore
+> referencing the Cave of Treasures... Not weird mechanics and a game that
+> doesn't seem interesting to play."
+
+**Before** portfolio digest pressure-fields or any deep co-authoring: ask the
+owner **exactly one** calibration question (recommended default in parentheses):
+
+> How deep should this grill go, and how much creative latitude vs fidelity to
+> any named reference in the seed?
+> *(Recommended default: medium grill — pressure the loop and feel; stay
+> faithful to named-reference mechanics the owner is pointing at; invent only
+> where the seed is silent. Defer the post-design-lock understanding checkpoint
+> to P17.5.)*
+
+Record the answer in `intake/office-hours.md` prose (and the JSON block when a
+field fits). This calibration is live office-hours dialogue — budget-exempt
+like the rest of the grill session. Do **not** skip it in `grill` lane.
+
+**Yolo:** do not ask. Infer depth and fidelity stance from the seed and BRIEF
+(if any); state the inferred stance in one short prose line at the top of
+`intake/office-hours.md`, then fill all ten fields silently as today.
+
 **Lane behavior** (read `manifest.design_lane`; absence keeps the legacy
 at-most-one-question procedure):
 - `grill` — a collaborative co-authoring session and the default for new runs.
-  Detect gaps, propose concrete fills, and extrapolate game-quality principles
-  with the owner. Live-session conversation is exempt from the manifest's
-  `questions_asked` budget; do not log it there. The ≤1 recorded budget remains
-  for later AFK phases.
+  **Open with the calibration question above**, then detect gaps, propose
+  concrete fills, and extrapolate game-quality principles with the owner.
+  Live-session conversation is exempt from the manifest's `questions_asked`
+  budget; do not log it there. The ≤1 recorded budget remains for later AFK
+  phases.
 - `yolo` — ask zero questions. Silently fill all ten fields from the seed,
   digest, and other run evidence. Convert every material unknown into a named,
   falsifiable prototype hypothesis. Yolo changes owner attention only: do not

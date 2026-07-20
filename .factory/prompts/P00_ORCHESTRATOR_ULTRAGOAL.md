@@ -64,11 +64,16 @@ PHASES (route by `manifest.current_phase`):
 5. `deepen` — DEEPEN verdict path: apply **exactly one** named transform, then
    re-enter `thesis` for re-review (≤2 attempts; after two failures, kill).
 6. `engine-profile` — score engine candidates against the locked design using P02.
-7. `decompose` — author SPEC.md using P18, then render issues
+7. `understanding-checkpoint` — present "the game as I understand it" (P17.5)
+   before any slicing: fantasy, core loop, inherited-from-named-reference vs
+   invented, campaign ramp. Grill → explicit owner sign-off; yolo → recorded
+   self-review. See `.factory/prompts/P17_5_UNDERSTANDING_CHECKPOINT.md`.
+   Process gate only — not a new `manifest.current_phase` value.
+8. `decompose` — author SPEC.md using P18, then render issues
    (`node scripts/emit-local-issues.mjs --seed-id <id> --write`).
-8. `handoff` — export the spec pack using P19
+9. `handoff` — export the spec pack using P19
    (`node scripts/package-spec.mjs --seed-id <id> --write`).
-9. Stop. Do not silently expand into building the game here.
+10. Stop. Do not silently expand into building the game here.
 
 OUTPUT:
 - intake/office-hours.md (+ intake/portfolio-digest.json)
