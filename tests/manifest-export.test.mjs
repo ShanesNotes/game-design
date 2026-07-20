@@ -45,6 +45,29 @@ function resolveStudioForTests() {
 
 const STUDIO_ROOT = resolveStudioForTests();
 
+/** Live contracts tip is at or above `floor` (e.g. baseline rung 1.4.0). Malformed → false. */
+function tipAtLeast(floor) {
+  const tip = contractsVersion(REPO);
+  if (!tip) return false;
+  const parse = (v) => String(v).split(".").map((n) => (/^\d+$/.test(n) ? Number(n) : NaN));
+  const a = parse(tip);
+  const b = parse(floor);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (Number.isNaN(x) || Number.isNaN(y)) return false;
+    if (x !== y) return x > y;
+  }
+  return true;
+}
+
+/** Max-floor claim when a feature floor is active and baseline rung wins at tip ≥ 1.4.0. */
+function claimWithBaselineFloor(featureFloor) {
+  return tipAtLeast(PLAYABLE_BASELINE_SCHEMA_VERSION)
+    ? PLAYABLE_BASELINE_SCHEMA_VERSION
+    : featureFloor;
+}
+
 function node(script, args, opts = {}) {
   const { env: extraEnv, cwd, ...rest } = opts;
   return spawnSync(process.execPath, [rel("scripts", script), ...args], {
@@ -262,9 +285,18 @@ test("AC2: godot-4 export emits schema-valid forge-manifest with real pin SHAs",
     assert.equal(mf.engine.profile, GODOT_PROFILE);
     assert.equal(mf.thesis.register, "mechanics-first");
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
-    // ADR 0013: the SPEC declares the playable baseline, but the live contracts
-    // tip is < 1.4.0, so the manifest must NOT carry it (version-conditional).
-    assert.equal(mf.playable_baseline, undefined);
+    // ADR 0013: playable_baseline is version-conditional — emitted only when the
+    // live contracts tip is ≥ 1.4.0 (baseline rung). Below tip, absent.
+    if (tipAtLeast(PLAYABLE_BASELINE_SCHEMA_VERSION)) {
+      assert.ok(mf.playable_baseline, "baseline emitted when contracts tip ≥ 1.4.0");
+      assert.ok(
+        Array.isArray(mf.playable_baseline?.ui?.surfaces) &&
+          mf.playable_baseline.ui.surfaces.some((s) => s.id === "pause"),
+        "emitted baseline must include pause surface"
+      );
+    } else {
+      assert.equal(mf.playable_baseline, undefined);
+    }
 
     // contracts test runner can also validate (Node path)
     const contractsValidate = path.join(STUDIO_ROOT, "contracts", "test", "validate-node.mjs");
@@ -595,11 +627,14 @@ function fixtureGameDir(parentBytes) {
   };
 }
 
-test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh pins", () => {
+test("F05b AC1: revision export at complete emits parent_digest + fresh pins (max-floor claim)", () => {
   const dir = tmp();
   const target = tmp();
   const id = "selftest-revision-export";
   const { gameDir, parentDigest } = fixtureGameDir();
+  // Revision ladder: baseline rung (1.4.0) wins over parent_digest floor (1.1.0)
+  // when the live tip carries it; otherwise plain revision claims 1.1.0.
+  const revClaim = claimWithBaselineFloor("1.1.0");
   try {
     completeReadyRun(dir, id, { profile: GODOT_PROFILE });
 
@@ -614,9 +649,9 @@ test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh p
     assert.ok(fs.existsSync(mfPath), "revision pack must contain forge-manifest.json");
     const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
 
-    assert.equal(mf.schema_version, "1.1.0");
+    assert.equal(mf.schema_version, revClaim);
     assert.equal(mf.parent_digest, parentDigest);
-    assert.deepEqual(validate(loadContractsSchema(), mf), [], "schema-valid v1.1.0");
+    assert.deepEqual(validate(loadContractsSchema(), mf), [], `schema-valid ${revClaim}`);
 
     const chk = node("validate-artifacts.mjs", ["--check", "forge-manifest", "--file", mfPath], { cwd: dir });
     assert.equal(chk.status, 0, chk.stdout + chk.stderr);
@@ -631,13 +666,13 @@ test("F05b AC1: revision export at complete emits v1.1.0 parent_digest + fresh p
     assert.equal(pins.ok, true, (pins.missing || []).join(", "));
     assert.equal(mf.pins.assets_index, pins.pins.assets_index);
     assert.equal(mf.pins.lore_index, pins.pins.lore_index);
-    // Revision floor pins contracts_version to schema_version (intake equality),
-    // not the schema enum tip (may be ahead, e.g. 1.2.0 after Imagine).
-    assert.equal(mf.pins.contracts_version, "1.1.0");
+    // Revision floor pins contracts_version to schema_version (intake equality).
+    // Max floor wins: baseline 1.4.0 > derive 1.3.0 > policy 1.2.0 > revision 1.1.0.
+    assert.equal(mf.pins.contracts_version, revClaim);
     assert.equal(mf.schema_version, mf.pins.contracts_version);
     assert.match(mf.pack_digest, /^[a-f0-9]{64}$/);
 
-    assert.match(r.stdout, /revision: schema_version 1\.1\.0 parent_digest/);
+    assert.match(r.stdout, new RegExp(`revision: schema_version ${revClaim} parent_digest`));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -956,9 +991,13 @@ test("DES-A live round-trip: package-spec base export passes forge intake contra
   }
 });
 
-test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
+test("derive: passthrough + version-claim matrix (max floor; baseline rung wins at tip ≥ 1.4.0)", () => {
   const { thesis, engine, pins, meta } = baseMapInputs();
   const tipPins = { ...pins, contracts_version: contractsVersion(REPO) || DERIVE_SCHEMA_VERSION };
+  // Feature floors: policy 1.2.0, derive 1.3.0; baseline 1.4.0 wins when tip carries it
+  // (minimal fixture has playable_baseline → emitBaseline when tip ≥ 1.4.0).
+  const policyClaim = claimWithBaselineFloor(ASSET_SOURCE_POLICY_SCHEMA_VERSION);
+  const deriveClaim = claimWithBaselineFloor(DERIVE_SCHEMA_VERSION);
   const plainReq = {
     request_id: "crate",
     role: "prop",
@@ -969,21 +1008,22 @@ test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
   };
   const withDerive = deriveRequest();
 
-  // no-derive, no-policy → tip claim; invariant holds
+  // no-derive, no-policy → tip claim, or baseline floor when emitted
   const noPolicySpec = {
     ...JSON.parse(fs.readFileSync(rel("examples/fixtures/minimal-spec-decomposition.json"), "utf8")),
     asset_requests: [plainReq]
   };
   delete noPolicySpec.asset_source_policy;
+  const tipClaim = claimWithBaselineFloor(tipPins.contracts_version);
   const rTip = mapForgeManifest({ thesis, spec: noPolicySpec, engine, pins: tipPins, meta });
   assert.equal(rTip.ok, true, (rTip.missing || []).join(", "));
-  assert.equal(rTip.manifest.schema_version, tipPins.contracts_version);
+  assert.equal(rTip.manifest.schema_version, tipClaim);
   assert.equal(rTip.manifest.schema_version, rTip.manifest.pins.contracts_version);
   assert.equal(rTip.manifest.asset_requests[0].derive, undefined);
   assert.ok(forgeIntakeContractVersionOk(rTip.manifest));
   assert.deepEqual(validate(loadContractsSchema(), rTip.manifest), []);
 
-  // policy-only → 1.2.0 floor
+  // policy-only → 1.2.0 floor (or 1.4.0 when baseline rung wins)
   const rPolicy = mapForgeManifest({
     thesis,
     spec: { ...noPolicySpec, asset_source_policy: "local", asset_requests: [plainReq] },
@@ -992,13 +1032,13 @@ test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
     meta
   });
   assert.equal(rPolicy.ok, true, (rPolicy.missing || []).join(", "));
-  assert.equal(rPolicy.manifest.schema_version, ASSET_SOURCE_POLICY_SCHEMA_VERSION);
-  assert.equal(rPolicy.manifest.pins.contracts_version, ASSET_SOURCE_POLICY_SCHEMA_VERSION);
+  assert.equal(rPolicy.manifest.schema_version, policyClaim);
+  assert.equal(rPolicy.manifest.pins.contracts_version, policyClaim);
   assert.equal(rPolicy.manifest.schema_version, rPolicy.manifest.pins.contracts_version);
   assert.ok(forgeIntakeContractVersionOk(rPolicy.manifest));
   assert.deepEqual(validate(loadContractsSchema(), rPolicy.manifest), []);
 
-  // derive only → 1.3.0 + passthrough
+  // derive only → 1.3.0 + passthrough (or 1.4.0 when baseline rung wins)
   const rDerive = mapForgeManifest({
     thesis,
     spec: { ...noPolicySpec, asset_requests: [withDerive] },
@@ -1007,14 +1047,14 @@ test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
     meta
   });
   assert.equal(rDerive.ok, true, (rDerive.missing || []).join(", "));
-  assert.equal(rDerive.manifest.schema_version, DERIVE_SCHEMA_VERSION);
-  assert.equal(rDerive.manifest.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rDerive.manifest.schema_version, deriveClaim);
+  assert.equal(rDerive.manifest.pins.contracts_version, deriveClaim);
   assert.equal(rDerive.manifest.schema_version, rDerive.manifest.pins.contracts_version);
   assert.deepEqual(rDerive.manifest.asset_requests[0].derive, withDerive.derive);
   assert.ok(forgeIntakeContractVersionOk(rDerive.manifest));
   assert.deepEqual(validate(loadContractsSchema(), rDerive.manifest), []);
 
-  // derive + policy → still 1.3.0 (max floor wins)
+  // derive + policy → max(derive, baseline) still wins
   const rBoth = mapForgeManifest({
     thesis,
     spec: {
@@ -1028,20 +1068,22 @@ test("derive: passthrough + version-claim matrix (1.3.0 floor)", () => {
   });
   assert.equal(rBoth.ok, true, (rBoth.missing || []).join(", "));
   assert.equal(rBoth.manifest.asset_source_policy, "combo");
-  assert.equal(rBoth.manifest.schema_version, DERIVE_SCHEMA_VERSION);
-  assert.equal(rBoth.manifest.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+  assert.equal(rBoth.manifest.schema_version, deriveClaim);
+  assert.equal(rBoth.manifest.pins.contracts_version, deriveClaim);
   assert.equal(rBoth.manifest.schema_version, rBoth.manifest.pins.contracts_version);
   assert.deepEqual(rBoth.manifest.asset_requests[1].derive, withDerive.derive);
   assert.ok(forgeIntakeContractVersionOk(rBoth.manifest));
   assert.deepEqual(validate(loadContractsSchema(), rBoth.manifest), []);
 });
 
-test("derive: revision export with derive block claims 1.3.0 (both fields) + intake ok", () => {
+test("derive: revision export with derive block claims max floor (both fields) + intake ok", () => {
   const dir = tmp();
   const target = tmp();
   const id = "selftest-revision-derive";
   const { gameDir, parentDigest } = fixtureGameDir();
   const withDerive = deriveRequest();
+  // derive floor 1.3.0; baseline rung 1.4.0 wins when tip ≥ 1.4.0
+  const revClaim = claimWithBaselineFloor(DERIVE_SCHEMA_VERSION);
   try {
     completeReadyRun(dir, id, {
       profile: GODOT_PROFILE,
@@ -1061,8 +1103,8 @@ test("derive: revision export with derive block claims 1.3.0 (both fields) + int
     assert.ok(fs.existsSync(mfPath), "revision pack must contain forge-manifest.json");
     const mf = JSON.parse(fs.readFileSync(mfPath, "utf8"));
 
-    assert.equal(mf.schema_version, DERIVE_SCHEMA_VERSION);
-    assert.equal(mf.pins.contracts_version, DERIVE_SCHEMA_VERSION);
+    assert.equal(mf.schema_version, revClaim);
+    assert.equal(mf.pins.contracts_version, revClaim);
     assert.equal(mf.schema_version, mf.pins.contracts_version);
     assert.equal(mf.parent_digest, parentDigest);
     assert.deepEqual(mf.asset_requests[0].derive, withDerive.derive);
@@ -1071,7 +1113,7 @@ test("derive: revision export with derive block claims 1.3.0 (both fields) + int
       `forge revision intake would reject: schema=${mf.schema_version} pins=${mf.pins.contracts_version}`
     );
     assert.deepEqual(validate(loadContractsSchema(), mf), []);
-    assert.match(r.stdout, new RegExp(`revision: schema_version ${DERIVE_SCHEMA_VERSION} parent_digest`));
+    assert.match(r.stdout, new RegExp(`revision: schema_version ${revClaim} parent_digest`));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

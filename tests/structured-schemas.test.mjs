@@ -1,5 +1,6 @@
 // T05 — structured feel_targets + typed acceptance (SPEC §3.3).
-// Also: subset validator keyword regressions (maxLength / minLength / uniqueItems).
+// Also: subset validator keyword regressions (maxLength / minLength / uniqueItems /
+// allOf / anyOf / not / contains / const — forge-manifest baseline gates).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -10,6 +11,10 @@ import { fileURLToPath } from "node:url";
 import { validate } from "../scripts/lib/validate-json-schema.mjs";
 import { readEmbeddedArtifact } from "../scripts/lib/run-state.mjs";
 import { FEEL_TARGET_REQUIRED_FOR_ADVANCE } from "../scripts/lib/anti-boring-gate.mjs";
+import {
+  forgeManifestSchemaPath,
+  resolveContractsRoot
+} from "../scripts/lib/studio-paths.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rel = (...p) => path.join(REPO, ...p);
@@ -56,6 +61,63 @@ test("validate uniqueItems keeps __proto__ keys and array/object shapes distinct
   assert.deepEqual(validate({ type: "array", uniqueItems: true }, protoPair), []);
   const shapePair = [{ a: 1 }, [["a", 1]]];
   assert.deepEqual(validate({ type: "array", uniqueItems: true }, shapePair), []);
+});
+
+test("validate enforces const / allOf / anyOf / not / contains", () => {
+  assert.deepEqual(validate({ const: "pause" }, "pause"), []);
+  assert.ok(validate({ const: "pause" }, "hud").some((e) => /const/.test(e)));
+
+  assert.deepEqual(
+    validate({ allOf: [{ type: "object" }, { required: ["a"] }] }, { a: 1 }),
+    []
+  );
+  assert.ok(
+    validate({ allOf: [{ type: "object" }, { required: ["a"] }] }, {}).some((e) =>
+      /missing required/.test(e)
+    )
+  );
+
+  assert.deepEqual(validate({ anyOf: [{ const: 1 }, { const: 2 }] }, 2), []);
+  assert.ok(validate({ anyOf: [{ const: 1 }, { const: 2 }] }, 3).some((e) => /anyOf/.test(e)));
+
+  assert.deepEqual(validate({ not: { required: ["x"] } }, {}), []);
+  assert.ok(validate({ not: { required: ["x"] } }, { x: 1 }).some((e) => /not/.test(e)));
+
+  const containsPause = {
+    type: "array",
+    contains: { required: ["id"], properties: { id: { const: "pause" } } }
+  };
+  assert.deepEqual(validate(containsPause, [{ id: "hud" }, { id: "pause" }]), []);
+  assert.ok(
+    validate(containsPause, [{ id: "hud" }]).some((e) => /contains/.test(e)),
+    "contains must reject arrays lacking a matching item"
+  );
+});
+
+test("design Node validator rejects contracts manifest-baseline invalid fixtures", () => {
+  // Hermetic against live contracts tip: the three shapes that Draft 2020-12
+  // rejects (missing baseline @ 1.4, baseline on 1.3, no pause surface) must
+  // also be REJECT under package-spec's Node subset (allOf / contains / not).
+  const schemaPath = forgeManifestSchemaPath(REPO);
+  const fixtureDir = path.join(resolveContractsRoot(REPO), "fixtures", "manifest-baseline");
+  assert.ok(fs.existsSync(schemaPath), `forge-manifest schema missing: ${schemaPath}`);
+  assert.ok(fs.existsSync(fixtureDir), `manifest-baseline fixtures missing: ${fixtureDir}`);
+  const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8"));
+
+  const valid = JSON.parse(fs.readFileSync(path.join(fixtureDir, "valid-v1.4-baseline.json"), "utf8"));
+  for (const k of Object.keys(valid)) if (k.startsWith("_")) delete valid[k];
+  assert.deepEqual(validate(schema, valid), [], "valid-v1.4-baseline must ACCEPT");
+
+  for (const name of [
+    "invalid-missing-baseline-v1.4.json",
+    "invalid-baseline-on-v1.3.json",
+    "invalid-baseline-no-pause-surface.json"
+  ]) {
+    const inst = JSON.parse(fs.readFileSync(path.join(fixtureDir, name), "utf8"));
+    for (const k of Object.keys(inst)) if (k.startsWith("_")) delete inst[k];
+    const errs = validate(schema, inst);
+    assert.ok(errs.length > 0, `${name} must REJECT design-side; got ACCEPT`);
+  }
 });
 
 test("live schemas exercise maxLength, minLength, uniqueItems", () => {
