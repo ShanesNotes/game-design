@@ -38,7 +38,7 @@
           "check": "feel:rotate-snap"
         }
       ],
-      "evidence_requirements": ["playtests/**/playtest_report.json from a bot session >= 60s"],
+      "evidence_requirements": ["docs/evidence/tracer-loop/**", "log"],
       "depends_on": [],
       "loop_verbs_covered": ["plant", "water", "rotate-asteroid"]
     },
@@ -60,7 +60,7 @@
           "check": "two_bot_score_spread"
         }
       ],
-      "evidence_requirements": ["two playtest reports with distinct bot_type values"],
+      "evidence_requirements": ["docs/evidence/sunlight-pressure/**", "screenshot"],
       "depends_on": ["tracer-loop"],
       "loop_verbs_covered": ["plant", "water"]
     }

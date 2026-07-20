@@ -37,9 +37,27 @@ SLICING RULES:
   ```
   Pre-refresh free-string `acceptance` arrays fail validation; re-run this
   phase, do not migrate (SPEC §3.3).
-- **Evidence requirements.** Every slice/feature names the playtest evidence it must
-  produce (checker enforces at least one entry) (see PLAYTEST_PLAN falsifiers — the Two-Bot test deferred at
-  design-review lands here as a slice obligation).
+- **Evidence requirements (a forge-enforced contract, not prose).** Every
+  slice/feature names at least one `evidence_requirements` entry (the decompose
+  checker enforces presence; forge verify enforces satisfaction per built slice —
+  `applyEvidenceRequired`). Each entry is exactly one of:
+  1. a **game-relative path glob** (`*`, `?`, `**` segments; never absolute,
+     never `..`) — satisfied when at least one file in the game repo or one
+     produced evidence path matches it; or
+  2. an exact **produced-evidence type token** — `log`, `metric`, or
+     `screenshot` — satisfied when the slice's verify results include evidence
+     of that type.
+  Anything else is prose, and prose never matches: the requirement fails verify
+  with `missing_evidence_required`. Author new specs with globs/type tokens
+  only. Convention: per-slice build evidence lands under
+  `docs/evidence/<slice-id>/` in the game repo, so the worked requirement for
+  the tracer slice is:
+  ```json
+  "evidence_requirements": ["docs/evidence/tracer-loop/**", "log"]
+  ```
+  (see PLAYTEST_PLAN falsifiers — the Two-Bot test deferred at
+  design-review lands here as a slice obligation, expressed in this same
+  glob/token form).
 - **Feel is sliced first-class** (docs/feel-doctrine.md). The tracer slice's
   acceptance includes the golden moment's full feedback chain (anticipation →
   action → impact → aftermath, readable in one play), and every thesis
