@@ -33,6 +33,7 @@ Legend:
 | Meshy/Tripo/Rodin style 3D gen | OFF_BY_DEFAULT | Asset rung-3 only unless used as low-poly greybox after gate. | Asset-provenance required. |
 | Ludo.ai style game-concept gen | PROBE | Optional ideation/reference scan at seed or thesis time; never a substitute for the depth gate or feel targets. | Account required; outputs are references, not evidence. |
 | AI audio/image assets | OFF_BY_DEFAULT | No opaque assets before G1+G2. | Asset-provenance required. |
+| ElevenLabs MCP (audio generation) | OFF_BY_DEFAULT | Wired + enabled on this box via the Codex CLI only (no other seat carries it). Candidate fill for audio sourcing gaps; forge lock generated rows are closed to Imagine + Blender Derive (contracts 1.3.0), so generated audio cannot resolve into a game lock until an audio track lands. | Probe: `codex mcp list` shows `elevenlabs` enabled (probed 2026-07-20); asset-provenance required. |
 
 ## Harvest protocol
 
